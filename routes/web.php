@@ -6,3 +6,4 @@ use Illuminate\Support\Facades\Route;
     return view('welcome');
 });*/
 Route::view('/', 'landing')->name('home');
+Route::view('/', 'TOST')->name('home');
