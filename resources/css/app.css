@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+/* resources/css/app.css */
+@tailwind utilities;
+
+@font-face {
+    font-family: 'IranYekan';
+    src: url('/fonts/iranyekan/woff2/IRANYekanX-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'IranYekan';
+    src: url('/fonts/iranyekan/woff2/IRANYekanX-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'IranYekan';
+    src: url('/fonts/iranyekan/woff2/IRANYekanX-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'IranSans';
+    src: url('/fonts/iransans/woff2/IRANSansX-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'IranSans';
+    src: url('/fonts/iransans/woff2/IRANSansX-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    --color-primary: #0A5C3A;
+    --color-primary-dark: #1F3D2E;
+    --color-gold-soft: #E8C670;
+    --color-gold: #E6AF00;
+    --color-cream: #F5EDE0;
+    --color-teal: #4A7C83;
+    --color-orange: #E96F27;
+}
+
+@layer base {
+    html {
+        @apply scroll-smooth;
+    }
+    body {
+        @apply font-sans text-primary-dark antialiased bg-white;
+    }
+}
