@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Http\Requests\Auth;
+
+use App\Rules\ValidIranMobile;
+use Illuminate\Foundation\Http\FormRequest;
+
+class SendOtpRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'mobile' => ['required', 'string', new ValidIranMobile],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return ['mobile.required' => 'شماره موبایل الزامی است.'];
+    }
+}
