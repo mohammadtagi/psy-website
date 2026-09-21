@@ -31,6 +31,11 @@ return [
         'username' => env('MELIPAYAMAK_USERNAME'),
         'password' => env('MELIPAYAMAK_PASSWORD'),
         'pattern_id' => (int) env('MELIPAYAMAK_PATTERN_ID', 388165),
+
+        'endpoint' => env(
+            'MELIPAYAMAK_ENDPOINT',
+            'https://rest.payamak-panel.com/api/SendSMS/SendByBaseNumber'
+        ),
     ],
 
     'otp' => [

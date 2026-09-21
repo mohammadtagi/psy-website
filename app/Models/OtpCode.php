@@ -21,6 +21,7 @@ class OtpCode extends Model
             'expires_at' => 'datetime',
             'consumed_at' => 'datetime',
             'last_sent_at' => 'datetime',
+            'attempts' => 'integer',
         ];
     }
 
@@ -36,6 +37,13 @@ class OtpCode extends Model
 
     public function hasReachedMaximumAttempts(): bool
     {
-        return $this->attempts >= config('services.otp.max_attempts');
+        return $this->attempts >= (int) config('services.otp.max_attempts', 5);
+    }
+
+    public function isUsable(): bool
+    {
+        return ! $this->isExpired()
+            && ! $this->isConsumed()
+            && ! $this->hasReachedMaximumAttempts();
     }
 }

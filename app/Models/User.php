@@ -25,12 +25,43 @@ class User extends Authenticatable
         'mobile',
         'email',
         'password',
+        'role',
     ];
+
 
     protected $hidden = [
         'password',
         'remember_token',
     ];
+    public const ROLE_CLIENT = 'client';
+
+    public const ROLE_PSYCHOLOGIST = 'psychologist';
+
+    public const ROLE_ADMIN = 'admin';
+
+    public function isClient(): bool
+    {
+        return $this->role === self::ROLE_CLIENT;
+    }
+
+    public function isPsychologist(): bool
+    {
+        return $this->role === self::ROLE_PSYCHOLOGIST;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function hasRole(string|array $roles): bool
+    {
+        return in_array(
+            $this->role,
+            (array) $roles,
+            true
+        );
+    }
 
     protected function casts(): array
     {
