@@ -182,7 +182,11 @@ class OtpLoginController extends Controller
         $request->session()->forget(self::SESSION_MOBILE_KEY);
         $request->session()->regenerate();
 
-        return redirect()->route('home');
+        return match ($user->role) {
+            User::ROLE_ADMIN => redirect()->route('admin.dashboard'),
+            User::ROLE_PSYCHOLOGIST => redirect()->route('psychologist.dashboard'),
+            default => redirect('/'),
+        };
     }
 
     public function resendOtp(Request $request): RedirectResponse
