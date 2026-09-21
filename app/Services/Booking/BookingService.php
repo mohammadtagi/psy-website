@@ -277,7 +277,7 @@ class BookingService
     private function parseLocalDate(string $date): CarbonImmutable
     {
         try {
-            return CarbonImmutable::createFromFormat(
+            $parsed = CarbonImmutable::createFromFormat(
                 '!Y-m-d',
                 $date,
                 self::LOCAL_TIMEZONE,
@@ -287,7 +287,19 @@ class BookingService
                 'date' => 'تاریخ انتخاب‌شده معتبر نیست.',
             ]);
         }
+
+        if (
+            $parsed === false
+            || $parsed->format('Y-m-d') !== $date
+        ) {
+            throw ValidationException::withMessages([
+                'date' => 'تاریخ انتخاب‌شده معتبر نیست.',
+            ]);
+        }
+
+        return $parsed;
     }
+
 
     private function roundUpToHalfHour(CarbonImmutable $dateTime): CarbonImmutable
     {

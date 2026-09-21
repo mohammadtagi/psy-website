@@ -76,7 +76,7 @@ class AppointmentService
             === (int) $actor->getKey()
         );
 
-        if (! $isClient && ! $isPsychologist && ! $bypassClientTimeLimit) {
+        if (! $isClient && ! $isPsychologist) {
             abort(403);
         }
 
@@ -91,5 +91,6 @@ class AppointmentService
                 'appointment' => 'لغو نوبت فقط تا ۱۲ ساعت پیش از شروع امکان‌پذیر است.',
             ]);
         }
+
     }
 }

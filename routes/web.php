@@ -83,9 +83,11 @@ Route::get('/booking/{date}', [
 Route::post('/booking/{date}', [
     BookingController::class,
     'store',
-])->where('date', '\d{4}-\d{2}-\d{2}')
-    ->middleware('auth')
+])
+    ->where('date', '\d{4}-\d{2}-\d{2}')
+    ->middleware(['auth', 'role:client'])
     ->name('booking.store');
+
 
 
 

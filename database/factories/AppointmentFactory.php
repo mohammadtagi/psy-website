@@ -38,7 +38,7 @@ class AppointmentFactory extends Factory
             'duration_minutes' => 45,
             'session_type' => Appointment::SESSION_TYPE_ONLINE,
             'status' => Appointment::STATUS_CONFIRMED,
-            'amount' => 760,
+            'amount' => 760000,
 
             'hold_expires_at' => null,
             'meeting_url' => null,
@@ -100,7 +100,7 @@ class AppointmentFactory extends Factory
                 'starts_at' => $startsAt,
                 'ends_at' => $startsAt->addMinutes($minutes),
                 'duration_minutes' => $minutes,
-                'amount' => $amount ?? ($minutes === 60 ? 950 : 760),
+                'amount' => $amount ?? ($minutes === 60 ? 950000 : 760000),
             ];
         });
     }
