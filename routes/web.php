@@ -4,6 +4,10 @@ use App\Http\Controllers\Auth\OtpLoginController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Psychologist\DashboardController as PsychologistDashboardController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\Psychologist\AvailabilityController;
+use App\Http\Controllers\Client\AppointmentController as ClientAppointmentController;
+use App\Http\Controllers\Psychologist\AppointmentController as PsychologistAppointmentController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [
@@ -64,10 +68,77 @@ Route::middleware(['auth', 'role:admin'])
             ->name('dashboard');
     });
 
+
+Route::get('/booking', [
+    BookingController::class,
+    'index',
+])->name('booking.index');
+
+Route::get('/booking/{date}', [
+    BookingController::class,
+    'show',
+])->where('date', '\d{4}-\d{2}-\d{2}')
+    ->name('booking.show');
+
+Route::post('/booking/{date}', [
+    BookingController::class,
+    'store',
+])->where('date', '\d{4}-\d{2}-\d{2}')
+    ->middleware('auth')
+    ->name('booking.store');
+
+
+
 Route::middleware(['auth', 'role:psychologist'])
     ->prefix('psychologist')
     ->name('psychologist.')
     ->group(function (): void {
         Route::get('/', [PsychologistDashboardController::class, 'index'])
             ->name('dashboard');
+
+        Route::get('/availabilities', [
+            AvailabilityController::class,
+            'index',
+        ])->name('availabilities.index');
+
+        Route::post('/availabilities', [
+            AvailabilityController::class,
+            'store',
+        ])->name('availabilities.store');
+
+        Route::delete('/availabilities/{availability}', [
+            AvailabilityController::class,
+            'destroy',
+        ])->name('availabilities.destroy');
+        Route::get('/appointments', [
+            PsychologistAppointmentController::class,
+            'index',
+        ])->name('appointments.index');
+
+        Route::post('/appointments/{appointment}/cancel', [
+            PsychologistAppointmentController::class,
+            'cancel',
+        ])->name('appointments.cancel');
+
+    });
+
+
+Route::get('/booking/confirmation/{appointment}', [
+    BookingController::class,
+    'confirmation',
+])->middleware('auth')
+    ->name('booking.confirmation');
+Route::middleware('auth')
+    ->prefix('appointments')
+    ->name('client.appointments.')
+    ->group(function (): void {
+        Route::get('/', [
+            ClientAppointmentController::class,
+            'index',
+        ])->name('index');
+
+        Route::post('/{appointment}/cancel', [
+            ClientAppointmentController::class,
+            'cancel',
+        ])->name('cancel');
     });

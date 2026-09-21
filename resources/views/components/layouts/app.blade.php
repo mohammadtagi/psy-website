@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? config('app.name', 'سامانه روانشناسی') }}</title>
+    <title>@yield('title', (isset($title) && is_string($title)) ? $title : config('app.name', 'سامانه روانشناسی'))</title>
 
     <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -32,7 +32,10 @@
 
 <!-- محتوای اصلی صفحات -->
 <main>
-    {{ $slot }}
+    @if(isset($slot) && !is_array($slot))
+        {{ $slot }}
+    @endif
+    @yield('content')
 </main>
 </body>
 </html>
