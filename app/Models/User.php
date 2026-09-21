@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -22,11 +23,15 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'first_name',
+        'last_name',
+        'birth_date',
         'mobile',
         'email',
         'password',
         'role',
     ];
+
 
 
     protected $hidden = [
@@ -63,12 +68,30 @@ class User extends Authenticatable
         );
     }
 
+
+    public function availabilities(): HasMany
+    {
+        return $this->hasMany(Availability::class, 'psychologist_id');
+    }
+
+    public function psychologistAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'psychologist_id');
+    }
+
+    public function clientAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'client_id');
+    }
+
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
+            'birth_date' => 'date',
             'password' => 'hashed',
         ];
     }
+
 
 }
