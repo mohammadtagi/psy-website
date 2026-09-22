@@ -152,11 +152,36 @@ class PaymentController extends Controller
                 )
                 ->with('status', 'این پرداخت قبلاً با موفقیت ثبت شده است.');
         }
+        if ($payment->isFinal()) {
+            return redirect()
+                ->route(
+                    'booking.confirmation',
+                    $payment->appointment,
+                )
+                ->withErrors([
+                    'payment' => 'این تراکنش قبلاً تعیین تکلیف شده است.',
+                ]);
+        }
 
         if ($gatewayStatus !== 'OK') {
-            $payment->status = Payment::STATUS_FAILED;
-            $payment->gateway_message = 'پرداخت توسط کاربر لغو شد.';
-            $payment->save();
+            DB::transaction(function () use ($payment): void {
+                $lockedPayment = Payment::query()
+                    ->whereKey($payment->getKey())
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($lockedPayment->status === Payment::STATUS_PAID) {
+                    return;
+                }
+
+                if ($lockedPayment->isFinal()) {
+                    return;
+                }
+
+                $lockedPayment->status = Payment::STATUS_CANCELLED;
+                $lockedPayment->gateway_message = 'پرداخت توسط کاربر لغو شد.';
+                $lockedPayment->save();
+            }, 3);
 
             return redirect()
                 ->route(
@@ -168,6 +193,7 @@ class PaymentController extends Controller
                 ]);
         }
 
+
         try {
             $result = $this->zarinpal->verify(
                 $payment,
@@ -175,9 +201,23 @@ class PaymentController extends Controller
             );
 
             if (! $result['success']) {
-                $payment->status = Payment::STATUS_FAILED;
-                $payment->gateway_message = $result['message'];
-                $payment->save();
+                DB::transaction(function () use (
+                    $payment,
+                    $result,
+                ): void {
+                    $lockedPayment = Payment::query()
+                        ->whereKey($payment->getKey())
+                        ->lockForUpdate()
+                        ->firstOrFail();
+
+                    if ($lockedPayment->isFinal()) {
+                        return;
+                    }
+
+                    $lockedPayment->status = Payment::STATUS_FAILED;
+                    $lockedPayment->gateway_message = $result['message'];
+                    $lockedPayment->save();
+                }, 3);
 
                 return redirect()
                     ->route(
@@ -189,6 +229,7 @@ class PaymentController extends Controller
                             ?? 'پرداخت تأیید نشد.',
                     ]);
             }
+
 
             DB::transaction(function () use (
                 $payment,

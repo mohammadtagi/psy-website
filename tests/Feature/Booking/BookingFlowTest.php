@@ -48,14 +48,18 @@ class BookingFlowTest extends TestCase
                 'session_type' => Appointment::SESSION_TYPE_ONLINE,
                 'first_name' => 'علی',
                 'last_name' => 'رضایی',
-                'birth_date' => '1375-04-12',
+                'birth_date_jalali' => '1375/04/12',
             ]);
 
         $appointment = Appointment::query()->firstOrFail();
 
         $response
             ->assertRedirect(route('booking.confirmation', $appointment))
-            ->assertSessionHas('status', 'نوبت شما با موفقیت ثبت شد.');
+            ->assertSessionHas(
+                'status',
+                'درخواست نوبت شما به‌صورت موقت ثبت شد. تأیید نهایی نوبت منوط به پرداخت موفق است.'
+            );
+
 
         $this->assertDatabaseHas('appointments', [
             'id' => $appointment->id,
@@ -64,15 +68,12 @@ class BookingFlowTest extends TestCase
             'availability_id' => $availability->id,
             'duration_minutes' => 45,
             'session_type' => Appointment::SESSION_TYPE_ONLINE,
-            'status' => Appointment::STATUS_CONFIRMED,
+            'status' => Appointment::STATUS_PENDING_PAYMENT,
             'amount' => 760000,
-            'hold_expires_at' => null,
         ]);
 
-        $this->assertSame(
-            '1375-04-12',
-            $client->fresh()->birth_date->format('Y-m-d'),
-        );
+        $this->assertSame('1996-07-02', $client->fresh()->birth_date->format('Y-m-d'));
+
     }
 
     public function test_client_can_book_a_60_minute_in_person_appointment(): void
@@ -105,7 +106,7 @@ class BookingFlowTest extends TestCase
                 'session_type' => Appointment::SESSION_TYPE_IN_PERSON,
                 'first_name' => 'مریم',
                 'last_name' => 'احمدی',
-                'birth_date' => '1372-08-20',
+                'birth_date_jalali' => '1372/08/20',
             ]);
 
         $response->assertSessionHasNoErrors();
@@ -115,7 +116,7 @@ class BookingFlowTest extends TestCase
             'psychologist_id' => $psychologist->id,
             'duration_minutes' => 60,
             'session_type' => Appointment::SESSION_TYPE_IN_PERSON,
-            'status' => Appointment::STATUS_CONFIRMED,
+            'status' => Appointment::STATUS_PENDING_PAYMENT,
             'amount' => 950000,
         ]);
     }
@@ -156,7 +157,7 @@ class BookingFlowTest extends TestCase
                 'session_type' => 'online',
                 'first_name' => 'رضا',
                 'last_name' => 'کریمی',
-                'birth_date' => '1378-01-10',
+                'birth_date_jalali' => '1378/01/10',
             ]);
 
         $response->assertSessionHasErrors('starts_at');
@@ -193,7 +194,7 @@ class BookingFlowTest extends TestCase
                 'session_type' => 'online',
                 'first_name' => 'سارا',
                 'last_name' => 'محمدی',
-                'birth_date' => '1379-02-15',
+                'birth_date_jalali' => '1379/02/15',
             ]);
 
         $response->assertSessionHasErrors('starts_at');
@@ -229,7 +230,7 @@ class BookingFlowTest extends TestCase
                 'session_type' => 'online',
                 'first_name' => 'حسن',
                 'last_name' => 'اکبری',
-                'birth_date' => '1370-03-01',
+                'birth_date_jalali' => '1370/03/01',
             ]);
 
         $response->assertSessionHasErrors('starts_at');
@@ -250,7 +251,7 @@ class BookingFlowTest extends TestCase
                 'session_type' => 'online',
                 'first_name' => 'روان',
                 'last_name' => 'شناس',
-                'birth_date' => '1365-01-01',
+                'birth_date_jalali' => '1365/01/01',
             ]);
 
         $response->assertForbidden();

@@ -9,6 +9,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use App\Models\Payment;
+use Illuminate\Support\Collection;
 
 class BookingService
 {
@@ -125,9 +126,6 @@ class BookingService
                     continue;
                 }
 
-                // Continue with the existing overlap check and slot construction.
-
-
                 if ($this->overlapsBookableAppointment(
                     $slotStart,
                     $slotEnd,
@@ -156,9 +154,6 @@ class BookingService
         return $this->uniqueSlots($slots);
     }
 
-    /**
-     * @param array<string, mixed> $data
-     */
     /**
      * @param array<string, mixed> $data
      */
@@ -381,12 +376,12 @@ class BookingService
 
 
     /**
-     * @param \Illuminate\Support\Collection<int, Appointment> $appointments
+     * @param Collection<int, Appointment> $appointments
      */
     private function overlapsBookableAppointment(
         CarbonImmutable $startsAt,
         CarbonImmutable $endsAt,
-                        $appointments,
+        Collection $appointments,
         CarbonImmutable $now,
     ): bool {
         foreach ($appointments as $appointment) {

@@ -103,6 +103,15 @@ Appointment::STATUS_PENDING_PAYMENT =>
                 </div>
             @endif
 
+            @if ($errors->has('payment'))
+                <div
+                    class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-800"
+                    role="alert"
+                >
+                    {{ $errors->first('payment') }}
+                </div>
+            @endif
+
             <div class="space-y-6 p-6">
                 @if ($isPendingPayment)
                     <div
@@ -242,25 +251,18 @@ Appointment::STATUS_PENDING_PAYMENT =>
                         </strong>
                     </div>
 
-                    <p class="mt-3 text-xs leading-6 text-gray-600">
-                        پرداخت آنلاین در حال حاضر فعال نیست.
-                        نمایش مبلغ یا وضعیت نوبت، به‌تنهایی رسید پرداخت محسوب نمی‌شود.
-                    </p>
-
                     @if ($isPendingPayment && $hasActiveHold && ! $hasSessionStarted)
-                        <p class="mt-2 text-xs leading-6 text-amber-800">
-                            در حال تأ امکان تکمیل پرداخت و تأیید این رزرو از طریق سایت وجود ندارد.
+                        <p class="mt-3 text-xs leading-6 text-gray-600">
+                            با انتخاب گزینه پرداخت، به درگاه زرین‌پال منتقل می‌شوید.
+                            تأیید نهایی نوبت پس از پرداخت موفق و تأیید سمت سرور انجام می‌شود.
+                        </p>
+                    @elseif (! $isConfirmed)
+                        <p class="mt-3 text-xs leading-6 text-gray-600">
+                            نمایش مبلغ یا وضعیت نوبت، به‌تنهایی رسید پرداخت محسوب نمی‌شود.
                         </p>
                     @endif
 
-                    @if ($errors->has('payment'))
-                        <div
-                            class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-800"
-                            role="alert"
-                        >
-                            {{ $errors->first('payment') }}
-                        </div>
-                    @endif
+
 
 
                 @if ($isPendingPayment && $hasActiveHold && ! $hasSessionStarted)
