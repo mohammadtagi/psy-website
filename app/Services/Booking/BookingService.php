@@ -49,7 +49,7 @@ class BookingService
         }
 
         $dayStart = $localDate->startOfDay()->utc();
-        $dayEnd = $localDate->endOfDay()->utc();
+        $dayEnd = $localDate->addDay()->startOfDay()->utc();
 
         $availabilities = Availability::query()
             ->where('psychologist_id', $psychologist->getKey())
@@ -63,14 +63,34 @@ class BookingService
             return [];
         }
 
+        $now = CarbonImmutable::now('UTC');
+
         $appointments = Appointment::query()
             ->where('psychologist_id', $psychologist->getKey())
-            ->where('starts_at', '<', $dayEnd)
+            ->where(
+                'starts_at',
+                '<',
+                $dayEnd->addMinutes($durationMinutes),
+            )
             ->where('ends_at', '>', $dayStart)
-            ->bookable()
+            ->where(function ($query) use ($now): void {
+                $query
+                    ->whereIn('status', [
+                        Appointment::STATUS_CONFIRMED,
+                        Appointment::STATUS_COMPLETED,
+                        Appointment::STATUS_NO_SHOW,
+                    ])
+                    ->orWhere(function ($pending) use ($now): void {
+                        $pending
+                            ->where(
+                                'status',
+                                Appointment::STATUS_PENDING_PAYMENT,
+                            )
+                            ->where('hold_expires_at', '>', $now);
+                    });
+            })
             ->get(['starts_at', 'ends_at', 'status', 'hold_expires_at']);
 
-        $now = CarbonImmutable::now('UTC');
         $slots = [];
 
         foreach ($availabilities as $availability) {
@@ -82,22 +102,30 @@ class BookingService
                 $availability->ends_at
             );
 
-            $firstStart = $this->roundUpToHalfHour($availabilityStart);
+            $firstStart = $this->roundUpToHalfHour(
+                $availabilityStart->lt($dayStart)
+                    ? $dayStart
+                    : $availabilityStart,
+            );
 
             for (
                 $slotStart = $firstStart;
-                $slotStart->addMinutes($durationMinutes)->lte($availabilityEnd);
+                $slotStart->lt($dayEnd)
+                && $slotStart->addMinutes($durationMinutes)->lte($availabilityEnd);
                 $slotStart = $slotStart->addMinutes(self::SLOT_INTERVAL_MINUTES)
             ) {
                 $slotEnd = $slotStart->addMinutes($durationMinutes);
 
                 if (
-                    $slotStart->lte(
-                        $now->addMinute(self::MINUTE_BEFORE_START_LIMIT)
+                    $slotStart->lt(
+                        $now->addMinutes(self::MINUTE_BEFORE_START_LIMIT)
                     )
                 ) {
                     continue;
                 }
+
+                // Continue with the existing overlap check and slot construction.
+
 
                 if ($this->overlapsBookableAppointment(
                     $slotStart,
@@ -152,7 +180,11 @@ class BookingService
 
         $now = CarbonImmutable::now('UTC');
 
-        if ($startsAt->lte($now->addMinute())) {
+        if (
+            $startsAt->lt(
+                $now->addMinutes(self::MINUTE_BEFORE_START_LIMIT)
+            )
+        ) {
             throw ValidationException::withMessages([
                 'starts_at' => 'رزرو این زمان امکان‌پذیر نیست.',
             ]);
@@ -301,15 +333,22 @@ class BookingService
     }
 
 
-    private function roundUpToHalfHour(CarbonImmutable $dateTime): CarbonImmutable
-    {
-        $minutes = ((int) $dateTime->format('H')) * 60
-            + (int) $dateTime->format('i');
+    private function roundUpToHalfHour(
+        CarbonImmutable $dateTime,
+    ): CarbonImmutable {
+        $local = $dateTime->setTimezone(self::LOCAL_TIMEZONE);
 
-        $roundedMinutes = (int) (ceil($minutes / 30) * 30);
+        $rounded = $local->startOfHour()->addMinutes(
+            $local->minute >= 30 ? 30 : 0,
+        );
 
-        return $dateTime->startOfDay()->addMinutes($roundedMinutes);
+        if ($rounded->lt($local)) {
+            $rounded = $rounded->addMinutes(self::SLOT_INTERVAL_MINUTES);
+        }
+
+        return $rounded->utc();
     }
+
 
     /**
      * @param \Illuminate\Support\Collection<int, Appointment> $appointments
