@@ -26,7 +26,7 @@
 
             <p class="mt-2 text-sm text-gray-600">
                 {{ $dateObject->locale('fa')->dayName }}
-                {{ $dateObject->format('Y/m/d') }}
+                {{ \App\Support\PersianDate::format($dateObject) }}
                 -
                 جلسه {{ $durationMinutes }} دقیقه‌ای
             </p>
@@ -185,21 +185,40 @@
 
                     <div>
                         <label
-                            for="birth_date"
+                            for="birth_date_jalali"
                             class="mb-2 block text-sm font-medium text-gray-700"
                         >
-                            تاریخ تولد
+                            تاریخ تولد شمسی
                         </label>
 
                         <input
-                            id="birth_date"
-                            name="birth_date"
-                            type="date"
-                            value="{{ old('birth_date', optional(auth()->user()->birth_date)->format('Y-m-d')) }}"
+                            id="birth_date_jalali"
+                            name="birth_date_jalali"
+                            type="text"
+                            dir="ltr"
+                            value="{{ old(
+            'birth_date_jalali',
+            auth()->user()->birth_date
+                ? \App\Support\PersianDate::format(auth()->user()->birth_date)
+                : ''
+        ) }}"
+                            placeholder="۱۳۷۵/۰۶/۱۵"
+                            maxlength="10"
                             required
+                            aria-describedby="birth-date-help"
+                            @error('birth_date_jalali') aria-invalid="true" @enderror
                             class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
+
+                        <p id="birth-date-help" class="mt-2 text-xs text-gray-500">
+                            به ترتیب سال/ماه/روز وارد کنید؛ اعداد فارسی و انگلیسی پذیرفته می‌شوند.
+                        </p>
+
+                        @error('birth_date_jalali')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
+
 
                     <fieldset>
                         <legend class="mb-3 text-sm font-medium text-gray-700">
@@ -255,60 +274,88 @@
     @if ($isAuthenticated && ! empty($slots))
         <script>
             (() => {
-                const slots = @json($slots);
+                const slots = {{ \Illuminate\Support\Js::from($slots) }};
+                const oldSelection = {{ \Illuminate\Support\Js::from([
+                'availability_id' => old('availability_id'),
+                'start_time' => old('start_time'),
+            ]) }};
+
                 const buttons = document.querySelectorAll('.slot-button');
-                const formContainer = document.getElementById(
-                    'booking-form-container'
-                );
-                const availabilityInput = document.getElementById(
-                    'availability_id'
-                );
+                const formContainer = document.getElementById('booking-form-container');
+                const availabilityInput = document.getElementById('availability_id');
                 const startTimeInput = document.getElementById('start_time');
                 const selectedTime = document.getElementById('selected-time');
 
-                buttons.forEach((button) => {
-                    button.addEventListener('click', () => {
-                        const index = Number(button.dataset.slotIndex);
-                        const slot = slots[index];
+                function selectSlot(button, shouldScroll = true) {
+                    const slot = slots[Number(button.dataset.slotIndex)];
 
-                        buttons.forEach((item) => {
-                            item.classList.remove(
-                                'border-indigo-600',
-                                'bg-indigo-50',
-                                'text-indigo-700'
-                            );
+                    if (!slot) {
+                        return;
+                    }
 
-                            item.classList.add(
-                                'border-gray-300',
-                                'bg-white',
-                                'text-gray-800'
-                            );
-                        });
-
-                        button.classList.remove(
-                            'border-gray-300',
-                            'bg-white',
-                            'text-gray-800'
-                        );
-
-                        button.classList.add(
+                    buttons.forEach((item) => {
+                        item.classList.remove(
                             'border-indigo-600',
                             'bg-indigo-50',
                             'text-indigo-700'
                         );
 
-                        availabilityInput.value = slot.availability_id;
-                        startTimeInput.value = slot.start_time;
-                        selectedTime.textContent =
-                            `${slot.start_time} تا ${slot.end_time}`;
+                        item.classList.add(
+                            'border-gray-300',
+                            'bg-white',
+                            'text-gray-800'
+                        );
 
-                        formContainer.classList.remove('hidden');
+                        item.setAttribute('aria-pressed', 'false');
+                    });
+
+                    button.classList.remove(
+                        'border-gray-300',
+                        'bg-white',
+                        'text-gray-800'
+                    );
+
+                    button.classList.add(
+                        'border-indigo-600',
+                        'bg-indigo-50',
+                        'text-indigo-700'
+                    );
+
+                    button.setAttribute('aria-pressed', 'true');
+
+                    availabilityInput.value = slot.availability_id;
+                    startTimeInput.value = slot.start_time;
+                    selectedTime.textContent =
+                        `${slot.start_time} تا ${slot.end_time}`;
+
+                    formContainer.classList.remove('hidden');
+
+                    if (shouldScroll) {
                         formContainer.scrollIntoView({
                             behavior: 'smooth',
                             block: 'start',
                         });
-                    });
+                    }
+                }
+
+                buttons.forEach((button) => {
+                    button.setAttribute('aria-pressed', 'false');
+
+                    button.addEventListener('click', () => selectSlot(button));
                 });
+
+                const previousButton = Array.from(buttons).find((button) => {
+                    const slot = slots[Number(button.dataset.slotIndex)];
+
+                    return slot
+                        && String(slot.availability_id) ===
+                        String(oldSelection.availability_id)
+                        && slot.start_time === oldSelection.start_time;
+                });
+
+                if (previousButton) {
+                    selectSlot(previousButton, false);
+                }
             })();
         </script>
     @endif

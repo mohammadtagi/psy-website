@@ -7,35 +7,82 @@
 
     <title>@yield('title', (isset($title) && is_string($title)) ? $title : config('app.name', 'سامانه روانشناسی'))</title>
 
-    <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="min-h-screen bg-gray-50 font-sans antialiased text-gray-800">
-<!-- نوار بالا (Navbar ساده) -->
-<header class="border-b border-gray-200 bg-white">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <div class="flex items-center gap-4">
-            <span class="text-xl font-bold text-indigo-600">سامانه مدیریت</span>
-        </div>
 
-        <div class="flex items-center gap-3">
-            <span class="text-sm text-gray-600">{{ auth()->user()?->name ?? auth()->user()?->mobile }}</span>
-            <form method="POST" action="{{ route('logout') ?? '#' }}" class="inline">
-                @csrf
-                <button type="submit" class="rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50">
-                    خروج
-                </button>
-            </form>
-        </div>
+    @stack('styles')
+</head>
+
+<body class="min-h-screen bg-gray-50 font-sans antialiased text-gray-800">
+<header class="border-b border-gray-200 bg-white">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <a
+            href="{{ route('home') }}"
+            class="text-lg font-bold text-indigo-600"
+        >
+            کریم محمدزاده
+        </a>
+
+        <nav aria-label="حساب کاربری" class="flex flex-wrap items-center gap-3">
+            @auth
+                @php
+                    $user = auth()->user();
+
+                    $displayName = trim(
+                        ($user->first_name ?? '') . ' ' .
+                        ($user->last_name ?? '')
+                    );
+
+                    $accountRoute = match ($user->role) {
+                        'admin' => 'admin.dashboard',
+                        'psychologist' => 'psychologist.dashboard',
+                        'client' => 'client.appointments.index',
+                        default => null,
+                    };
+                @endphp
+
+                <span class="text-sm text-gray-600">
+                        {{ $displayName !== '' ? $displayName : $user->mobile }}
+                    </span>
+
+                @if ($accountRoute)
+                    <a
+                        href="{{ route($accountRoute) }}"
+                        class="rounded-lg px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
+                    >
+                        {{ $user->role === 'client' ? 'نوبت‌های من' : 'پنل کاربری' }}
+                    </a>
+                @endif
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+
+                    <button
+                        type="submit"
+                        class="rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                    >
+                        خروج
+                    </button>
+                </form>
+            @else
+                <a
+                    href="{{ route('auth.login') }}"
+                    class="rounded-lg px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
+                >
+                    ورود
+                </a>
+            @endauth
+        </nav>
     </div>
 </header>
 
-<!-- محتوای اصلی صفحات -->
-<main>
-    @if(isset($slot) && !is_array($slot))
+<div>
+    @if (isset($slot) && ! is_array($slot))
         {{ $slot }}
     @endif
+
     @yield('content')
-</main>
+</div>
+
+@stack('scripts')
 </body>
 </html>

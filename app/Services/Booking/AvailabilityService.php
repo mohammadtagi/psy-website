@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use App\Support\PersianDate;
 
 class AvailabilityService
 {
@@ -297,14 +298,22 @@ class AvailabilityService
 
     private function throwConflict(CarbonImmutable $startsAt): never
     {
-        $localStart = $startsAt
-            ->setTimezone(self::LOCAL_TIMEZONE)
-            ->format('Y-m-d H:i');
+        $localStart = $startsAt->setTimezone(self::LOCAL_TIMEZONE);
+
+        $formattedDate = PersianDate::format(
+            $localStart,
+            'yyyy/MM/dd',
+        );
 
         throw ValidationException::withMessages([
-            'availability' => "بازه با شروع {$localStart} با برنامه موجود تداخل دارد.",
+            'availability' => sprintf(
+                'بازه با شروع %s ساعت %s با برنامه موجود تداخل دارد.',
+                $formattedDate,
+                $localStart->format('H:i'),
+            ),
         ]);
     }
+
 
     private function minutesFromMidnight(string $time): int
     {

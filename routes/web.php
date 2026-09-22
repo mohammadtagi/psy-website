@@ -8,6 +8,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\Psychologist\AvailabilityController;
 use App\Http\Controllers\Client\AppointmentController as ClientAppointmentController;
 use App\Http\Controllers\Psychologist\AppointmentController as PsychologistAppointmentController;
+use App\Http\Controllers\PaymentController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [
@@ -144,3 +145,17 @@ Route::middleware('auth')
             'cancel',
         ])->name('cancel');
     });
+
+// شروع پرداخت: فقط کاربر لاگین‌شده (کلاینت)
+Route::post('/appointments/{appointment}/payment', [
+    PaymentController::class,
+    'pay',
+])->middleware(['auth', 'role:client'])
+    ->name('payments.pay');
+
+// callback زرین‌پال: عمومی (بدون auth)
+Route::get('/payments/zarinpal/callback', [
+    PaymentController::class,
+    'callback',
+])->name('payments.zarinpal.callback');
+

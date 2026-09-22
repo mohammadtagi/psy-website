@@ -1,51 +1,96 @@
+@php use Carbon\CarbonImmutable; @endphp
+@php use App\Support\PersianDate; @endphp
+@php use App\Models\Appointment; @endphp
 @extends('components.layouts.app')
 
-@section('title', 'تأیید ثبت نوبت')
+@section('title', 'جزئیات نوبت')
 
 @section('content')
     @php
         $timezone = 'Asia/Tehran';
 
-        $startsAt = \Carbon\CarbonImmutable::instance(
+        $startsAt = CarbonImmutable::instance(
             $appointment->starts_at
         )->setTimezone($timezone);
 
-        $endsAt = \Carbon\CarbonImmutable::instance(
+        $endsAt = CarbonImmutable::instance(
             $appointment->ends_at
         )->setTimezone($timezone);
 
         $sessionType = match ($appointment->session_type) {
-            \App\Models\Appointment::SESSION_TYPE_ONLINE => 'آنلاین',
-            \App\Models\Appointment::SESSION_TYPE_IN_PERSON => 'حضوری',
+            Appointment::SESSION_TYPE_ONLINE => 'آنلاین',
+            Appointment::SESSION_TYPE_IN_PERSON => 'حضوری',
             default => 'نامشخص',
         };
 
+        $now = CarbonImmutable::now('UTC');
+
+        $isPendingPayment = $appointment->status
+            === Appointment::STATUS_PENDING_PAYMENT;
+
+        $holdExpiresAt = $appointment->hold_expires_at
+            ? CarbonImmutable::instance(
+                $appointment->hold_expires_at
+            )->setTimezone($timezone)
+            : null;
+
+        $hasActiveHold = $isPendingPayment
+            && $holdExpiresAt !== null
+            && $holdExpiresAt->gt($now);
+
+        $hasExpiredHold = $isPendingPayment && ! $hasActiveHold;
+
+        $hasSessionStarted = $startsAt->lte($now);
+
+
         $statusLabel = match ($appointment->status) {
-            \App\Models\Appointment::STATUS_CONFIRMED => 'تأیید شده',
-            \App\Models\Appointment::STATUS_PENDING_PAYMENT => 'در انتظار پرداخت',
-            \App\Models\Appointment::STATUS_CANCELLED => 'لغو شده',
-            \App\Models\Appointment::STATUS_COMPLETED => 'تکمیل شده',
-            \App\Models\Appointment::STATUS_NO_SHOW => 'عدم حضور',
+            Appointment::STATUS_CONFIRMED => 'تأیید شده',
+Appointment::STATUS_PENDING_PAYMENT =>
+    $hasExpiredHold
+        ? 'مهلت رزرو موقت پایان یافته'
+        : 'در انتظار پرداخت',
+
+            Appointment::STATUS_CANCELLED => 'لغو شده',
+            Appointment::STATUS_COMPLETED => 'تکمیل شده',
+            Appointment::STATUS_NO_SHOW => 'عدم حضور',
             default => $appointment->status,
         };
+
+        $isConfirmed = $appointment->status
+            === Appointment::STATUS_CONFIRMED;
+
+        $statusClasses = match ($appointment->status) {
+            Appointment::STATUS_CONFIRMED =>
+                'bg-green-100 text-green-800',
+
+            Appointment::STATUS_PENDING_PAYMENT =>
+                'bg-amber-100 text-amber-800',
+
+            Appointment::STATUS_CANCELLED =>
+                'bg-red-100 text-red-800',
+
+            default => 'bg-gray-100 text-gray-800',
+        };
+
+        if ($hasExpiredHold) {
+    $statusClasses = 'bg-gray-100 text-gray-800';
+}
+
     @endphp
 
     <main class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         <section class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div class="border-b border-green-200 bg-green-50 px-6 py-8 text-center">
-                <div
-                    class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-xl font-bold text-green-700"
-                    aria-hidden="true"
-                >
-                    ✓
-                </div>
-
-                <h1 class="mt-4 text-2xl font-bold text-green-900">
-                    نوبت شما با موفقیت ثبت شد
+            <div
+                class="border-b px-6 py-8 text-center {{ $isConfirmed
+                    ? 'border-green-200 bg-green-50'
+                    : 'border-gray-200 bg-gray-50' }}"
+            >
+                <h1 class="text-2xl font-bold text-gray-900">
+                    {{ $isConfirmed ? 'نوبت شما تأیید شده است' : 'جزئیات نوبت' }}
                 </h1>
 
-                <p class="mt-2 text-sm text-green-800">
-                    اطلاعات جلسه را در این صفحه مشاهده کنید.
+                <p class="mt-2 text-sm text-gray-700">
+                    وضعیت فعلی نوبت: {{ $statusLabel }}
                 </p>
             </div>
 
@@ -59,6 +104,51 @@
             @endif
 
             <div class="space-y-6 p-6">
+                @if ($isPendingPayment)
+                    <div
+                        class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-7 text-amber-900"
+                        role="status"
+                    >
+                        @if ($hasExpiredHold)
+                            <p class="font-medium">
+                                مهلت رزرو موقت این نوبت پایان یافته است.
+                            </p>
+
+                            <p class="mt-1">
+                                این نوبت تأیید نشده و دیگر زمان جلسه را برای شما نگه نمی‌دارد.
+                                برای رزرو مجدد، زمان‌های موجود را بررسی کنید.
+                            </p>
+                        @elseif ($hasSessionStarted)
+                            <p class="font-medium">
+                                زمان شروع جلسه فرا رسیده و این نوبت تأیید نشده است.
+                            </p>
+
+                            <p class="mt-1">
+                                برای ثبت نوبت جدید، زمان‌های موجود را بررسی کنید.
+                            </p>
+                        @else
+                            <p class="font-medium">
+                                این نوبت به‌صورت موقت ثبت شده و هنوز تأیید نهایی نشده است.
+                            </p>
+
+                            <p class="mt-1">
+                                پایان مهلت نگهداری موقت:
+                                <strong>
+                                    {{ \App\Support\PersianDate::format($holdExpiresAt) }}
+                                    ساعت
+                                    {{ $holdExpiresAt->format('H:i:s') }}
+                                </strong>
+                                به وقت تهران.
+                            </p>
+
+                            <p class="mt-1">
+                                تأیید نهایی به پرداخت موفق و معتبر بودن زمان نوبت وابسته است.
+                                مهلت نگهداری موقت، امکان پرداخت پس از شروع جلسه را تضمین نمی‌کند.
+                            </p>
+                        @endif
+                    </div>
+                @endif
+
                 <div class="flex items-center justify-between border-b border-gray-100 pb-4">
                     <span class="text-sm text-gray-500">
                         کد نوبت
@@ -86,7 +176,9 @@
                             وضعیت
                         </span>
 
-                        <span class="mt-1 inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+                        <span
+                            class="mt-1 inline-flex rounded-full px-3 py-1 text-sm font-medium {{ $statusClasses }}"
+                        >
                             {{ $statusLabel }}
                         </span>
                     </div>
@@ -97,7 +189,7 @@
                         </span>
 
                         <strong class="mt-1 block text-gray-900">
-                            {{ $startsAt->format('Y/m/d') }}
+                            {{ PersianDate::format($startsAt) }}
                         </strong>
 
                         <span class="mt-1 block text-xs text-gray-500">
@@ -150,7 +242,45 @@
                         </strong>
                     </div>
 
-                    @if ($appointment->session_type === \App\Models\Appointment::SESSION_TYPE_ONLINE)
+                    <p class="mt-3 text-xs leading-6 text-gray-600">
+                        پرداخت آنلاین در حال حاضر فعال نیست.
+                        نمایش مبلغ یا وضعیت نوبت، به‌تنهایی رسید پرداخت محسوب نمی‌شود.
+                    </p>
+
+                    @if ($isPendingPayment && $hasActiveHold && ! $hasSessionStarted)
+                        <p class="mt-2 text-xs leading-6 text-amber-800">
+                            در حال تأ امکان تکمیل پرداخت و تأیید این رزرو از طریق سایت وجود ندارد.
+                        </p>
+                    @endif
+
+                    @if ($errors->has('payment'))
+                        <div
+                            class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-800"
+                            role="alert"
+                        >
+                            {{ $errors->first('payment') }}
+                        </div>
+                    @endif
+
+
+                @if ($isPendingPayment && $hasActiveHold && ! $hasSessionStarted)
+                        <form
+                            method="POST"
+                            action="{{ route('payments.pay', $appointment) }}"
+                            class="mt-4"
+                        >
+                            @csrf
+
+                            <button
+                                type="submit"
+                                class="inline-flex min-h-11 items-center justify-center rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            >
+                                پرداخت و تأیید نوبت
+                            </button>
+                        </form>
+                    @endif
+
+                    @if ($appointment->session_type === Appointment::SESSION_TYPE_ONLINE)
                         <p class="mt-3 text-xs leading-6 text-gray-500">
                             لینک جلسه آنلاین، در صورت فعال‌شدن، در اطلاعات نوبت نمایش داده خواهد شد.
                         </p>
@@ -166,10 +296,10 @@
                     </a>
 
                     <a
-                        href="{{ route('home') }}"
+                        href="{{ route('client.appointments.index') }}"
                         class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-700"
                     >
-                        بازگشت به صفحه اصلی
+                        مشاهده نوبت‌های من
                     </a>
                 </div>
             </div>

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Appointment extends Model
 {
@@ -18,6 +20,16 @@ class Appointment extends Model
     public const STATUS_PENDING_PAYMENT = 'pending_payment';
 
     public const STATUS_CONFIRMED = 'confirmed';
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+    public function successfulPayment(): HasOne
+    {
+        return $this->hasOne(Payment::class)
+            ->where('status', Payment::STATUS_PAID)
+            ->latestOfMany();
+    }
 
     public const STATUS_CANCELLED = 'cancelled';
 

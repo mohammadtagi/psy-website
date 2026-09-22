@@ -78,6 +78,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(Appointment::class, 'psychologist_id');
     }
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'client_id');
+    }
+
 
     public function clientAppointments(): HasMany
     {

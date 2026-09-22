@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Validation\ValidationException;
+use App\Support\PersianDate;
 
 class BookingController extends Controller
 {
@@ -24,6 +25,7 @@ class BookingController extends Controller
     public function index(): View
     {
         $psychologist = $this->psychologist();
+        $durationMinutes = $this->requestedDuration();
 
         $today = CarbonImmutable::now(self::TIMEZONE)->startOfDay();
 
@@ -34,18 +36,46 @@ class BookingController extends Controller
             ->orderBy('starts_at')
             ->get();
 
-        $dates = $availabilities
-            ->map(fn (Availability $availability): string => CarbonImmutable::instance(
-                $availability->starts_at
-            )->setTimezone(self::TIMEZONE)->format('Y-m-d'))
-            ->unique()
+        $candidateDates = [];
+
+        foreach ($availabilities as $availability) {
+            $firstDay = CarbonImmutable::instance($availability->starts_at)
+                ->setTimezone(self::TIMEZONE)
+                ->startOfDay();
+
+            $localEnd = CarbonImmutable::instance($availability->ends_at)
+                ->setTimezone(self::TIMEZONE);
+
+            if ($firstDay->lt($today)) {
+                $firstDay = $today;
+            }
+
+            for (
+                $day = $firstDay;
+                $day->lt($localEnd);
+                $day = $day->addDay()
+            ) {
+                $candidateDates[$day->format('Y-m-d')] = true;
+            }
+        }
+
+        $dates = collect(array_keys($candidateDates))
+            ->sort()
+            ->filter(fn (string $date): bool => $this->bookingService
+                    ->availableSlotsForDate(
+                        psychologist: $psychologist,
+                        date: $date,
+                        durationMinutes: $durationMinutes,
+                    ) !== [])
             ->values();
 
         return view('booking.index', [
             'psychologist' => $psychologist,
             'dates' => $dates,
+            'durationMinutes' => $durationMinutes,
         ]);
     }
+
 
     public function show(string $date): View
     {
@@ -115,12 +145,23 @@ class BookingController extends Controller
                 'string',
                 'max:100',
             ],
-            'birth_date' => [
+            'birth_date_jalali' => [
                 'required',
-                'date_format:Y-m-d',
-                'before_or_equal:today',
+                'string',
+                'max:10',
             ],
+
         ]);
+        try {
+            $birthDate = PersianDate::birthDateToGregorian(
+                $validated['birth_date_jalali'],
+            );
+        } catch (\InvalidArgumentException) {
+            throw ValidationException::withMessages([
+                'birth_date_jalali' =>
+                    'تاریخ تولد شمسی معتبر وارد کنید؛ مانند ۱۳۷۵/۰۶/۱۵. تاریخ نباید در آینده باشد.',
+            ]);
+        }
 
         /** @var User $client */
         $client = $request->user();
@@ -128,8 +169,9 @@ class BookingController extends Controller
         $client->update([
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
-            'birth_date' => $validated['birth_date'],
+            'birth_date' => $birthDate,
         ]);
+
 
         $psychologist = $this->psychologist();
 
@@ -158,7 +200,11 @@ class BookingController extends Controller
 
         return redirect()
             ->route('booking.confirmation', $appointment)
-            ->with('status', 'نوبت شما با موفقیت ثبت شد.');
+            ->with(
+                'status',
+                'درخواست نوبت شما به‌صورت موقت ثبت شد. تأیید نهایی نوبت منوط به پرداخت موفق است.',
+            );
+
     }
     public function confirmation(int $appointment): View
     {
@@ -192,11 +238,17 @@ class BookingController extends Controller
 
     private function validateDate(string $date): string
     {
-        $parsed = CarbonImmutable::createFromFormat(
-            '!Y-m-d',
-            $date,
-            self::TIMEZONE,
-        );
+        try {
+            $parsed = CarbonImmutable::createFromFormat(
+                '!Y-m-d',
+                $date,
+                self::TIMEZONE,
+            );
+        } catch (\InvalidArgumentException) {
+            throw ValidationException::withMessages([
+                'date' => 'تاریخ انتخاب‌شده معتبر نیست.',
+            ]);
+        }
 
         if (
             $parsed === false
@@ -209,6 +261,7 @@ class BookingController extends Controller
 
         return $date;
     }
+
 
     private function requestedDuration(): int
     {

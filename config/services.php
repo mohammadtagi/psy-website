@@ -44,6 +44,32 @@ return [
         'max_attempts' => (int) env('OTP_MAX_ATTEMPTS', 5),
         'resend_seconds' => (int) env('OTP_RESEND_SECONDS', 60),
     ],
+    'zarinpal' => [
+        'merchant_id' => env('ZARINPAL_MERCHANT_ID'),
+
+        'sandbox' => (bool) env('ZARINPAL_SANDBOX', true),
+
+        'callback_url' => env(
+            'ZARINPAL_CALLBACK_URL',
+            env('APP_URL').'/payments/zarinpal/callback'
+        ),
+
+        'request_url' => env(
+            'ZARINPAL_REQUEST_URL',
+            'https://sandbox.zarinpal.com/pg/v4/payment/request.json'
+        ),
+
+        'verify_url' => env(
+            'ZARINPAL_VERIFY_URL',
+            'https://sandbox.zarinpal.com/pg/v4/payment/verify.json'
+        ),
+
+        'start_url' => env(
+            'ZARINPAL_START_URL',
+            'https://sandbox.zarinpal.com/pg/StartPay/'
+        ),
+    ],
+
 
     'slack' => [
         'notifications' => [

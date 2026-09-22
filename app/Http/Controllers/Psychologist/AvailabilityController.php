@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use App\Support\PersianDate;
+use InvalidArgumentException;
 
 class AvailabilityController extends Controller
 {
@@ -67,12 +69,13 @@ class AvailabilityController extends Controller
             ],
             'from_date' => [
                 'required',
-                'date_format:Y-m-d',
+                'string',
+                'max:10',
             ],
             'to_date' => [
                 'required',
-                'date_format:Y-m-d',
-                'after_or_equal:from_date',
+                'string',
+                'max:10',
             ],
             'start_time' => [
                 'required',
@@ -92,19 +95,32 @@ class AvailabilityController extends Controller
                 'between:0,6',
             ],
         ]);
+        try {
+            $fromDate = PersianDate::toGregorian($validated['from_date']);
+            $toDate = PersianDate::toGregorian($validated['to_date']);
+        } catch (InvalidArgumentException) {
+            throw ValidationException::withMessages([
+                'from_date' => 'تاریخ واردشده باید به‌صورت شمسی معتبر باشد؛ مانند ۱۴۰۵/۰۷/۰۱.',
+            ]);
+        }
 
+        if ($toDate < $fromDate) {
+            throw ValidationException::withMessages([
+                'to_date' => 'تاریخ پایان باید برابر یا بعد از تاریخ شروع باشد.',
+            ]);
+        }
         if ($validated['mode'] === 'single') {
             $this->availabilityService->createForDate(
                 psychologist: $psychologist,
-                date: $validated['from_date'],
+                date: $fromDate,                        // ✅ میلادی
                 startTime: $validated['start_time'],
                 endTime: $validated['end_time'],
             );
         } else {
             $this->availabilityService->createForDateRange(
                 psychologist: $psychologist,
-                fromDate: $validated['from_date'],
-                toDate: $validated['to_date'],
+                fromDate: $fromDate,                    // ✅ میلادی
+                toDate: $toDate,                        // ✅ میلادی
                 weekdays: array_map(
                     'intval',
                     $validated['weekdays'] ?? [],
@@ -113,6 +129,7 @@ class AvailabilityController extends Controller
                 endTime: $validated['end_time'],
             );
         }
+
 
         return redirect()
             ->route('psychologist.availabilities.index')

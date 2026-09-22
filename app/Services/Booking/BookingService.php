@@ -8,6 +8,7 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+use App\Models\Payment;
 
 class BookingService
 {
@@ -158,6 +159,9 @@ class BookingService
     /**
      * @param array<string, mixed> $data
      */
+    /**
+     * @param array<string, mixed> $data
+     */
     public function book(
         User $client,
         User $psychologist,
@@ -195,7 +199,6 @@ class BookingService
             $psychologist,
             $availabilityId,
             $durationMinutes,
-            $now,
             $startsAt,
             $endsAt,
             $data,
@@ -224,6 +227,19 @@ class BookingService
                 ]);
             }
 
+            // زمان پس از دریافت قفل‌ها دوباره بررسی می‌شود.
+            $now = CarbonImmutable::now('UTC');
+
+            if (
+                $startsAt->lt(
+                    $now->addMinutes(self::MINUTE_BEFORE_START_LIMIT)
+                )
+            ) {
+                throw ValidationException::withMessages([
+                    'starts_at' => 'رزرو این زمان امکان‌پذیر نیست.',
+                ]);
+            }
+
             $availabilityStart = CarbonImmutable::instance(
                 $availability->starts_at
             );
@@ -249,14 +265,12 @@ class BookingService
                     $query
                         ->whereIn('status', [
                             Appointment::STATUS_CONFIRMED,
-                            Appointment::STATUS_COMPLETED,
-                            Appointment::STATUS_NO_SHOW,
                         ])
                         ->orWhere(function ($pending) use ($now): void {
                             $pending
                                 ->where(
                                     'status',
-                                    Appointment::STATUS_PENDING_PAYMENT
+                                    Appointment::STATUS_PENDING_PAYMENT,
                                 )
                                 ->where('hold_expires_at', '>', $now);
                         });
@@ -270,7 +284,15 @@ class BookingService
                 ]);
             }
 
-            return Appointment::query()->create([
+            $holdMinutes = (int) config('payment.hold_minutes', 15);
+
+            if ($holdMinutes < 1) {
+                throw new \LogicException(
+                    'payment.hold_minutes must be a positive integer.'
+                );
+            }
+
+            $appointment = Appointment::query()->create([
                 'psychologist_id' => $lockedPsychologist->getKey(),
                 'client_id' => $client->getKey(),
                 'availability_id' => $availability->getKey(),
@@ -278,11 +300,19 @@ class BookingService
                 'ends_at' => $endsAt,
                 'duration_minutes' => $durationMinutes,
                 'session_type' => $data['session_type'] ?? 'online',
-                'status' => Appointment::STATUS_CONFIRMED,
+                'status' => Appointment::STATUS_PENDING_PAYMENT,
                 'amount' => $this->amountForDuration($durationMinutes),
-                'hold_expires_at' => null,
+                'hold_expires_at' => $now->addMinutes($holdMinutes),
             ]);
 
+            $appointment->payments()->create([
+                'client_id' => $client->getKey(),
+                'amount' => $appointment->amount,
+                'gateway' => Payment::GATEWAY_ZARINPAL,
+                'status' => Payment::STATUS_INITIATED,
+            ]);
+
+            return $appointment;
         }, 3);
     }
 

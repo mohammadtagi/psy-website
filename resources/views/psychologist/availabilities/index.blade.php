@@ -119,8 +119,13 @@
                         <input
                             id="from_date"
                             name="from_date"
-                            type="date"
+                            type="text"
+                            inputmode="numeric"
+                            dir="ltr"
                             value="{{ old('from_date') }}"
+                            placeholder="۱۴۰۵/۰۷/۰۱"
+                            maxlength="10"
+                            pattern="[۰-۹0-9]{4}/[۰-۹0-9]{1,2}/[۰-۹0-9]{1,2}"
                             required
                             class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
@@ -137,8 +142,13 @@
                         <input
                             id="to_date"
                             name="to_date"
-                            type="date"
+                            type="text"
+                            inputmode="numeric"
+                            dir="ltr"
                             value="{{ old('to_date') }}"
+                            placeholder="۱۴۰۵/۰۷/۳۰"
+                            maxlength="10"
+                            pattern="[۰-۹0-9]{4}/[۰-۹0-9]{1,2}/[۰-۹0-9]{1,2}"
                             class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
                     </div>
@@ -263,8 +273,12 @@
                             <div>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <h3 class="font-medium text-gray-900">
-                                        {{ $startsAt->format('Y/m/d') }}
+                                        {{ \App\Support\PersianDate::format($startsAt) }}
                                     </h3>
+
+                                    <span class="text-sm text-gray-500">
+                                        {{ \App\Support\PersianDate::format($startsAt, 'EEEE') }}
+                                    </span>
 
                                     <span class="text-gray-400">|</span>
 
@@ -330,6 +344,7 @@
         (() => {
             const form = document.getElementById('availability-form');
             const modeInputs = form.querySelectorAll('input[name="mode"]');
+            const fromDateInput = document.getElementById('from_date');
             const toDateField = document.getElementById('to-date-field');
             const toDateInput = document.getElementById('to_date');
             const weekdaysField = document.getElementById('weekdays-field');
@@ -349,10 +364,24 @@
 
                 toDateInput.required = recurring;
 
+                if (!recurring) {
+                    toDateInput.value = fromDateInput.value;
+                }
+
                 weekdayInputs.forEach((input) => {
                     input.required = false;
                 });
             };
+
+            fromDateInput.addEventListener('input', () => {
+                const mode = form.querySelector(
+                    'input[name="mode"]:checked'
+                )?.value;
+
+                if (mode !== 'recurring') {
+                    toDateInput.value = fromDateInput.value;
+                }
+            });
 
             modeInputs.forEach((input) => {
                 input.addEventListener('change', updateMode);

@@ -66,7 +66,7 @@
                                 <div>
                                     <span class="block text-xs text-gray-500">تاریخ</span>
                                     <strong class="mt-1 block text-sm text-gray-900">
-                                        {{ $startsAt->format('Y/m/d') }}
+                                        {{ \App\Support\PersianDate::format($startsAt, 'yyyy/MM/dd') }}
                                     </strong>
                                 </div>
 
@@ -122,12 +122,22 @@
                         </div>
 
                         @if ($appointment->status === \App\Models\Appointment::STATUS_CANCELLED)
+                            @php
+                                $cancelledAt = optional($appointment->cancelled_at)
+                                    ->setTimezone('Asia/Tehran');
+                            @endphp
+
                             <p class="mt-4 border-t border-gray-100 pt-4 text-xs text-gray-500">
                                 این نوبت در
-                                {{ optional($appointment->cancelled_at)->setTimezone('Asia/Tehran')->format('Y/m/d H:i') }}
+                                {{ $cancelledAt
+                                    ? \App\Support\PersianDate::format($cancelledAt, 'yyyy/MM/dd')
+                                      . ' ' . $cancelledAt->format('H:i')
+                                    : '---'
+                                }}
                                 لغو شده است.
                             </p>
                         @endif
+
                     </article>
                 @endforeach
             </div>

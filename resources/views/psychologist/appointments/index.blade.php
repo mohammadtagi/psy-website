@@ -64,7 +64,7 @@
                         </td>
 
                         <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-700">
-                            {{ $startsAt->format('Y/m/d') }}
+                            {{ \App\Support\PersianDate::format($startsAt, 'yyyy/MM/dd') }}
                             <br>
                             <span class="text-xs text-gray-500">
                                     {{ $startsAt->format('H:i') }}
