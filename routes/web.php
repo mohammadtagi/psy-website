@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\OtpLoginController;
+use App\Http\Controllers\Psychologist\ClientController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Psychologist\DashboardController as PsychologistDashboardController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Psychologist\AvailabilityController;
 use App\Http\Controllers\Client\AppointmentController as ClientAppointmentController;
 use App\Http\Controllers\Psychologist\AppointmentController as PsychologistAppointmentController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Client\ProfileController as ClientProfileController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [
@@ -123,6 +125,12 @@ Route::middleware(['auth', 'role:psychologist'])
             'cancel',
         ])->name('appointments.cancel');
 
+        Route::get('/clients', [ClientController::class, 'index'])
+            ->name('clients.index');
+
+        Route::post('/clients', [ClientController::class, 'store'])
+            ->name('clients.store');
+
     });
 
 
@@ -131,6 +139,12 @@ Route::get('/booking/confirmation/{appointment}', [
     'confirmation',
 ])->middleware('auth')
     ->name('booking.confirmation');
+
+
+    Route::middleware(['auth', 'role:client'])
+        ->get('/profile', [ClientProfileController::class, 'show'])
+       ->name('client.profile');
+
 Route::middleware(['auth', 'role:client'])
     ->prefix('appointments')
     ->name('client.appointments.')

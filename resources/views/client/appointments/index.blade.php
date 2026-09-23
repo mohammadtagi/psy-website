@@ -200,19 +200,41 @@
 
                         @if ($appointment->status === \App\Models\Appointment::STATUS_CANCELLED)
                             @php
-                                $cancelledAt = optional($appointment->cancelled_at)
-                                    ->setTimezone('Asia/Tehran');
+                                $cancelledAt = $appointment->cancelled_at
+                                    ? $appointment->cancelled_at->copy()->setTimezone('Asia/Tehran')
+                                    : null;
+
+                                $cancelledByPsychologist = $appointment->cancelled_by !== null
+                                    && (int) $appointment->cancelled_by === (int) $appointment->psychologist_id;
                             @endphp
 
-                            <p class="mt-4 border-t border-gray-100 pt-4 text-xs text-gray-500">
-                                این نوبت در
-                                {{ $cancelledAt
-                                    ? \App\Support\PersianDate::format($cancelledAt, 'yyyy/MM/dd')
-                                      . ' ' . $cancelledAt->format('H:i')
-                                    : '---'
-                                }}
-                                لغو شده است.
-                            </p>
+                            <div class="mt-4 border-t border-gray-100 pt-4">
+                                <p class="text-xs text-gray-500">
+                                    این نوبت
+                                    @if ($cancelledAt)
+                                        در
+                                        {{ \App\Support\PersianDate::format($cancelledAt, 'yyyy/MM/dd') }}
+                                        ساعت
+                                        {{ $cancelledAt->format('H:i') }}
+                                    @endif
+
+                                    @if ($cancelledByPsychologist)
+                                        توسط روان‌شناس
+                                    @endif
+
+                                    لغو شده است.
+                                </p>
+
+                                @if (filled($appointment->cancellation_reason))
+                                    <div class="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                                        <p class="text-sm font-semibold text-red-900">
+                                            دلیل لغو نوبت
+                                        </p>
+
+                                        <p class="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-red-800">{{ $appointment->cancellation_reason }}</p>
+                                    </div>
+                                @endif
+                            </div>
                         @endif
                     </article>
                 @endforeach

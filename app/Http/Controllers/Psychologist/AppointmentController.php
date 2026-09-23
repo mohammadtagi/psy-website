@@ -71,7 +71,7 @@ class AppointmentController extends Controller
             'cancellation_reason' => [
                 'nullable',
                 'string',
-                'max:500',
+                'max:255',
             ],
         ]);
 
