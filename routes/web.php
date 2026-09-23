@@ -131,7 +131,7 @@ Route::get('/booking/confirmation/{appointment}', [
     'confirmation',
 ])->middleware('auth')
     ->name('booking.confirmation');
-Route::middleware('auth')
+Route::middleware(['auth', 'role:client'])
     ->prefix('appointments')
     ->name('client.appointments.')
     ->group(function (): void {

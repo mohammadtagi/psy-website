@@ -26,6 +26,22 @@ class AppointmentController extends Controller
             ->where('psychologist_id', $psychologist->getKey())
             ->with([
                 'client:id,first_name,last_name,mobile,birth_date',
+                'payments' => function ($query): void {
+                    $query
+                        ->select([
+                            'id',
+                            'appointment_id',
+                            'client_id',
+                            'amount',
+                            'status',
+                            'gateway',
+                            'authority',
+                            'ref_id',
+                            'gateway_message',
+                            'paid_at',
+                        ])
+                        ->latest('id');
+                },
             ])
             ->orderBy('starts_at')
             ->paginate(30)

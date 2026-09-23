@@ -8,6 +8,9 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use App\Models\Payment;
+
+
 class AppointmentCancellationTest extends TestCase
 {
     use RefreshDatabase;
@@ -17,6 +20,110 @@ class AppointmentCancellationTest extends TestCase
         CarbonImmutable::setTestNow();
         parent::tearDown();
     }
+
+    public function test_cancelling_appointment_does_not_change_paid_payment(): void
+    {
+        $now = CarbonImmutable::parse('2026-09-22 09:00:00', 'UTC');
+        CarbonImmutable::setTestNow($now);
+
+        $client = User::factory()->client()->create();
+        $psychologist = User::factory()->psychologist()->create();
+
+        $startsAt = $now->addHours(13);
+
+        $availability = Availability::factory()
+            ->forPsychologist($psychologist)
+            ->from($startsAt)
+            ->create();
+
+        $appointment = Appointment::factory()
+            ->forClient($client)
+            ->forPsychologist($psychologist)
+            ->usingAvailability($availability)
+            ->at($startsAt)
+            ->create([
+                'status' => Appointment::STATUS_CONFIRMED,
+            ]);
+
+        $payment = Payment::factory()->create([
+            'appointment_id' => $appointment->id,
+            'client_id' => $client->id,
+            'status' => Payment::STATUS_PAID,
+        ]);
+
+        $this
+            ->actingAs($psychologist)
+            ->post(route(
+                'psychologist.appointments.cancel',
+                $appointment,
+            ));
+
+        $this->assertDatabaseHas('payments', [
+            'id' => $payment->id,
+            'status' => Payment::STATUS_PAID,
+        ]);
+    }
+
+    public function test_psychologist_cancelling_appointment_cancels_active_payments(): void
+    {
+        $now = CarbonImmutable::parse('2026-09-22 09:00:00', 'UTC');
+        CarbonImmutable::setTestNow($now);
+
+        $client = User::factory()->client()->create();
+        $psychologist = User::factory()->psychologist()->create();
+
+        $startsAt = $now->addHours(2);
+
+        $availability = Availability::factory()
+            ->forPsychologist($psychologist)
+            ->from($startsAt)
+            ->create();
+
+        $appointment = Appointment::factory()
+            ->forClient($client)
+            ->forPsychologist($psychologist)
+            ->usingAvailability($availability)
+            ->at($startsAt)
+            ->create([
+                'status' => Appointment::STATUS_PENDING_PAYMENT,
+            ]);
+
+        $activePayment = Payment::factory()->create([
+            'appointment_id' => $appointment->id,
+            'client_id' => $client->id,
+            'status' => Payment::STATUS_PENDING,
+        ]);
+
+        $initiatedPayment = Payment::factory()->create([
+            'appointment_id' => $appointment->id,
+            'client_id' => $client->id,
+            'status' => Payment::STATUS_INITIATED,
+        ]);
+
+        $response = $this
+            ->actingAs($psychologist)
+            ->post(route(
+                'psychologist.appointments.cancel',
+                $appointment,
+            ), [
+                'cancellation_reason' => 'لغو به درخواست روان‌شناس',
+            ]);
+
+        $response
+            ->assertRedirect(route('psychologist.appointments.index'))
+            ->assertSessionHas('status', 'نوبت با موفقیت لغو شد.');
+
+        $this->assertDatabaseHas('payments', [
+            'id' => $activePayment->id,
+            'status' => Payment::STATUS_CANCELLED,
+        ]);
+
+        $this->assertDatabaseHas('payments', [
+            'id' => $initiatedPayment->id,
+            'status' => Payment::STATUS_CANCELLED,
+        ]);
+    }
+
     public function test_client_can_cancel_exactly_at_the_twelve_hour_boundary(): void
     {
         $now = CarbonImmutable::parse('2026-09-22 09:00:00', 'UTC');

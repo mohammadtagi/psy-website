@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
+use App\Models\Payment;
 
 class AppointmentService
 {
@@ -42,9 +43,21 @@ class AppointmentService
                 'hold_expires_at' => null,
             ]);
 
+            Payment::query()
+                ->where('appointment_id', $lockedAppointment->getKey())
+                ->whereIn('status', [
+                    Payment::STATUS_INITIATED,
+                    Payment::STATUS_PENDING,
+                ])
+                ->update([
+                    'status' => Payment::STATUS_CANCELLED,
+                    'gateway_message' => 'پرداخت به دلیل لغو نوبت لغو شد.',
+                ]);
+
             return $lockedAppointment->refresh();
         }, 3);
     }
+
 
     private function ensureCanCancel(
         Appointment $appointment,

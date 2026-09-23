@@ -39,6 +39,18 @@
                     @php
                         $startsAt = $appointment->starts_at->setTimezone('Asia/Tehran');
                         $endsAt = $appointment->ends_at->setTimezone('Asia/Tehran');
+                        $now = now('Asia/Tehran');
+
+                        $isPendingPayment =
+                            $appointment->status === \App\Models\Appointment::STATUS_PENDING_PAYMENT;
+
+                        $holdExpired = $isPendingPayment
+                            && (
+                                $appointment->hold_expires_at === null
+                                || $appointment->hold_expires_at
+                                    ->setTimezone('Asia/Tehran')
+                                    ->lessThanOrEqualTo($now)
+                            );
 
                         $isActive = in_array($appointment->status, [
                             \App\Models\Appointment::STATUS_CONFIRMED,
@@ -46,15 +58,41 @@
                         ], true);
 
                         $canCancel = $isActive
-                            && $startsAt->greaterThanOrEqualTo(
-                                now('Asia/Tehran')->addHours(12)
-                            );
+                            && $startsAt->greaterThanOrEqualTo($now->copy()->addHours(12));
 
+                        $latestPayment = $appointment->payments->first();
+
+                        $canPay = $isPendingPayment
+                            && ! $holdExpired
+                            && $latestPayment
+                            && $latestPayment->isPending();
+
+                        $statusLabel = match ($appointment->status) {
+                            \App\Models\Appointment::STATUS_CONFIRMED => 'تأیید شده',
+                            \App\Models\Appointment::STATUS_PENDING_PAYMENT => $holdExpired
+                                ? 'مهلت پرداخت تمام شده'
+                                : 'در انتظار پرداخت',
+                            \App\Models\Appointment::STATUS_CANCELLED => 'لغو شده',
+                            \App\Models\Appointment::STATUS_COMPLETED => 'تکمیل شده',
+                            \App\Models\Appointment::STATUS_NO_SHOW => 'عدم حضور',
+                            default => $appointment->status,
+                        };
+
+                        $paymentStatusLabel = $latestPayment?->status
+                            ? match ($latestPayment->status) {
+                                \App\Models\Payment::STATUS_INITIATED => 'شروع نشده',
+                                \App\Models\Payment::STATUS_PENDING => 'در حال پرداخت',
+                                \App\Models\Payment::STATUS_PAID => 'پرداخت موفق',
+                                \App\Models\Payment::STATUS_FAILED => 'ناموفق',
+                                \App\Models\Payment::STATUS_CANCELLED => 'لغو شده',
+                                default => $latestPayment->status,
+                            }
+                            : 'ثبت نشده';
                     @endphp
 
                     <article class="border border-gray-200 bg-white p-5 shadow-sm">
                         <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                            <div class="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            <div class="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
                                 <div>
                                     <span class="block text-xs text-gray-500">روان‌شناس</span>
                                     <strong class="mt-1 block text-sm text-gray-900">
@@ -80,45 +118,84 @@
                                 </div>
 
                                 <div>
-                                    <span class="block text-xs text-gray-500">وضعیت</span>
+                                    <span class="block text-xs text-gray-500">وضعیت نوبت</span>
+
                                     <strong class="mt-1 block text-sm text-gray-900">
-                                        @switch($appointment->status)
-                                            @case(\App\Models\Appointment::STATUS_CONFIRMED)
-                                                تأیید شده
-                                                @break
-                                            @case(\App\Models\Appointment::STATUS_PENDING_PAYMENT)
-                                                در انتظار پرداخت
-                                                @break
-                                            @case(\App\Models\Appointment::STATUS_CANCELLED)
-                                                لغو شده
-                                                @break
-                                            @case(\App\Models\Appointment::STATUS_COMPLETED)
-                                                تکمیل شده
-                                                @break
-                                            @default
-                                                {{ $appointment->status }}
-                                        @endswitch
+                                        {{ $statusLabel }}
                                     </strong>
                                 </div>
+
+                                <div>
+                                    <span class="block text-xs text-gray-500">وضعیت پرداخت</span>
+
+                                    <strong class="mt-1 block text-sm text-gray-900">
+                                        {{ $paymentStatusLabel }}
+                                    </strong>
+                                </div>
+
+
+                                <div>
+                                    <span class="block text-xs text-gray-500">مبلغ</span>
+
+                                    <strong class="mt-1 block text-sm text-gray-900">
+                                        {{ number_format($appointment->amount) }}
+                                        تومان
+                                    </strong>
+                                </div>
+
+                            </div>
+                            <div class="flex shrink-0 flex-wrap gap-2">
+
+                                @if ($canPay)
+                                    <form
+                                        method="POST"
+                                        action="{{ route('payments.pay', $appointment) }}"
+                                        class="shrink-0"
+                                    >
+                                        @csrf
+
+                                        <button
+                                            type="submit"
+                                            class="inline-flex min-h-10 items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                                        >
+                                            پرداخت نوبت
+                                        </button>
+                                    </form>
+                                @endif
+
+                                @if (
+                                    $appointment->status === \App\Models\Appointment::STATUS_CONFIRMED
+                                    && filled($appointment->meeting_url)
+                                )
+                                    <a
+                                        href="{{ $appointment->meeting_url }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="inline-flex min-h-10 items-center rounded-lg border border-indigo-300 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
+                                    >
+                                        ورود به جلسه
+                                    </a>
+                                @endif
+
+                                @if ($canCancel)
+                                    <form
+                                        method="POST"
+                                        action="{{ route('client.appointments.cancel', $appointment) }}"
+                                        class="shrink-0"
+                                        onsubmit="return confirm('آیا از لغو این نوبت مطمئن هستید؟')"
+                                    >
+                                        @csrf
+
+                                        <button
+                                            type="submit"
+                                            class="inline-flex min-h-10 items-center rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+                                        >
+                                            لغو نوبت
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
 
-                            @if ($canCancel)
-                                <form
-                                    method="POST"
-                                    action="{{ route('client.appointments.cancel', $appointment) }}"
-                                    class="shrink-0"
-                                    onsubmit="return confirm('آیا از لغو این نوبت مطمئن هستید؟')"
-                                >
-                                    @csrf
-
-                                    <button
-                                        type="submit"
-                                        class="inline-flex min-h-10 items-center rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
-                                    >
-                                        لغو نوبت
-                                    </button>
-                                </form>
-                            @endif
                         </div>
 
                         @if ($appointment->status === \App\Models\Appointment::STATUS_CANCELLED)
@@ -137,7 +214,6 @@
                                 لغو شده است.
                             </p>
                         @endif
-
                     </article>
                 @endforeach
             </div>

@@ -24,9 +24,10 @@ class PaymentController extends Controller
         Appointment $appointment,
     ): RedirectResponse {
         abort_unless(
-            $appointment->client_id === $request->user()->getKey(),
+            (int) $appointment->client_id === (int) $request->user()->getKey(),
             403,
         );
+
 
         try {
             $authority = DB::transaction(function () use (
@@ -101,7 +102,6 @@ class PaymentController extends Controller
 
                 return $authority;
             }, 3);
-
             return redirect()->away(
                 $this->zarinpal->startUrl($authority)
             );

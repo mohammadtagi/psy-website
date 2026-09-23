@@ -16,7 +16,6 @@ class AppointmentController extends Controller
         private readonly AppointmentService $appointmentService,
     ) {
     }
-
     public function index(Request $request): View
     {
         /** @var User $client */
@@ -26,6 +25,19 @@ class AppointmentController extends Controller
             ->where('client_id', $client->getKey())
             ->with([
                 'psychologist:id,first_name,last_name',
+                'payments' => function ($query): void {
+                    $query
+                        ->select([
+                            'id',
+                            'appointment_id',
+                            'client_id',
+                            'amount',
+                            'status',
+                            'gateway_message',
+                            'paid_at',
+                        ])
+                        ->latest('id');
+                },
             ])
             ->orderByDesc('starts_at')
             ->paginate(20)
