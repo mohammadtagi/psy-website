@@ -103,7 +103,25 @@
                                     </div>
                                 </dl>
 
-                                {{-- گام بعد: افزودن عملیات انتخاب مراجع برای ایجاد پرونده بالینی --}}
+                                <div class="mt-5 flex flex-wrap gap-3 border-t border-gray-100 pt-4">
+                                    @if ($client->clinicalRecord)
+                                        <a
+                                            href="{{ route('psychologist.clinical-records.show', $client) }}"
+                                            class="border border-indigo-700 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
+                                        >
+                                            مشاهده پرونده
+                                        </a>
+                                    @else
+                                        <a
+                                            href="{{ route('psychologist.clinical-records.create', $client) }}"
+                                            class="border border-indigo-700 bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800"
+                                        >
+                                            ایجاد پرونده
+                                        </a>
+                                    @endif
+                                </div>
+
+
                             </article>
                         @endforeach
                     </div>

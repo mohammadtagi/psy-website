@@ -171,4 +171,57 @@ final class PersianDate
 
         return $date->format('Y-m-d');
     }
+
+    public static function toGregorianDateTime(string $input): string
+    {
+        $normalized = strtr(trim($input), [
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3',
+            '۴' => '4', '۵' => '5', '۶' => '6', '۷' => '7',
+            '۸' => '8', '۹' => '9',
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3',
+            '٤' => '4', '٥' => '5', '٦' => '6', '٧' => '7',
+            '٨' => '8', '٩' => '9',
+        ]);
+
+        if (! preg_match(
+            '/\A([0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2})\s+([0-9]{1,2}):([0-9]{2})\z/',
+            $normalized,
+            $matches,
+        )) {
+            throw new InvalidArgumentException(
+                'تاریخ و زمان باید به شکل ۱۴۰۵/۰۷/۰۲ ۱۴:۳۰ وارد شود.',
+            );
+        }
+
+        $hour = (int) $matches[2];
+        $minute = (int) $matches[3];
+
+        if ($hour > 23 || $minute > 59) {
+            throw new InvalidArgumentException('زمان واردشده معتبر نیست.');
+        }
+
+        $gregorianDate = self::toGregorian($matches[1]);
+
+        $dateTime = CarbonImmutable::createFromFormat(
+            '!Y-m-d H:i',
+            "{$gregorianDate} {$hour}:{$minute}",
+            self::TIMEZONE,
+        );
+
+        if ($dateTime === false) {
+            throw new InvalidArgumentException(
+                'تاریخ و زمان واردشده معتبر نیست.',
+            );
+        }
+
+        /*
+         * مقدار UTC ذخیره می‌شود تا هنگام نمایش در Asia/Tehran
+         * دوباره دقیقاً به ساعت واردشده توسط کاربر تبدیل شود.
+         */
+        return $dateTime
+            ->utc()
+            ->format('Y-m-d H:i:s');
+    }
+
+
 }

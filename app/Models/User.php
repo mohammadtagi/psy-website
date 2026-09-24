@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\ClinicalRecord;
 
 class User extends Authenticatable
 {
@@ -41,6 +43,10 @@ class User extends Authenticatable
     public const ROLE_CLIENT = 'client';
 
     public const ROLE_PSYCHOLOGIST = 'psychologist';
+    public function clinicalRecord(): HasOne
+    {
+        return $this->hasOne(ClinicalRecord::class, 'client_id');
+    }
 
     public const ROLE_ADMIN = 'admin';
 

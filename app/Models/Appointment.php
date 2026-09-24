@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\ClinicalNote;
 
 class Appointment extends Model
 {
@@ -79,6 +80,14 @@ class Appointment extends Model
     public function availability(): BelongsTo
     {
         return $this->belongsTo(Availability::class);
+    }
+
+    public function clinicalNote(): HasOne
+
+    {
+
+        return $this->hasOne(ClinicalNote::class);
+
     }
 
     public function cancelledBy(): BelongsTo

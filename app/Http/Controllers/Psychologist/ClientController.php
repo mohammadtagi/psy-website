@@ -43,11 +43,13 @@ class ClientController extends Controller
             }
 
             $clients = $clientsQuery
+                ->with('clinicalRecord:id,client_id,status')
                 ->orderBy('first_name')
                 ->orderBy('last_name')
                 ->orderBy('mobile')
                 ->limit(50)
                 ->get();
+
         }
 
         $canCreateClient = $this->isCompleteMobileNumber($query);

@@ -11,6 +11,8 @@ use App\Http\Controllers\Client\AppointmentController as ClientAppointmentContro
 use App\Http\Controllers\Psychologist\AppointmentController as PsychologistAppointmentController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Client\ProfileController as ClientProfileController;
+use App\Http\Controllers\Psychologist\ClinicalRecordController;
+use App\Http\Controllers\Psychologist\ClinicalNoteController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [
@@ -130,6 +132,55 @@ Route::middleware(['auth', 'role:psychologist'])
 
         Route::post('/clients', [ClientController::class, 'store'])
             ->name('clients.store');
+
+        Route::get('/clients/{client}/clinical-record', [
+            ClinicalRecordController::class,
+            'show',
+        ])->name('clinical-records.show');
+
+        Route::get('/clients/{client}/clinical-record/create', [
+            ClinicalRecordController::class,
+            'create',
+        ])->name('clinical-records.create');
+
+        Route::post('/clients/{client}/clinical-record', [
+            ClinicalRecordController::class,
+            'store',
+        ])->name('clinical-records.store');
+
+        Route::get('/clinical-records/{clinicalRecord}/edit', [
+            ClinicalRecordController::class,
+            'edit',
+        ])->name('clinical-records.edit');
+
+        Route::put('/clinical-records/{clinicalRecord}', [
+            ClinicalRecordController::class,
+            'update',
+        ])->name('clinical-records.update');
+        Route::get('/clinical-records/{clinicalRecord}/notes/create', [
+            ClinicalNoteController::class,
+            'create',
+        ])->name('clinical-notes.create');
+
+        Route::post('/clinical-records/{clinicalRecord}/notes', [
+            ClinicalNoteController::class,
+            'store',
+        ])->name('clinical-notes.store');
+
+        Route::get('/clinical-notes/{clinicalNote}/edit', [
+            ClinicalNoteController::class,
+            'edit',
+        ])->name('clinical-notes.edit');
+
+        Route::put('/clinical-notes/{clinicalNote}', [
+            ClinicalNoteController::class,
+            'update',
+        ])->name('clinical-notes.update');
+
+        Route::delete('/clinical-notes/{clinicalNote}', [
+            ClinicalNoteController::class,
+            'destroy',
+        ])->name('clinical-notes.destroy');
 
     });
 
