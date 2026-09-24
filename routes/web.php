@@ -13,6 +13,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Client\ProfileController as ClientProfileController;
 use App\Http\Controllers\Psychologist\ClinicalRecordController;
 use App\Http\Controllers\Psychologist\ClinicalNoteController;
+use App\Http\Controllers\Psychologist\ClinicalAttachmentController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [
@@ -182,6 +183,27 @@ Route::middleware(['auth', 'role:psychologist'])
             'destroy',
         ])->name('clinical-notes.destroy');
 
+
+        //attachments
+        Route::get('/clinical-records/{clinicalRecord}/attachments', [
+            ClinicalAttachmentController::class,
+            'index',
+        ])->name('clinical-attachments.index');
+
+        Route::post('/clinical-records/{clinicalRecord}/attachments', [
+            ClinicalAttachmentController::class,
+            'store'
+        ])->name('clinical-attachments.store');
+
+        Route::get('/clinical-attachments/{clinicalAttachment}/download', [
+            ClinicalAttachmentController::class,
+            'download'
+        ])->name('clinical-attachments.download');
+
+        Route::delete('/clinical-attachments/{clinicalAttachment}', [
+            ClinicalAttachmentController::class,
+            'destroy'
+        ])->name('clinical-attachments.destroy');
     });
 
 

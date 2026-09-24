@@ -45,13 +45,6 @@ class ClinicalRecord extends Model
         'closed_at',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'closed_at' => 'datetime',
-        ];
-    }
-
     public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_id');
@@ -82,5 +75,12 @@ class ClinicalRecord extends Model
     public function isClosed(): bool
     {
         return $this->status === self::STATUS_CLOSED;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'closed_at' => 'datetime',
+        ];
     }
 }

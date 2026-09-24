@@ -171,17 +171,70 @@
 
 
             <section class="border border-gray-200 bg-white p-5 md:col-span-2">
-                <h2 class="text-lg font-semibold text-gray-900">مدارک و ضمائم</h2>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            مدارک و ضمائم
+                        </h2>
 
-                <p class="mt-4 text-sm text-gray-600">
-                    تعداد ضمائم:
-                    {{ $record->attachments->count() }}
-                </p>
+                        <p class="mt-2 text-sm text-gray-600">
+                            تعداد ضمائم:
+                            {{ $record->attachments->count() }}
+                        </p>
+                    </div>
 
-                <p class="mt-2 text-sm text-gray-500">
-                    آپلود و دانلود امن ضمائم در گام بعدی اضافه می‌شود.
-                </p>
+                    <a
+                        href="{{ route('psychologist.clinical-attachments.index', [
+                'clinicalRecord' => $record,
+            ]) }}"
+                        class="border border-indigo-700 bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800"
+                    >
+                        مدیریت ضمائم
+                    </a>
+                </div>
+
+                @if ($record->attachments->isEmpty())
+                    <p class="mt-5 text-sm text-gray-500">
+                        هنوز ضمیمه‌ای برای این پرونده ثبت نشده است.
+                    </p>
+                @else
+                    <div class="mt-5 space-y-3">
+                        @foreach ($record->attachments->take(3) as $attachment)
+                            <div class="flex flex-wrap items-center justify-between gap-3 border border-gray-200 p-3">
+                                <div class="min-w-0">
+                                    <p class="break-all text-sm font-medium text-gray-900">
+                                        {{ $attachment->original_name }}
+                                    </p>
+
+                                    @if ($attachment->document_date)
+                                        <p class="mt-1 text-xs text-gray-500">
+                                            تاریخ مدرک:
+                                            {{ \App\Support\PersianDate::format($attachment->document_date, 'yyyy/MM/dd') }}
+                                        </p>
+                                    @endif
+                                </div>
+
+                                <a
+                                    href="{{ route('psychologist.clinical-attachments.download', [
+                            'clinicalAttachment' => $attachment,
+                        ]) }}"
+                                    class="text-sm text-indigo-700 hover:underline"
+                                >
+                                    دریافت فایل
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if ($record->attachments->count() > 3)
+                        <p class="mt-4 text-sm text-gray-500">
+                            {{ $record->attachments->count() - 3 }}
+                            ضمیمهٔ دیگر نیز وجود دارد.
+                        </p>
+                    @endif
+                @endif
             </section>
+
         </div>
     </div>
 </x-layouts.app>
