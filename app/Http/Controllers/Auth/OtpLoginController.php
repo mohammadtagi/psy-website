@@ -185,7 +185,7 @@ class OtpLoginController extends Controller
         return match ($user->role) {
             User::ROLE_ADMIN => redirect()->route('admin.dashboard'),
             User::ROLE_PSYCHOLOGIST => redirect()->route('psychologist.dashboard'),
-            default => redirect('/'),
+                        default => redirect()->route('client.dashboard'),
         };
     }
 

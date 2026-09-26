@@ -106,7 +106,6 @@ class ClinicalNoteController extends Controller
             ->route('psychologist.clinical-records.show', $client)
             ->with('status', 'یادداشت بالینی حذف شد.');
     }
-
     private function appointmentsForRecord(
         ClinicalRecord $clinicalRecord,
     ) {
@@ -118,8 +117,9 @@ class ClinicalNoteController extends Controller
                 Appointment::STATUS_COMPLETED,
                 Appointment::STATUS_NO_SHOW,
             ])
-            ->with('clinicalNote:id,appointment_id')
+            ->whereDoesntHave('clinicalNote')
             ->orderByDesc('starts_at')
+            ->orderByDesc('id')
             ->get();
     }
 
@@ -192,13 +192,19 @@ class ClinicalNoteController extends Controller
                 ->whereKey($validated['appointment_id'])
                 ->where('client_id', $clinicalRecord->client_id)
                 ->where('psychologist_id', auth()->id())
+                ->whereIn('status', [
+                    Appointment::STATUS_CONFIRMED,
+                    Appointment::STATUS_COMPLETED,
+                    Appointment::STATUS_NO_SHOW,
+                ])
                 ->first();
 
             if (! $appointment) {
                 throw ValidationException::withMessages([
-                    'appointment_id' => 'نوبت انتخاب‌شده متعلق به این مراجع نیست.',
+                    'appointment_id' => 'فقط نوبت‌های تأییدشده، تکمیل‌شده یا نوبت‌های عدم حضور قابل اتصال به یادداشت بالینی هستند.',
                 ]);
             }
+
 
             $existingNoteQuery = ClinicalNote::query()
                 ->where('appointment_id', $appointment->id);

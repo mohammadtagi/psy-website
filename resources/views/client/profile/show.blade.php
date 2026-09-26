@@ -37,6 +37,146 @@
 
                             </dl>
                     </section>
+            @if (session('success'))
+                <div class="mt-5 border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="mt-5 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <ul class="list-inside list-disc space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <section class="mt-10 border border-gray-200 bg-white p-5">
+                <details
+                    @if ($errors->has('first_name') || $errors->has('last_name') || $errors->has('birth_date'))
+                        open
+                    @endif
+                >
+                    <summary class="flex cursor-pointer list-none items-center justify-between gap-3">
+            <span class="text-lg font-semibold text-gray-900">
+                ویرایش اطلاعات فردی
+            </span>
+
+                        <span class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+                ویرایش اطلاعات
+            </span>
+                    </summary>
+
+                    <form
+                        method="POST"
+                        action="{{ route('client.profile.update') }}"
+                        class="mt-5 space-y-5"
+                    >
+                        @csrf
+                        @method('PUT')
+
+                        <div class="grid gap-5 sm:grid-cols-2">
+                            <div>
+                                <label
+                                    for="first_name"
+                                    class="block text-sm font-medium text-gray-700"
+                                >
+                                    نام
+                                </label>
+
+                                <input
+                                    id="first_name"
+                                    name="first_name"
+                                    type="text"
+                                    value="{{ old('first_name', $client->first_name) }}"
+                                    maxlength="100"
+                                    required
+                                    autocomplete="given-name"
+                                    class="mt-1 block w-full border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                            </div>
+
+                            <div>
+                                <label
+                                    for="last_name"
+                                    class="block text-sm font-medium text-gray-700"
+                                >
+                                    نام خانوادگی
+                                </label>
+
+                                <input
+                                    id="last_name"
+                                    name="last_name"
+                                    type="text"
+                                    value="{{ old('last_name', $client->last_name) }}"
+                                    maxlength="100"
+                                    required
+                                    autocomplete="family-name"
+                                    class="mt-1 block w-full border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                            </div>
+
+                            <div>
+                                <label
+                                    for="birth_date"
+                                    class="block text-sm font-medium text-gray-700"
+                                >
+                                    تاریخ تولد
+                                </label>
+
+                                <input
+                                    id="birth_date"
+                                    name="birth_date"
+                                    type="text"
+                                    dir="ltr"
+                                    inputmode="numeric"
+                                    placeholder="۱۴۰۰/۰۵/۱۲"
+                                    value="{{ old(
+                            'birth_date',
+                            $client->birth_date
+                                ? \App\Support\PersianDate::format($client->birth_date, 'yyyy/MM/dd')
+                                : ''
+                        ) }}"
+                                    maxlength="10"
+                                    pattern="[۰-۹0-9]{4}/[۰-۹0-9]{1,2}/[۰-۹0-9]{1,2}"
+                                    required
+                                    autocomplete="bday"
+                                    class="mt-1 block w-full border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    تاریخ را به‌صورت شمسی وارد کنید؛ برای نمونه: ۱۴۰۰/۰۵/۱۲
+                                </p>
+                            </div>
+
+                            <div>
+                    <span class="block text-sm font-medium text-gray-700">
+                        شماره موبایل
+                    </span>
+
+                                <p class="mt-1 bg-gray-50 px-3 py-2 text-sm text-gray-600">
+                                    {{ $client->mobile ?: 'ثبت نشده' }}
+                                </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    شماره موبایل قابل ویرایش نیست.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-start">
+                            <button
+                                type="submit"
+                                class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                            >
+                                ذخیره تغییرات
+                            </button>
+                        </div>
+                    </form>
+                </details>
+            </section>
 
                 <section class="mt-10">
                         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">

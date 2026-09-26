@@ -39,7 +39,24 @@ class AppointmentController extends Controller
                         ->latest('id');
                 },
             ])
+            ->orderByRaw(
+                'CASE
+        WHEN status IN (?, ?) THEN 0
+        WHEN status IN (?, ?) THEN 1
+        WHEN status = ? THEN 2
+        ELSE 3
+    END',
+                [
+                    Appointment::STATUS_CONFIRMED,
+                    Appointment::STATUS_PENDING_PAYMENT,
+                    Appointment::STATUS_COMPLETED,
+                    Appointment::STATUS_NO_SHOW,
+                    Appointment::STATUS_CANCELLED,
+                ],
+            )
             ->orderByDesc('starts_at')
+            ->orderByDesc('id')
+
             ->paginate(20)
             ->withQueryString();
 

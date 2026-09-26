@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', (isset($title) && is_string($title)) ? $title : config('app.name', 'سامانه روانشناسی'))</title>
+    <title>
+        @yield(
+            'title',
+            (isset($title) && is_string($title))
+                ? $title
+                : config('app.name', 'سامانه روانشناسی')
+        )
+    </title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -22,7 +29,10 @@
             کریم محمدزاده
         </a>
 
-        <nav aria-label="حساب کاربری" class="flex flex-wrap items-center gap-3">
+        <nav
+            aria-label="حساب کاربری"
+            class="flex flex-wrap items-center gap-3"
+        >
             @auth
                 @php
                     $user = auth()->user();
@@ -32,26 +42,68 @@
                         ($user->last_name ?? '')
                     );
 
-                    $accountRoute = match ($user->role) {
-                        'admin' => 'admin.dashboard',
-                        'psychologist' => 'psychologist.dashboard',
-                        'client' => 'client.appointments.index',
-                        default => null,
+                    $roleLinks = match ($user->role) {
+                        'admin' => [
+                            [
+                                'label' => 'داشبورد مدیر',
+                                'route' => 'admin.dashboard',
+                            ],
+                        ],
+
+                        'psychologist' => [
+                            [
+                                'label' => 'داشبورد',
+                                'route' => 'psychologist.dashboard',
+                            ],
+                            [
+                                'label' => 'نوبت‌ها',
+                                'route' => 'psychologist.appointments.index',
+                            ],
+                            [
+                                'label' => 'بازه‌های حضور',
+                                'route' => 'psychologist.availabilities.index',
+                            ],
+                            [
+                                'label' => 'مراجعان و پرونده‌ها',
+                                'route' => 'psychologist.clients.index',
+                            ],
+                        ],
+
+                        'client' => [
+                            [
+                                'label' => 'داشبورد',
+                                'route' => 'client.dashboard',
+                            ],
+                            [
+                                'label' => 'نوبت‌های من',
+                                'route' => 'client.appointments.index',
+                            ],
+                            [
+                                'label' => 'پروفایل',
+'route' => 'client.profile.show',
+                            ],
+                            [
+                                'label' => 'رزرو نوبت',
+                                'route' => 'booking.index',
+                            ],
+                        ],
+
+                        default => [],
                     };
                 @endphp
 
                 <span class="text-sm text-gray-600">
-                        {{ $displayName !== '' ? $displayName : $user->mobile }}
-                    </span>
+                    {{ $displayName !== '' ? $displayName : $user->mobile }}
+                </span>
 
-                @if ($accountRoute)
+                @foreach ($roleLinks as $link)
                     <a
-                        href="{{ route($accountRoute) }}"
+                        href="{{ route($link['route']) }}"
                         class="rounded-lg px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
                     >
-                        {{ $user->role === 'client' ? 'نوبت‌های من' : 'پنل کاربری' }}
+                        {{ $link['label'] }}
                     </a>
-                @endif
+                @endforeach
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
@@ -86,3 +138,4 @@
 @stack('scripts')
 </body>
 </html>
+

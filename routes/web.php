@@ -14,6 +14,7 @@ use App\Http\Controllers\Client\ProfileController as ClientProfileController;
 use App\Http\Controllers\Psychologist\ClinicalRecordController;
 use App\Http\Controllers\Psychologist\ClinicalNoteController;
 use App\Http\Controllers\Psychologist\ClinicalAttachmentController;
+use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [
@@ -95,7 +96,13 @@ Route::post('/booking/{date}', [
     ->name('booking.store');
 
 
-
+    Route::middleware(['auth', 'role:client'])
+        ->prefix('client')
+        ->name('client.')
+        ->group(function (): void {
+            Route::get('/', [ClientDashboardController::class, 'index'])
+                ->name('dashboard');
+    });
 
 Route::middleware(['auth', 'role:psychologist'])
     ->prefix('psychologist')
@@ -214,9 +221,20 @@ Route::get('/booking/confirmation/{appointment}', [
     ->name('booking.confirmation');
 
 
-    Route::middleware(['auth', 'role:client'])
-        ->get('/profile', [ClientProfileController::class, 'show'])
-       ->name('client.profile');
+Route::middleware(['auth', 'role:client'])
+    ->prefix('profile')
+    ->name('client.profile.')
+    ->group(function (): void {
+        Route::get('/', [
+            ClientProfileController::class,
+            'show',
+        ])->name('show');
+
+        Route::put('/', [
+            ClientProfileController::class,
+            'update',
+        ])->name('update');
+    });
 
 Route::middleware(['auth', 'role:client'])
     ->prefix('appointments')

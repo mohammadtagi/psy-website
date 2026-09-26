@@ -69,37 +69,14 @@
                     <option value="">بدون نوبت مرتبط</option>
 
                     @foreach ($appointments as $appointment)
-                        @foreach ($appointments as $appointment)
-                            @php
-                                $appointmentLabel = $appointment->starts_at
-                                    ? \App\Support\PersianDate::format(
-                                        $appointment->starts_at,
-                                        'yyyy/MM/dd HH:mm'
-                                    )
-                                    : 'بدون تاریخ';
-
-                                $hasAnotherNote = $appointment->clinicalNote !== null
-                                    && $appointment->clinicalNote->id !== $note->id;
-                            @endphp
-
-                            <option
-                                value="{{ $appointment->id }}"
-                                @selected(
-                                    (string) old(
-                                        'appointment_id',
-                                        $note->appointment_id
-                                    ) === (string) $appointment->id
+                        @php
+                            $appointmentLabel = $appointment->starts_at
+                                ? \App\Support\PersianDate::format(
+                                    $appointment->starts_at,
+                                    'yyyy/MM/dd HH:mm'
                                 )
-                                @disabled($hasAnotherNote)
-                            >
-                                {{ $appointmentLabel }}
-
-                                @if ($hasAnotherNote)
-                                    - یادداشت ثبت شده
-                                @endif
-                            </option>
-                        @endforeach
-
+                                : 'بدون تاریخ';
+                        @endphp
 
                         <option
                             value="{{ $appointment->id }}"
@@ -109,15 +86,11 @@
                                     $note->appointment_id
                                 ) === (string) $appointment->id
                             )
-                            @disabled($hasAnotherNote)
                         >
                             {{ $appointmentLabel }}
-
-                            @if ($hasAnotherNote)
-                                - یادداشت ثبت شده
-                            @endif
                         </option>
                     @endforeach
+
                 </select>
 
                 @error('appointment_id')
