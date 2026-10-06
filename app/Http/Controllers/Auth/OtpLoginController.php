@@ -283,6 +283,7 @@ class OtpLoginController extends Controller
 
                 report($exception);
 
+                dd($exception);
                 throw ValidationException::withMessages([
                     'mobile' => 'ارسال پیامک انجام نشد. لطفاً دوباره تلاش کنید.',
                 ]);
