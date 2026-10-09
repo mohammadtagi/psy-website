@@ -259,38 +259,78 @@ class AvailabilityServiceTest extends TestCase
                     );
             }
 
-    public function test_it_rejects_an_overlapping_availability_even_when_existing_row_is_disabled(): void
+
+    public function test_it_allows_overlap_with_a_disabled_availability(): void
     {
-                CarbonImmutable::setTestNow(
-                        CarbonImmutable::parse('2026-09-22 06:00:00', 'UTC'),
-                    );
+        CarbonImmutable::setTestNow(
+            CarbonImmutable::parse('2026-09-22 06:00:00', 'UTC'),
+        );
 
-                $psychologist = User::factory()->psychologist()->create();
+        $psychologist = User::factory()->psychologist()->create();
 
-                Availability::factory()
-                    ->forPsychologist($psychologist)
-                    ->from(
-                            CarbonImmutable::parse(
-                                    '2026-09-24 10:00:00',
-                                    'Asia/Tehran',
-                                )->utc(),
-                        )
-                    ->disabled()
-                    ->create([
-                            'ends_at' => CarbonImmutable::parse(
-                                    '2026-09-24 12:00:00',
-                                    'Asia/Tehran',
-                                )->utc(),
-                        ]);
+        Availability::factory()
+            ->forPsychologist($psychologist)
+            ->from(
+                CarbonImmutable::parse(
+                    '2026-09-24 10:00:00',
+                    'Asia/Tehran',
+                )->utc(),
+            )
+            ->disabled()
+            ->create([
+                'ends_at' => CarbonImmutable::parse(
+                    '2026-09-24 19:00:00',
+                    'Asia/Tehran',
+                )->utc(),
+            ]);
+
+        $created = $this->service->createForDate(
+            $psychologist,
+            '2026-09-24',
+            '11:00',
+            '19:00',
+        );
+
+        $this->assertCount(1, $created);
+        $this->assertSame(
+            Availability::STATUS_ACTIVE,
+            $created->first()->status,
+        );
+    }
+
+
+    public function test_it_still_rejects_overlap_with_an_active_availability(): void
+    {
+        CarbonImmutable::setTestNow(
+            CarbonImmutable::parse('2026-09-22 06:00:00', 'UTC'),
+        );
+
+        $psychologist = User::factory()->psychologist()->create();
+
+        Availability::factory()
+            ->forPsychologist($psychologist)
+            ->from(
+                CarbonImmutable::parse(
+                    '2026-09-24 10:00:00',
+                    'Asia/Tehran',
+                )->utc(),
+            )
+            ->create([
+                'ends_at' => CarbonImmutable::parse(
+                    '2026-09-24 19:00:00',
+                    'Asia/Tehran',
+                )->utc(),
+                'status' => Availability::STATUS_ACTIVE,
+            ]);
 
         $this->expectException(ValidationException::class);
 
         $this->service->createForDate(
-                $psychologist,
-                '2026-09-24',
-                '11:00',
-                '13:00',
-            );
+            $psychologist,
+            '2026-09-24',
+            '11:00',
+            '19:00',
+        );
     }
 
     public function test_it_rejects_overlap_with_a_confirmed_appointment(): void

@@ -98,6 +98,7 @@ class ClinicalRecordController extends Controller
     public function edit(ClinicalRecord $clinicalRecord): View
     {
         $clinicalRecord->load('client');
+                $this->ensureRecordBelongsToCurrentPsychologist($clinicalRecord);
 
         return view('psychologist.clinical-records.edit', [
             'client' => $clinicalRecord->client,
@@ -110,7 +111,7 @@ class ClinicalRecordController extends Controller
         ClinicalRecord $clinicalRecord,
     ): RedirectResponse {
         $clinicalRecord->load('client');
-
+        $this->ensureRecordBelongsToCurrentPsychologist($clinicalRecord);
         $clinicalRecord->update(
             $this->validatedData($request),
         );
@@ -183,6 +184,34 @@ class ClinicalRecordController extends Controller
 
     private function ensureClient(User $client): void
     {
-        abort_unless($client->isClient(), 404);
+        abort_unless(
+            $client->isClient()
+            && (
+                (int) $client->created_by_psychologist_id === (int) auth()->id()
+                || $client->clientAppointments()
+                    ->where('psychologist_id', auth()->id())
+                    ->exists()
+            ),
+            404,
+        );
     }
+
+    private function ensureRecordBelongsToCurrentPsychologist(
+        ClinicalRecord $clinicalRecord,
+    ): void {
+        $client = $clinicalRecord->client;
+
+        abort_unless(
+            $client !== null
+            && $client->isClient()
+            && (
+                (int) $client->created_by_psychologist_id === (int) auth()->id()
+                || $client->clientAppointments()
+                    ->where('psychologist_id', auth()->id())
+                    ->exists()
+            ),
+            404,
+        );
+    }
+
 }

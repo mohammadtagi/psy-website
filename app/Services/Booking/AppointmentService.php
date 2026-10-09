@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
 use App\Models\Payment;
 
+
 class AppointmentService
 {
     private const TIMEZONE = 'Asia/Tehran';
@@ -93,17 +94,43 @@ class AppointmentService
             abort(403);
         }
 
-        if (
-            $isClient
-            && ! $bypassClientTimeLimit
-            && $appointment->starts_at->lt(
-                CarbonImmutable::now('UTC')->addHours(12)
-            )
-        ) {
-            throw ValidationException::withMessages([
-                'appointment' => 'لغو نوبت فقط تا ۱۲ ساعت پیش از شروع امکان‌پذیر است.',
-            ]);
+        if ($isClient && ! $bypassClientTimeLimit) {
+            $now = CarbonImmutable::now('UTC');
+
+            $graceMinutes = (int) config(
+                'booking.new_booking_grace_minutes',
+                60,
+            );
+
+            $cancellationBeforeMinutes = (int) config(
+                'booking.cancellation_before_minutes',
+                720,
+            );
+
+            $createdAt = CarbonImmutable::parse(
+                $appointment->created_at
+            )->utc();
+
+            $isWithinNewBookingGracePeriod = $now->lt(
+                $createdAt->addMinutes($graceMinutes)
+            );
+
+            if (! $isWithinNewBookingGracePeriod) {
+                $latestCancellationAt = $appointment->starts_at
+                    ->copy()
+                    ->subMinutes($cancellationBeforeMinutes);
+
+                if ($now->greaterThanOrEqualTo($latestCancellationAt)) {
+                    throw ValidationException::withMessages([
+                        'appointment' => sprintf(
+                            'لغو نوبت فقط تا %d ساعت قبل از شروع امکان‌پذیر است.',
+                            intdiv($cancellationBeforeMinutes, 60)
+                        ),
+                    ]);
+                }
+            }
         }
+
 
     }
 }

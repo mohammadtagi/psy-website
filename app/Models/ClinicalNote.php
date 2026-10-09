@@ -13,6 +13,9 @@ class ClinicalNote extends Model
     protected $fillable = [
         'clinical_record_id',
         'appointment_id',
+                'treatment_plan_id',
+                'treatment_plan_stage_id',
+                'session_type',
         'session_at',
         'summary',
         'client_condition',
@@ -21,11 +24,18 @@ class ClinicalNote extends Model
         'private_note',
     ];
 
-    protected function casts(): array
+    public const SESSION_TYPE_PLAN = 'plan';
+
+    public const SESSION_TYPE_FREE = 'free';
+
+    public function treatmentPlan(): BelongsTo
     {
-        return [
-            'session_at' => 'datetime',
-        ];
+        return $this->belongsTo(TreatmentPlan::class);
+    }
+
+    public function treatmentPlanStage(): BelongsTo
+    {
+            return $this->belongsTo(TreatmentPlanStage::class);
     }
 
     public function clinicalRecord(): BelongsTo
@@ -37,4 +47,16 @@ class ClinicalNote extends Model
     {
         return $this->belongsTo(Appointment::class);
     }
+
+    protected function casts(): array
+    {
+        return [
+            'clinical_record_id' => 'integer',
+            'appointment_id' => 'integer',
+            'treatment_plan_id' => 'integer',
+            'treatment_plan_stage_id' => 'integer',
+            'session_at' => 'datetime',
+        ];
+    }
+
 }

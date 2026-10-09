@@ -54,7 +54,10 @@ class ClinicalRecord extends Model
     {
         return $this->hasMany(ClinicalNote::class);
     }
-
+    public function treatmentPlans(): HasMany
+    {
+        return $this->hasMany(TreatmentPlan::class);
+    }
     public function items(): HasMany
     {
         return $this->hasMany(ClinicalRecordItem::class)
@@ -80,7 +83,9 @@ class ClinicalRecord extends Model
     protected function casts(): array
     {
         return [
+            'client_id' => 'integer',
             'closed_at' => 'datetime',
         ];
     }
+
 }

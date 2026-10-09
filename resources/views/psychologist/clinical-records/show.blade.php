@@ -85,6 +85,117 @@
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h2 class="text-lg font-semibold text-gray-900">
+                            نقشه‌های درمان
+                        </h2>
+                        <p class="mt-2 text-sm text-gray-600">
+                            مدیریت مراحل، اهداف و پیشرفت درمان
+                        </p>
+                    </div>
+
+                    @if (!$record->treatmentPlans->contains(fn ($plan) => $plan->isActive()))
+                        <a
+                            href="{{ route('psychologist.treatment-plans.create', $record) }}"
+                            class="border border-indigo-700 bg-indigo-700 px-4 py-2 text-sm font-medium text-white"
+                        >
+                            ایجاد نقشه درمان
+                        </a>
+                    @endif
+                </div>
+
+                @forelse ($record->treatmentPlans as $plan)
+                    @php
+                        $planNotes = $plan->clinicalNotes()
+                            ->where('session_type', \App\Models\ClinicalNote::SESSION_TYPE_PLAN)
+                            ->whereHas('appointment', fn ($query) =>
+                                $query->where('status', \App\Models\Appointment::STATUS_COMPLETED)
+                            )
+                            ->get();
+
+                        $totalEstimated = (int) $plan->stages->sum('estimated_sessions');
+                        $completedSessions = $planNotes->count();
+                        $progress = $totalEstimated > 0
+                            ? min(100, (int) round(($completedSessions / $totalEstimated) * 100))
+                            : 0;
+                    @endphp
+
+                    <article class="mt-5 border border-gray-200 p-4">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <h3 class="font-semibold text-gray-900">
+                                    {{ $plan->title }}
+                                </h3>
+
+                                <p class="mt-1 text-sm text-gray-600">
+                                    وضعیت:
+                                    @switch($plan->status)
+                                        @case('active') فعال @break
+                                        @case('completed') تکمیل‌شده @break
+                                        @case('dropped_out') انصراف مراجع @break
+                                        @case('referred') ارجاع‌شده @break
+                                    @endswitch
+                                </p>
+                            </div>
+
+                            <a
+                                href="{{ route('psychologist.treatment-plans.edit', $plan) }}"
+                                class="text-sm text-indigo-700 hover:underline"
+                            >
+                                {{ $plan->isActive() ? 'ویرایش' : 'مشاهده' }}
+                            </a>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="flex justify-between text-sm text-gray-600">
+                                <span>پیشرفت مسیر</span>
+                                <span>{{ $progress }}٪</span>
+                            </div>
+
+                            <div class="mt-2 h-2 bg-gray-200">
+                                <div
+                                    class="h-2 bg-indigo-700"
+                                    style="width: {{ $progress }}%"
+                                ></div>
+                            </div>
+
+                            <p class="mt-2 text-xs text-gray-500">
+                                {{ $completedSessions }} جلسه تکمیل‌شده از {{ $totalEstimated ?: 'بدون تخمین' }}
+                            </p>
+                        </div>
+
+                        <div class="mt-5 grid gap-3 md:grid-cols-3">
+                            @foreach ($plan->stages as $stage)
+                                @php
+                                    $stageCount = $planNotes
+                                        ->where('treatment_plan_stage_id', $stage->id)
+                                        ->count();
+                                @endphp
+
+                                <div class="border border-gray-200 p-3">
+                                    <p class="text-sm font-medium text-gray-900">
+                                        مرحله {{ $stage->stage_number }}
+                                    </p>
+                                    <p class="mt-1 text-sm text-gray-600">{{ $stage->title }}</p>
+                                    <p class="mt-2 text-xs text-gray-500">
+                                        جلسات: {{ $stageCount }}
+                                        /
+                                        {{ $stage->estimated_sessions ?? 'بدون تخمین' }}
+                                    </p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </article>
+                @empty
+                    <p class="mt-5 text-sm text-gray-500">
+                        هنوز نقشه درمانی برای این پرونده ایجاد نشده است.
+                    </p>
+                @endforelse
+            </section>
+
+
+            <section class="border border-gray-200 bg-white p-5 md:col-span-2">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">
                             یادداشت‌های جلسات
                         </h2>
 
@@ -112,11 +223,26 @@
                             <article class="border border-gray-200 p-4">
                                 <div class="flex flex-wrap items-start justify-between gap-3">
                                     <div>
-                                        <p class="text-sm font-medium text-gray-900">
-                                            {{ $note->session_at
-                                                ? \App\Support\PersianDate::format($note->session_at, 'yyyy/MM/dd HH:mm')
-                                                : 'تاریخ ثبت نشده' }}
-                                        </p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-sm font-medium text-gray-900">
+                                                {{ $note->session_at
+                                                    ? \App\Support\PersianDate::format($note->session_at, 'yyyy/MM/dd HH:mm')
+                                                    : 'تاریخ ثبت نشده' }}
+                                            </p>
+
+                                            {{-- کد اضافه‌شده --}}
+                                            @if ($note->session_type === \App\Models\ClinicalNote::SESSION_TYPE_PLAN)
+                                                <span
+                                                    class="inline-flex items-center rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                            جلسه مسیر درمان
+                        </span>
+                                            @else
+                                                <span
+                                                    class="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                            جلسه آزاد
+                        </span>
+                                            @endif
+                                        </div>
 
                                         @if ($note->appointment)
                                             <p class="mt-1 text-xs text-gray-500">

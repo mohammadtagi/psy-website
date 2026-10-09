@@ -15,6 +15,7 @@ use App\Http\Controllers\Psychologist\ClinicalRecordController;
 use App\Http\Controllers\Psychologist\ClinicalNoteController;
 use App\Http\Controllers\Psychologist\ClinicalAttachmentController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
+use App\Http\Controllers\Psychologist\TreatmentPlanController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [
@@ -165,6 +166,32 @@ Route::middleware(['auth', 'role:psychologist'])
             ClinicalRecordController::class,
             'update',
         ])->name('clinical-records.update');
+
+                Route::get('/clinical-records/{clinicalRecord}/treatment-plan/create', [
+                        TreatmentPlanController::class,
+                        'create',
+                    ])->name('treatment-plans.create');
+
+                Route::post('/clinical-records/{clinicalRecord}/treatment-plan', [
+                        TreatmentPlanController::class,
+                        'store',
+                    ])->name('treatment-plans.store');
+
+                Route::get('/treatment-plans/{treatmentPlan}/edit', [
+                        TreatmentPlanController::class,
+                        'edit',
+                    ])->name('treatment-plans.edit');
+
+                Route::put('/treatment-plans/{treatmentPlan}', [
+                        TreatmentPlanController::class,
+                        'update',
+                    ])->name('treatment-plans.update');
+
+                Route::patch('/treatment-plans/{treatmentPlan}/archive', [
+                        TreatmentPlanController::class,
+                        'archive',
+                    ])->name('treatment-plans.archive');
+
         Route::get('/clinical-records/{clinicalRecord}/notes/create', [
             ClinicalNoteController::class,
             'create',

@@ -61,13 +61,14 @@
                         $startsAt = $appointment->starts_at->setTimezone('Asia/Tehran');
                         $endsAt = $appointment->ends_at->setTimezone('Asia/Tehran');
 
-                        $isActive = in_array($appointment->status, [
-                            Appointment::STATUS_CONFIRMED,
-                            Appointment::STATUS_PENDING_PAYMENT,
-                        ], true);
+                        $isPendingAndValid = $appointment->status === Appointment::STATUS_PENDING_PAYMENT
+                            && $appointment->hold_expires_at?->isFuture();
+
+                        $isActive = $appointment->status === Appointment::STATUS_CONFIRMED || $isPendingAndValid;
 
                         $latestPayment = $appointment->payments->first();
                     @endphp
+
 
                     <tr>
                         {{-- ۱. مراجع --}}

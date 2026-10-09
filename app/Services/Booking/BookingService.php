@@ -198,7 +198,60 @@ class BookingService
             $endsAt,
             $data,
         ): Appointment {
+            $lockedClient = User::query()
+                ->whereKey($client->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $lockedClient->isClient()) {
+                throw ValidationException::withMessages([
+                    'client' => 'کاربر انتخاب‌شده مراجع معتبر نیست.',
+                ]);
+            }
+            $now = CarbonImmutable::now('UTC');
+
+            $pendingAppointments = Appointment::query()
+                ->where('client_id', $lockedClient->getKey())
+                ->where('status', Appointment::STATUS_PENDING_PAYMENT)
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($pendingAppointments as $pendingAppointment) {
+                $holdExpiresAt = $pendingAppointment->hold_expires_at;
+
+                $isExpired = $holdExpiresAt === null
+                    || CarbonImmutable::instance($holdExpiresAt)->lte($now);
+
+                if (! $isExpired) {
+                    throw ValidationException::withMessages([
+                        'pending_payment_appointment_id' => (string) $pendingAppointment->getKey(),
+                        'booking' => sprintf(
+                            'شما یک نوبت پرداخت‌نشده دارید. ابتدا پرداخت همان نوبت را تکمیل کنید.'
+                        ),
+                    ]);
+                }
+
+                $pendingAppointment->update([
+                    'status' => Appointment::STATUS_CANCELLED,
+                    'cancelled_at' => $now,
+                    'cancellation_reason' => 'مهلت پرداخت نوبت به پایان رسید.',
+                    'hold_expires_at' => null,
+                ]);
+
+                Payment::query()
+                    ->where('appointment_id', $pendingAppointment->getKey())
+                    ->whereIn('status', [
+                        Payment::STATUS_INITIATED,
+                        Payment::STATUS_PENDING,
+                    ])
+                    ->update([
+                        'status' => Payment::STATUS_CANCELLED,
+                        'gateway_message' => 'مهلت پرداخت نوبت به پایان رسید.',
+                    ]);
+            }
+
             $lockedPsychologist = User::query()
+
                 ->whereKey($psychologist->getKey())
                 ->lockForUpdate()
                 ->firstOrFail();

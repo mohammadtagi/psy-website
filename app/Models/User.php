@@ -12,6 +12,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\ClinicalRecord;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 
 class User extends Authenticatable
 {
@@ -32,9 +34,26 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+                'created_by_psychologist_id',
+
     ];
 
 
+    public function createdByPsychologist(): BelongsTo
+    {
+        return $this->belongsTo(
+            self::class,
+            'created_by_psychologist_id',
+        );
+    }
+
+    public function manuallyCreatedClients(): HasMany
+    {
+        return $this->hasMany(
+            self::class,
+            'created_by_psychologist_id',
+        )->where('role', self::ROLE_CLIENT);
+    }
 
     protected $hidden = [
         'password',
@@ -48,6 +67,15 @@ class User extends Authenticatable
         return $this->hasOne(ClinicalRecord::class, 'client_id');
     }
 
+    public function treatmentPlans(): HasMany
+    {
+        return $this->hasMany(TreatmentPlan::class, 'client_id');
+    }
+
+    public function psychologistTreatmentPlans(): HasMany
+    {
+            return $this->hasMany(TreatmentPlan::class, 'psychologist_id');
+    }
     public const ROLE_ADMIN = 'admin';
 
     public function isClient(): bool
@@ -79,7 +107,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Availability::class, 'psychologist_id');
     }
-
     public function psychologistAppointments(): HasMany
     {
         return $this->hasMany(Appointment::class, 'psychologist_id');
@@ -101,6 +128,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'birth_date' => 'date',
             'password' => 'hashed',
+                        'created_by_psychologist_id' => 'integer',
+
         ];
     }
 

@@ -51,6 +51,8 @@ class Appointment extends Model
         'hold_expires_at',
         'meeting_url',
         'cancelled_at',
+                'client_note',
+
         'cancelled_by',
         'cancellation_reason',
     ];

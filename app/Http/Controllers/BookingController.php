@@ -187,16 +187,37 @@ class BookingController extends Controller
             ]);
         }
 
-        $appointment = $this->bookingService->book(
-            client: $client,
-            psychologist: $psychologist,
-            data: [
-                'availability_id' => $validated['availability_id'],
-                'starts_at' => $startsAt->utc()->toIso8601String(),
-                'duration_minutes' => (int) $validated['duration_minutes'],
-                'session_type' => $validated['session_type'],
-            ],
-        );
+        try {
+            $appointment = $this->bookingService->book(
+                client: $client,
+                psychologist: $psychologist,
+                data: [
+                    'availability_id' => $validated['availability_id'],
+                    'starts_at' => $startsAt->utc()->toIso8601String(),
+                    'duration_minutes' => (int) $validated['duration_minutes'],
+                    'session_type' => $validated['session_type'],
+                ],
+            );
+        } catch (ValidationException $exception) {
+            $pendingAppointmentId = $exception
+                ->errors()['pending_payment_appointment_id'][0]
+                ?? null;
+
+            if ($pendingAppointmentId !== null) {
+                return redirect()
+                    ->route(
+                        'booking.confirmation',
+                        ['appointment' => (int) $pendingAppointmentId],
+                    )
+                    ->withErrors([
+                        'booking' =>
+                            'شما یک نوبت پرداخت‌نشده دارید. ابتدا پرداخت همان نوبت را تکمیل کنید.',
+                    ]);
+            }
+
+            throw $exception;
+        }
+
 
         return redirect()
             ->route('booking.confirmation', $appointment)

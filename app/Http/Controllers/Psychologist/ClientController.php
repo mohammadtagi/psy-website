@@ -25,8 +25,23 @@ class ClientController extends Controller
         $clients = collect();
 
         if ($query !== '') {
+            $psychologistId = auth()->id();
+
             $clientsQuery = User::query()
-                ->where('role', User::ROLE_CLIENT);
+                ->where('role', User::ROLE_CLIENT)
+                ->where(function ($clientQuery) use ($psychologistId): void {
+                    $clientQuery
+                        ->where('created_by_psychologist_id', $psychologistId)
+                        ->orWhereHas('clientAppointments', function ($appointmentQuery) use (
+                            $psychologistId
+                        ): void {
+                            $appointmentQuery->where(
+                                'psychologist_id',
+                                $psychologistId,
+                            );
+                        });
+                });
+
 
             if ($this->looksLikeMobileSearch($query)) {
                 $clientsQuery->where('mobile', 'like', '%' . $query . '%');
@@ -109,6 +124,7 @@ class ClientController extends Controller
             'mobile' => $validated['mobile'],
             'birth_date' => $birthDate,
             'role' => User::ROLE_CLIENT,
+            'created_by_psychologist_id' => auth()->id(),
             'password' => Hash::make(Str::random(32)),
             ]);
 

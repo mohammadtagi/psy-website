@@ -255,10 +255,11 @@ class AvailabilityService
         CarbonImmutable $endsAt,
         CarbonImmutable $now,
     ): void {
-        // Include disabled rows: the existing row must be edited or
-        // reactivated instead of creating an overlapping duplicate.
+        // Disabled availability rows no longer occupy the schedule.
         $availabilityConflict = Availability::query()
             ->where('psychologist_id', $psychologist->getKey())
+                        ->where('status', Availability::STATUS_ACTIVE)
+
             ->where('starts_at', '<', $endsAt)
             ->where('ends_at', '>', $startsAt)
             ->lockForUpdate()
