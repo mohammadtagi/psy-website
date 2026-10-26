@@ -104,19 +104,26 @@
 
                 @forelse ($record->treatmentPlans as $plan)
                     @php
-                        $planNotes = $plan->clinicalNotes()
-                            ->where('session_type', \App\Models\ClinicalNote::SESSION_TYPE_PLAN)
-                            ->whereHas('appointment', fn ($query) =>
-                                $query->where('status', \App\Models\Appointment::STATUS_COMPLETED)
-                            )
-                            ->get();
+                        $stageIds = $plan->stages->modelKeys();
+
+                        $heldSessions = \App\Models\Appointment::query()
+                            ->where('psychologist_id', auth()->id())
+                            ->where('client_id', $client->id)
+                            ->where('treatment_plan_id', $plan->id)
+                            ->whereIn('treatment_plan_stage_id', $stageIds)
+                            ->where('therapy_session_type', 'plan')
+                            ->where('status', \App\Models\Appointment::STATUS_CONFIRMED)
+                            ->where('attendance_status', 'held')
+                            ->get(['id', 'treatment_plan_stage_id']);
 
                         $totalEstimated = (int) $plan->stages->sum('estimated_sessions');
-                        $completedSessions = $planNotes->count();
+                        $completedSessions = $heldSessions->count();
+
                         $progress = $totalEstimated > 0
                             ? min(100, (int) round(($completedSessions / $totalEstimated) * 100))
                             : 0;
                     @endphp
+
 
                     <article class="mt-5 border border-gray-200 p-4">
                         <div class="flex flex-wrap items-start justify-between gap-3">
@@ -165,10 +172,11 @@
                         <div class="mt-5 grid gap-3 md:grid-cols-3">
                             @foreach ($plan->stages as $stage)
                                 @php
-                                    $stageCount = $planNotes
+                                    $stageCount = $heldSessions
                                         ->where('treatment_plan_stage_id', $stage->id)
                                         ->count();
                                 @endphp
+
 
                                 <div class="border border-gray-200 p-3">
                                     <p class="text-sm font-medium text-gray-900">
@@ -191,109 +199,86 @@
                 @endforelse
             </section>
 
-
             <section class="border border-gray-200 bg-white p-5 md:col-span-2">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h2 class="text-lg font-semibold text-gray-900">
-                            یادداشت‌های جلسات
+                            یادداشت‌های محرمانه من
                         </h2>
 
                         <p class="mt-2 text-sm text-gray-600">
-                            تعداد یادداشت‌ها:
-                            {{ $record->notes->count() }}
+                            فقط یادداشت‌های خودتان نمایش داده می‌شوند.
+                            تعداد: {{ $record->notes->count() }}
                         </p>
                     </div>
 
                     <a
-                        href="{{ route('psychologist.clinical-notes.create', ['clinicalRecord' => $record->id]) }}"
-                        class="border border-indigo-700 bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800"
+                        href="{{ route('psychologist.clinical-notes.create', [
+                'clinicalRecord' => $record,
+            ]) }}"
+                        class="bg-indigo-700 px-4 py-2 text-sm text-white"
                     >
-                        ثبت یادداشت
+                        ثبت یادداشت محرمانه
                     </a>
                 </div>
 
-                @if ($record->notes->isEmpty())
-                    <p class="mt-5 text-sm text-gray-500">
-                        هنوز یادداشتی برای این پرونده ثبت نشده است.
-                    </p>
-                @else
-                    <div class="mt-5 space-y-4">
-                        @foreach ($record->notes as $note)
-                            <article class="border border-gray-200 p-4">
-                                <div class="flex flex-wrap items-start justify-between gap-3">
-                                    <div>
-                                        <div class="flex items-center gap-2">
-                                            <p class="text-sm font-medium text-gray-900">
-                                                {{ $note->session_at
-                                                    ? \App\Support\PersianDate::format($note->session_at, 'yyyy/MM/dd HH:mm')
-                                                    : 'تاریخ ثبت نشده' }}
-                                            </p>
+                <div class="mt-5 space-y-4">
+                    @forelse ($record->notes as $note)
+                        <article class="space-y-4 border border-gray-200 p-4">
+                            <div class="space-y-1 text-xs text-gray-500">
+                                <p>
+                                    ثبت:
+                                    {{ \App\Support\PersianDate::format(
+                                        $note->created_at->copy()->setTimezone('Asia/Tehran'),
+                                        'yyyy/MM/dd HH:mm'
+                                    ) }}
+                                </p>
 
-                                            {{-- کد اضافه‌شده --}}
-                                            @if ($note->session_type === \App\Models\ClinicalNote::SESSION_TYPE_PLAN)
-                                                <span
-                                                    class="inline-flex items-center rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
-                            جلسه مسیر درمان
-                        </span>
-                                            @else
-                                                <span
-                                                    class="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-                            جلسه آزاد
-                        </span>
-                                            @endif
-                                        </div>
+                                <p>
+                                    آخرین ویرایش:
+                                    {{ \App\Support\PersianDate::format(
+                                        $note->updated_at->copy()->setTimezone('Asia/Tehran'),
+                                        'yyyy/MM/dd HH:mm'
+                                    ) }}
+                                </p>
+                            </div>
 
-                                        @if ($note->appointment)
-                                            <p class="mt-1 text-xs text-gray-500">
-                                                نوبت مرتبط:
-                                                {{ $note->appointment->starts_at
-                                                    ? \App\Support\PersianDate::format($note->appointment->starts_at, 'yyyy/MM/dd HH:mm')
-                                                    : 'بدون تاریخ' }}
-                                            </p>
-                                        @else
-                                            <p class="mt-1 text-xs text-gray-500">
-                                                یادداشت مستقل از نوبت
-                                            </p>
-                                        @endif
-                                    </div>
+                            <p class="whitespace-pre-wrap break-words text-sm leading-7 text-gray-700">{{ $note->private_note }}</p>
 
-                                    <div class="flex flex-wrap gap-3">
-                                        <a
-                                            href="{{ route('psychologist.clinical-notes.edit', ['clinicalNote' => $note->id]) }}"
-                                            class="text-sm text-indigo-700 hover:underline"
-                                        >
-                                            ویرایش
-                                        </a>
+                            <div class="flex flex-wrap gap-4">
+                                <a
+                                    href="{{ route('psychologist.clinical-notes.edit', [
+                            'clinicalNote' => $note,
+                        ]) }}"
+                                    class="text-sm text-indigo-700"
+                                >
+                                    ویرایش
+                                </a>
 
-                                        <form
-                                            method="POST"
-                                            action="{{ route('psychologist.clinical-notes.destroy', ['clinicalNote' => $note->id]) }}"
-                                            onsubmit="return confirm('آیا از حذف این یادداشت مطمئن هستید؟')"
-                                        >
-                                            @csrf
-                                            @method('DELETE')
+                                <form
+                                    method="POST"
+                                    action="{{ route('psychologist.clinical-notes.destroy', [
+                            'clinicalNote' => $note,
+                        ]) }}"
+                                    onsubmit="return confirm('این یادداشت محرمانه حذف شود؟')"
+                                >
+                                    @csrf
+                                    @method('DELETE')
 
-                                            <button
-                                                type="submit"
-                                                class="text-sm text-red-700 hover:underline"
-                                            >
-                                                حذف
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-
-                                @if ($note->summary)
-                                    <p class="mt-4 whitespace-pre-line text-sm leading-7 text-gray-700">
-                                        {{ $note->summary }}
-                                    </p>
-                                @endif
-                            </article>
-                        @endforeach
-                    </div>
-                @endif
+                                    <button type="submit" class="text-sm text-red-700">
+                                        حذف
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    @empty
+                        <p class="text-sm text-gray-500">
+                            هنوز یادداشت محرمانه‌ای ثبت نکرده‌اید.
+                        </p>
+                    @endforelse
+                </div>
             </section>
+
 
 
             <section class="border border-gray-200 bg-white p-5 md:col-span-2">

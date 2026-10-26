@@ -106,7 +106,7 @@
                                     @break
 
                                 @case(Appointment::STATUS_CONFIRMED)
-                                    تأییدشده
+                                    {{ $appointment->sessionStatusLabel() }}
                                     @break
 
                                 @case(Appointment::STATUS_CANCELLED)
@@ -157,6 +157,13 @@
                         {{-- ۸. عملیات --}}
                         <td class="min-w-52 px-4 py-4">
                             @if ($isActive)
+                                <a
+                                    href="{{ route('psychologist.appointments.session.show', $appointment) }}"
+                                    class="inline-block border border-indigo-300 px-3 py-2 text-sm text-indigo-700"
+                                >
+                                    مدیریت جلسه
+                                </a>
+
                                 <form
                                     method="POST"
                                     action="{{ route('psychologist.appointments.cancel', $appointment) }}"

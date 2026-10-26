@@ -100,7 +100,7 @@ $canCancel = $isActive
                                                     && $latestPayment->isPending();
 
                                                 $statusLabel = match ($appointment->status) {
-                                                    \App\Models\Appointment::STATUS_CONFIRMED => 'تأیید شده',
+\App\Models\Appointment::STATUS_CONFIRMED => $appointment->sessionStatusLabel(),
                                                     \App\Models\Appointment::STATUS_PENDING_PAYMENT => $holdExpired
                                                         ? 'مهلت پرداخت تمام شده'
                                                         : 'در انتظار پرداخت',
@@ -177,6 +177,12 @@ $canCancel = $isActive
 
                             </div>
                             <div class="flex shrink-0 flex-wrap gap-2">
+                                <a
+                                    href="{{ route('client.appointments.session.show', $appointment) }}"
+                                    class="inline-flex min-h-10 items-center border border-indigo-300 px-4 py-2 text-sm text-indigo-700"
+                                >
+                                    جزئیات جلسه
+                                </a>
 
                                 @if ($canPay)
                                     <form

@@ -22,11 +22,16 @@ class ClinicalRecordController extends Controller
             ->with([
                 'items',
                 'notes' => fn ($query) => $query
-                    ->with('appointment')
-                    ->latest('session_at')
+                    ->where('psychologist_id', auth()->id())
+                    ->latest('created_at')
                     ->latest('id'),
                 'attachments' => fn ($query) => $query
                     ->latest('id'),
+                'treatmentPlans' => fn ($query) => $query
+                    ->where('psychologist_id', auth()->id())
+                    ->with('stages')
+                    ->latest('id'),
+
             ])
             ->first();
 
@@ -43,7 +48,6 @@ class ClinicalRecordController extends Controller
                 Appointment::STATUS_COMPLETED,
                 Appointment::STATUS_NO_SHOW,
             ])
-            ->with('clinicalNote:id,appointment_id')
             ->orderByDesc('starts_at')
             ->get();
 
@@ -184,6 +188,8 @@ class ClinicalRecordController extends Controller
 
     private function ensureClient(User $client): void
     {
+        abort_unless(auth()->user()?->isPsychologist(), 404);
+
         abort_unless(
             $client->isClient()
             && (
@@ -199,6 +205,9 @@ class ClinicalRecordController extends Controller
     private function ensureRecordBelongsToCurrentPsychologist(
         ClinicalRecord $clinicalRecord,
     ): void {
+
+        abort_unless(auth()->user()?->isPsychologist(), 404);
+
         $client = $clinicalRecord->client;
 
         abort_unless(

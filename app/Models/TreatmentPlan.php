@@ -77,6 +77,10 @@ class TreatmentPlan extends Model
                         self::STATUS_REFERRED,
                     ], true);
     }
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
 
     protected function casts(): array
     {

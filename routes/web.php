@@ -53,6 +53,66 @@ Route::post('/logout', [
 ])->middleware('auth')->name('logout');
 
 
+Route::middleware('auth')->group(function (): void {
+    Route::post(
+        'treatment-plans/{treatmentPlan}/activate',
+        [
+            \App\Http\Controllers\Psychologist\TreatmentPlanController::class,
+            'activate',
+        ],
+    )->name('psychologist.treatment-plans.activate');
+
+    Route::post(
+        '/client/appointments/{appointment}/session/notes',
+        [
+            \App\Http\Controllers\Client\ClientSessionNoteController::class,
+            'store',
+        ],
+    )->name('client.appointments.session.notes.store');
+
+    Route::put(
+        '/client/appointments/{appointment}/session/notes/{note}',
+        [
+            \App\Http\Controllers\Client\ClientSessionNoteController::class,
+            'update',
+        ],
+    )->name('client.appointments.session.notes.update');
+
+    Route::delete(
+        '/client/appointments/{appointment}/session/notes/{note}',
+        [
+            \App\Http\Controllers\Client\ClientSessionNoteController::class,
+            'destroy',
+        ],
+    )->name('client.appointments.session.notes.destroy');
+
+    Route::get(
+        '/psychologist/appointments/{appointment}/session',
+        [
+            \App\Http\Controllers\Psychologist\AppointmentSessionController::class,
+            'show',
+        ],
+    )->name('psychologist.appointments.session.show');
+
+    Route::put(
+        '/psychologist/appointments/{appointment}/session',
+        [
+            \App\Http\Controllers\Psychologist\AppointmentSessionController::class,
+            'update',
+        ],
+    )->name('psychologist.appointments.session.update');
+
+    Route::get(
+        '/client/appointments/{appointment}/session',
+        [
+            \App\Http\Controllers\Client\AppointmentSessionController::class,
+            'show',
+        ],
+    )->name('client.appointments.session.show');
+});
+
+
+
 if (app()->environment('local')) {
     Route::view('/preview/auth/login', 'auth.login', [
         'preview' => true,

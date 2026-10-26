@@ -16,6 +16,36 @@
                 این نقشه درمان آرشیو شده و فقط‌خواندنی است.
             </p>
         @endif
+        <section class="mt-6 border-t border-gray-200 pt-5">
+            @if ($plan->activated_at !== null)
+                <p class="text-sm text-green-700">
+                    این مسیر برای مراجع فعال شده است.
+                </p>
+            @elseif ($plan->status === \App\Models\TreatmentPlan::STATUS_ACTIVE)
+                <p class="mb-3 text-sm text-gray-600">
+                    مسیر هنوز برای مراجع نمایش داده نمی‌شود.
+                    ابتدا تغییرات را ذخیره کنید، سپس آن را فعال کنید.
+                </p>
+
+                <form
+                    method="POST"
+                    action="{{ route('psychologist.treatment-plans.activate', $plan) }}"
+                >
+                    @csrf
+
+                    <button
+                        type="submit"
+                        class="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800"
+                    >
+                        فعال‌سازی مسیر برای مراجع
+                    </button>
+                </form>
+            @else
+                <p class="text-sm text-gray-600">
+                    مسیر غیرفعال یا آرشیوشده قابل فعال‌سازی نیست.
+                </p>
+            @endif
+        </section>
 
         <form
             method="POST"

@@ -36,6 +36,31 @@ class TreatmentPlanController extends Controller
             ->route('psychologist.clinical-records.show', $clinicalRecord->client)
             ->with('status', 'نقشه درمان با موفقیت ایجاد شد.');
     }
+    public function activate(TreatmentPlan $treatmentPlan): RedirectResponse
+    {
+        $this->ensurePlanBelongsToPsychologist($treatmentPlan);
+
+        $activated = TreatmentPlan::query()
+            ->whereKey($treatmentPlan->id)
+            ->where('psychologist_id', auth()->id())
+            ->where('status', TreatmentPlan::STATUS_ACTIVE)
+            ->whereNull('activated_at')
+            ->update([
+                'activated_at' => now(),
+            ]);
+
+        return redirect()
+            ->route(
+                'psychologist.treatment-plans.edit',
+                $treatmentPlan,
+            )
+            ->with(
+                'status',
+                $activated
+                    ? 'مسیر درمان برای مراجع فعال شد.'
+                    : 'مسیر قبلاً فعال شده یا وضعیت آن اجازه فعال‌سازی نمی‌دهد.',
+            );
+    }
 
     private function ensureRecordBelongsToCurrentPsychologist(
         ClinicalRecord $clinicalRecord,

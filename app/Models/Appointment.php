@@ -38,6 +38,18 @@ class Appointment extends Model
 
     public const STATUS_NO_SHOW = 'no_show';
 
+
+    public const THERAPY_TYPE_FREE = 'free';
+
+    public const THERAPY_TYPE_PLAN = 'plan';
+
+    public const ATTENDANCE_PENDING = 'pending';
+
+    public const ATTENDANCE_HELD = 'held';
+
+    public const ATTENDANCE_ABSENT = 'absent';
+
+
     protected $fillable = [
         'psychologist_id',
         'client_id',
@@ -66,6 +78,9 @@ class Appointment extends Model
             'cancelled_at' => 'datetime',
             'duration_minutes' => 'integer',
             'amount' => 'integer',
+            'treatment_plan_id' => 'integer',
+            'treatment_plan_stage_id' => 'integer',
+
         ];
     }
 
@@ -104,4 +119,62 @@ class Appointment extends Model
             self::STATUS_CONFIRMED,
         ]);
     }
+
+    public function treatmentPlan(): BelongsTo
+    {
+        return $this->belongsTo(TreatmentPlan::class);
+    }
+
+    public function treatmentPlanStage(): BelongsTo
+    {
+        return $this->belongsTo(TreatmentPlanStage::class);
+    }
+
+    public function clientSessionNotes(): HasMany
+    {
+        return $this->hasMany(ClientSessionNote::class);
+    }
+
+    /**
+     * فقط جلسات تأییدشده‌ای که مشاور برگزاری آن‌ها را ثبت کرده است.
+     */
+    public function scopeHeld(Builder $query): Builder
+    {
+        return $query
+            ->where('status', self::STATUS_CONFIRMED)
+            ->where('attendance_status', self::ATTENDANCE_HELD);
+    }
+
+    /**
+     * جلسات قابل شمارش در پیشرفت مسیر درمان.
+     */
+    public function scopeCountableForTreatment(Builder $query): Builder
+    {
+        return $query
+            ->held()
+            ->where('therapy_session_type', self::THERAPY_TYPE_PLAN)
+            ->whereNotNull('treatment_plan_id')
+            ->whereNotNull('treatment_plan_stage_id');
+    }
+
+    public function sessionStatusLabel(): string
+    {
+        return match ($this->status) {
+            self::STATUS_CANCELLED => 'لغوشده',
+            self::STATUS_PENDING_PAYMENT => 'در انتظار پرداخت',
+
+            self::STATUS_CONFIRMED => match ($this->attendance_status) {
+                self::ATTENDANCE_HELD => 'برگزارشده',
+                self::ATTENDANCE_ABSENT => 'عدم حضور مراجع',
+                default => 'در انتظار برگزاری',
+            },
+
+            // سازگاری موقت با کدهای قدیمی تا تکمیل پچ‌ها.
+            self::STATUS_COMPLETED => 'برگزارشده',
+            self::STATUS_NO_SHOW => 'عدم حضور مراجع',
+
+            default => 'وضعیت نامشخص',
+        };
+    }
+
 }

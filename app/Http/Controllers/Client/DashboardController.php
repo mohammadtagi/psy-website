@@ -39,20 +39,70 @@ class DashboardController extends Controller
 
 
         $treatmentPlans = $client->treatmentPlans()
-            ->with([
-                'stages',
-                'clinicalNotes' => fn($query) => $query
-                    ->where('session_type', \App\Models\ClinicalNote::SESSION_TYPE_PLAN)
-                    ->whereHas('appointment', fn($appointmentQuery) => $appointmentQuery->where(
-                        'status',
-                        Appointment::STATUS_COMPLETED,
-                    )
-                    )
-                    ->with('appointment')
-                    ->latest('session_at'),
-            ])
+            ->whereNotNull('activated_at')
+            ->with('stages')
             ->latest('id')
             ->get();
+
+// فقط جلسات برگزارشده؛ نه یادداشت‌ها و نه صرفاً جلسات گذشته.
+        $heldSessionsByPlan = Appointment::query()
+            ->where('client_id', $client->id)
+            ->whereIn('treatment_plan_id', $treatmentPlans->modelKeys())
+            ->where('status', Appointment::STATUS_CONFIRMED)
+            ->where('attendance_status', 'held')
+            ->where('therapy_session_type', 'plan')
+            ->whereNotNull('treatment_plan_stage_id')
+            ->get([
+                'id',
+                'psychologist_id',
+                'treatment_plan_id',
+                'treatment_plan_stage_id',
+            ])
+            ->groupBy('treatment_plan_id');
+
+        foreach ($treatmentPlans as $plan) {
+            $stageIds = $plan->stages
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $validSessions = $heldSessionsByPlan
+                ->get($plan->id, collect())
+                ->filter(
+                    fn ($appointment) =>
+                        (int) $appointment->psychologist_id === (int) $plan->psychologist_id
+                        && in_array(
+                            (int) $appointment->treatment_plan_stage_id,
+                            $stageIds,
+                            true,
+                        )
+                );
+
+            $countsByStage = $validSessions
+                ->countBy('treatment_plan_stage_id');
+
+            foreach ($plan->stages as $stage) {
+                $stage->setAttribute(
+                    'held_sessions_count',
+                    (int) $countsByStage->get($stage->id, 0),
+                );
+            }
+
+            $completedSessions = $validSessions->count();
+            $totalEstimated = (int) $plan->stages->sum('estimated_sessions');
+
+            $plan->setAttribute('held_sessions_count', $completedSessions);
+
+            $plan->setAttribute(
+                'progress_percent',
+                $totalEstimated > 0
+                    ? min(
+                    100,
+                    (int) round(($completedSessions / $totalEstimated) * 100),
+                )
+                    : 0,
+            );
+        }
 
 
         return view('client.dashboard', compact(

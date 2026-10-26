@@ -11,18 +11,9 @@ class ClinicalNote extends Model
     use HasFactory;
 
     protected $fillable = [
-        'clinical_record_id',
-        'appointment_id',
-                'treatment_plan_id',
-                'treatment_plan_stage_id',
-                'session_type',
-        'session_at',
-        'summary',
-        'client_condition',
-        'interventions',
-        'homework_and_next_plan',
         'private_note',
     ];
+
 
     public const SESSION_TYPE_PLAN = 'plan';
 
@@ -47,6 +38,10 @@ class ClinicalNote extends Model
     {
         return $this->belongsTo(Appointment::class);
     }
+    public function psychologist(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'psychologist_id');
+    }
 
     protected function casts(): array
     {
@@ -56,6 +51,8 @@ class ClinicalNote extends Model
             'treatment_plan_id' => 'integer',
             'treatment_plan_stage_id' => 'integer',
             'session_at' => 'datetime',
+            'psychologist_id' => 'integer',
+
         ];
     }
 

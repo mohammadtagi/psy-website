@@ -34,12 +34,9 @@
 
                     @foreach ($treatmentPlans as $plan)
                         @php
-                            $completedSessions = $plan->clinicalNotes->count();
-                            $totalEstimated = (int) $plan->stages->sum('estimated_sessions');
-                            $progress = $totalEstimated > 0
-                                ? min(100, (int) round(($completedSessions / $totalEstimated) * 100))
-                                : 0;
+                            $progress = (int) $plan->progress_percent;
                         @endphp
+
 
                         <article class="mt-4 border border-gray-200 p-4">
                             <div class="flex flex-wrap items-start justify-between gap-3">
@@ -73,9 +70,7 @@
                             <div class="mt-5 grid gap-3 sm:grid-cols-3">
                                 @foreach ($plan->stages as $stage)
                                     @php
-                                        $stageCount = $plan->clinicalNotes
-                                            ->where('treatment_plan_stage_id', $stage->id)
-                                            ->count();
+                                        $stageCount = (int) $stage->held_sessions_count;
                                     @endphp
 
                                     <div class="border border-gray-200 p-3">
@@ -88,7 +83,7 @@
                                         </p>
 
                                         <p class="mt-2 text-xs text-gray-500">
-                                            جلسات تکمیل‌شده:
+                                            جلسات برگزارشده:
                                             {{ $stageCount }}
                                             /
                                             {{ $stage->estimated_sessions ?? 'بدون تخمین' }}

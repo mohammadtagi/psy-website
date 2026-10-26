@@ -28,6 +28,17 @@ class TreatmentPlanStage extends Model
     {
                 return $this->hasMany(ClinicalNote::class);
     }
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    public function heldAppointments(): HasMany
+    {
+        return $this->appointments()
+            ->countableForTreatment();
+    }
+
     protected function casts(): array
     {
         return [
