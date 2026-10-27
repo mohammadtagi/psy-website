@@ -6,6 +6,9 @@ use App\Models\ClinicalRecord;
 use App\Models\TreatmentPlan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Models\Appointment;
+use App\Models\ClinicalNote;
+use App\Models\User;
 
 class TreatmentPlanService
 {
@@ -88,6 +91,61 @@ class TreatmentPlanService
 
             return $plan->load('stages');
         });
+    }
+    public function delete(User $actor, TreatmentPlan $plan): void
+    {
+        DB::transaction(function () use ($actor, $plan): void {
+            $lockedPlan = TreatmentPlan::query()
+                ->whereKey($plan->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $record = $lockedPlan->clinicalRecord;
+
+            abort_unless(
+                $actor->isPsychologist()
+                && (int) $lockedPlan->psychologist_id === (int) $actor->id
+                && $record !== null
+                && (int) $lockedPlan->client_id === (int) $record->client_id,
+                404,
+            );
+
+            // وضعیت از دیتابیس و پس از گرفتن قفل بررسی می‌شود.
+            if (! $lockedPlan->isActive()) {
+                throw ValidationException::withMessages([
+                    'treatment_plan' => 'مسیرهای آرشیوشده قابل حذف نیستند.',
+                ]);
+            }
+
+            $stageIds = $lockedPlan->stages()->pluck('id')->all();
+
+            // تمام وضعیت‌های نوبت بررسی می‌شوند؛ نه فقط جلسات تأییدشده.
+            Appointment::query()
+                ->where(function ($query) use ($lockedPlan, $stageIds): void {
+                    $query->where('treatment_plan_id', $lockedPlan->id)
+                        ->orWhereIn('treatment_plan_stage_id', $stageIds);
+                })
+                ->update([
+                    'treatment_plan_id' => null,
+                    'treatment_plan_stage_id' => null,
+                    'therapy_session_type' => Appointment::THERAPY_TYPE_FREE,
+                ]);
+
+            // حفظ یادداشت‌های قدیمی و پاک‌کردن فقط ارتباط درمانی آن‌ها.
+            ClinicalNote::query()
+                ->where(function ($query) use ($lockedPlan, $stageIds): void {
+                    $query->where('treatment_plan_id', $lockedPlan->id)
+                        ->orWhereIn('treatment_plan_stage_id', $stageIds);
+                })
+                ->update([
+                    'treatment_plan_id' => null,
+                    'treatment_plan_stage_id' => null,
+                    'session_type' => ClinicalNote::SESSION_TYPE_FREE,
+                ]);
+
+            // مراحل با cascadeOnDelete حذف می‌شوند.
+            $lockedPlan->delete();
+        }, 5);
     }
 
     public function archive(

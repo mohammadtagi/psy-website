@@ -170,6 +170,13 @@ Route::middleware(['auth', 'role:psychologist'])
     ->prefix('psychologist')
     ->name('psychologist.')
     ->group(function (): void {
+
+        Route::delete('/treatment-plans/{treatmentPlan}', [
+            TreatmentPlanController::class,
+            'destroy',
+        ])->name('treatment-plans.destroy');
+
+
         Route::post(
             '/clients/{client}/manual-appointments',
             [ClinicalRecordController::class, 'storeManualAppointment'],

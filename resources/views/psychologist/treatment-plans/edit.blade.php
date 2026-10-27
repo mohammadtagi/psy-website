@@ -1,5 +1,11 @@
 <x-layouts.app>
     <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        @error('treatment_plan')
+        <div role="alert" class="mb-6 border-r-4 border-red-600 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{ $message }}
+        </div>
+        @enderror
+
         <a
             href="{{ route('psychologist.clinical-records.show', $client) }}"
             class="text-sm text-indigo-700 hover:underline"
@@ -192,5 +198,37 @@
                 </button>
             </form>
         @endif
+
+        @if ($plan->isActive())
+            <section class="mt-8 border-t border-red-200 pt-6">
+                <h2 class="font-semibold text-red-700">
+                    حذف دائمی مسیر درمان
+                </h2>
+
+                <p class="mt-2 text-sm leading-7 text-gray-600">
+                    مسیر و مراحل آن حذف می‌شوند، اما جلسات، پرداخت‌ها و یادداشت‌ها
+                    باقی می‌مانند. جلسات مرتبط، مستقل از مسیر درمان خواهند شد.
+                    پس از حذف می‌توانید مسیر جدیدی بسازید.
+                </p>
+
+                <form
+                    method="POST"
+                    action="{{ route('psychologist.treatment-plans.destroy', $plan) }}"
+                    class="mt-4"
+                    onsubmit="return confirm('این مسیر درمان برای همیشه حذف شود؟ این عملیات قابل بازگشت نیست.')"
+                >
+                    @csrf
+                    @method('DELETE')
+
+                    <button
+                        type="submit"
+                        class="border border-red-700 bg-red-700 px-5 py-2 font-medium text-white hover:bg-red-800"
+                    >
+                        حذف دائمی مسیر
+                    </button>
+                </form>
+            </section>
+        @endif
+
     </div>
 </x-layouts.app>

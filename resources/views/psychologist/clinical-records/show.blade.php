@@ -1,5 +1,11 @@
 <x-layouts.app>
     <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        @error('treatment_plan')
+        <div role="alert" class="mb-6 border-r-4 border-red-600 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{ $message }}
+        </div>
+        @enderror
+
         @php
             $clientName = trim(($client->first_name ?? '') . ' ' . ($client->last_name ?? ''));
         @endphp
@@ -142,13 +148,30 @@
                                     @endswitch
                                 </p>
                             </div>
+                            <div class="flex items-center gap-4">
+                                <a
+                                    href="{{ route('psychologist.treatment-plans.edit', $plan) }}"
+                                    class="text-sm text-indigo-700 hover:underline"
+                                >
+                                    {{ $plan->isActive() ? 'ویرایش' : 'مشاهده' }}
+                                </a>
 
-                            <a
-                                href="{{ route('psychologist.treatment-plans.edit', $plan) }}"
-                                class="text-sm text-indigo-700 hover:underline"
-                            >
-                                {{ $plan->isActive() ? 'ویرایش' : 'مشاهده' }}
-                            </a>
+                                @if ($plan->isActive())
+                                    <form
+                                        method="POST"
+                                        action="{{ route('psychologist.treatment-plans.destroy', $plan) }}"
+                                        onsubmit="return confirm('مسیر درمان و مراحل آن برای همیشه حذف شوند؟ جلسات، پرداخت‌ها و یادداشت‌ها باقی می‌مانند، اما ارتباط آن‌ها با این مسیر پاک می‌شود.')"
+                                    >
+                                        @csrf
+                                        @method('DELETE')
+
+                                        <button type="submit" class="text-sm text-red-700 hover:underline">
+                                            حذف مسیر
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+
                         </div>
 
                         <div class="mt-4">

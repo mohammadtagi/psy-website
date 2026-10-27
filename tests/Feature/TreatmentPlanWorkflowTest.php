@@ -440,6 +440,238 @@ class TreatmentPlanWorkflowTest extends TestCase
         $response->assertNotFound();
         $this->assertDatabaseCount('clinical_notes', 0);
     }
+
+    public function test_active_plan_can_be_deleted_without_deleting_its_session(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+        $plan = $this->createPlan($psychologist, $client, $record);
+        $stage = $this->createStages($plan)[0];
+
+        // فعال‌سازی برای مراجع هم مانع حذف نیست.
+        $plan->forceFill(['activated_at' => now()])->save();
+
+        $appointment = $this->createSessionAppointment($psychologist, $client);
+        $appointment->forceFill([
+            'therapy_session_type' => Appointment::THERAPY_TYPE_PLAN,
+            'treatment_plan_id' => $plan->id,
+            'treatment_plan_stage_id' => $stage->id,
+            'attendance_status' => Appointment::ATTENDANCE_HELD,
+            'session_subject' => 'موضوع جلسه',
+            'session_discussion' => 'شرح جلسه',
+            'session_recommendations' => 'توصیه جلسه',
+            'session_exercises' => 'تمرین جلسه',
+            'client_note' => 'یادداشت مراجع',
+        ])->save();
+
+        $before = $appointment->getRawOriginal();
+
+        $this->actingAs($psychologist)
+            ->delete(route('psychologist.treatment-plans.destroy', $plan))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('psychologist.clinical-records.show', $client))
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseMissing('treatment_plans', ['id' => $plan->id]);
+        $this->assertDatabaseMissing('treatment_plan_stages', [
+            'treatment_plan_id' => $plan->id,
+        ]);
+
+        $appointment->refresh();
+
+        $this->assertNull($appointment->treatment_plan_id);
+        $this->assertNull($appointment->treatment_plan_stage_id);
+        $this->assertSame(
+            Appointment::THERAPY_TYPE_FREE,
+            $appointment->therapy_session_type,
+        );
+
+        // تمام فیلدهای دیگر نوبت باید دست‌نخورده باشند.
+        foreach ($before as $field => $value) {
+            if (in_array($field, [
+                'treatment_plan_id',
+                'treatment_plan_stage_id',
+                'therapy_session_type',
+                'updated_at',
+            ], true)) {
+                continue;
+            }
+
+            $this->assertSame(
+                $value,
+                $appointment->getRawOriginal($field),
+                "Appointment field changed: {$field}",
+            );
+        }
+
+        $this->assertDatabaseHas('clinical_records', ['id' => $record->id]);
+        $this->assertDatabaseCount('treatment_plans', 0);
+
+        // ساخت مسیر جدید اختیاری است، اما دیگر توسط guard مسدود نمی‌شود.
+        $this->actingAs($psychologist)->post(
+            route('psychologist.treatment-plans.store', $record),
+            ['title' => 'مسیر جدید'],
+        )->assertSessionHasNoErrors();
+
+        $this->assertDatabaseCount('treatment_plans', 1);
+        $newPlan = TreatmentPlan::query()->sole();
+        $this->assertSame('مسیر جدید', $newPlan->title);
+        $this->assertNull($newPlan->activated_at);
+
+        // جلسه قدیمی خودکار به مسیر جدید متصل نمی‌شود.
+        $this->assertNull($appointment->fresh()->treatment_plan_id);
+    }
+    public function test_deleting_plan_preserves_legacy_private_note(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+        $plan = $this->createPlan($psychologist, $client, $record);
+        $stage = $this->createStages($plan)[0];
+
+        $this->actingAs($psychologist)->post(
+            route('psychologist.clinical-notes.store', $record),
+            ['private_note' => 'یادداشت محرمانه محفوظ'],
+        )->assertSessionHasNoErrors();
+
+        $note = ClinicalNote::query()->sole();
+        $note->forceFill([
+            'treatment_plan_id' => $plan->id,
+            'treatment_plan_stage_id' => $stage->id,
+            'session_type' => ClinicalNote::SESSION_TYPE_PLAN,
+        ])->save();
+
+        $before = $note->getRawOriginal();
+
+        $this->actingAs($psychologist)
+            ->delete(route('psychologist.treatment-plans.destroy', $plan))
+            ->assertSessionHasNoErrors();
+
+        $note->refresh();
+
+        $this->assertNull($note->treatment_plan_id);
+        $this->assertNull($note->treatment_plan_stage_id);
+        $this->assertSame(ClinicalNote::SESSION_TYPE_FREE, $note->session_type);
+
+        foreach ($before as $field => $value) {
+            if (in_array($field, [
+                'treatment_plan_id',
+                'treatment_plan_stage_id',
+                'session_type',
+                'updated_at',
+            ], true)) {
+                continue;
+            }
+
+            $this->assertSame($value, $note->getRawOriginal($field));
+        }
+    }
+    public function test_all_archived_plan_statuses_are_protected_from_deletion(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+        $plan = $this->createPlan($psychologist, $client, $record);
+        $this->createStages($plan);
+
+        foreach ([
+                     TreatmentPlan::STATUS_COMPLETED,
+                     TreatmentPlan::STATUS_DROPPED_OUT,
+                     TreatmentPlan::STATUS_REFERRED,
+                 ] as $status) {
+            $plan->update([
+                'status' => $status,
+                'active_plan_guard' => null,
+                'status_reason' => 'علت آرشیو',
+            ]);
+
+            $this->actingAs($psychologist)
+                ->delete(route('psychologist.treatment-plans.destroy', $plan))
+                ->assertSessionHasErrors('treatment_plan');
+
+            $this->assertDatabaseHas('treatment_plans', [
+                'id' => $plan->id,
+                'status' => $status,
+                'status_reason' => 'علت آرشیو',
+            ]);
+
+            $this->assertSame(3, $plan->stages()->count());
+        }
+    }
+    public function test_another_psychologist_cannot_delete_the_plan(): void
+    {
+        [$owner, $client, $record] = $this->clinicalContext();
+        $plan = $this->createPlan($owner, $client, $record);
+        $this->createStages($plan);
+
+        $other = User::factory()->psychologist()->create();
+
+        $this->actingAs($other)
+            ->delete(route('psychologist.treatment-plans.destroy', $plan))
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('treatment_plans', ['id' => $plan->id]);
+        $this->assertSame(3, $plan->stages()->count());
+    }
+
+    public function test_guest_cannot_delete_a_treatment_plan(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+        $plan = $this->createPlan($psychologist, $client, $record);
+
+        $this->delete(route('psychologist.treatment-plans.destroy', $plan))
+            ->assertRedirect(route('auth.login'));
+
+        $this->assertDatabaseHas('treatment_plans', ['id' => $plan->id]);
+    }
+
+    public function test_client_cannot_delete_a_treatment_plan(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+        $plan = $this->createPlan($psychologist, $client, $record);
+
+        $response = $this->actingAs($client)
+            ->delete(route('psychologist.treatment-plans.destroy', $plan));
+
+        // بسته به قرارداد Role middleware، دسترسی با 403 یا 404 رد می‌شود.
+        $this->assertContains($response->getStatusCode(), [403, 404]);
+        $this->assertDatabaseHas('treatment_plans', ['id' => $plan->id]);
+    }
+
+    public function test_plan_with_mismatched_record_client_cannot_be_deleted(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+        $plan = $this->createPlan($psychologist, $client, $record);
+
+        $otherClient = User::factory()->client()->create();
+        $otherRecord = $this->createClinicalRecord($otherClient);
+
+        $plan->update(['clinical_record_id' => $otherRecord->id]);
+
+        $this->actingAs($psychologist)
+            ->delete(route('psychologist.treatment-plans.destroy', $plan))
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('treatment_plans', ['id' => $plan->id]);
+    }
+    public function test_delete_button_is_only_shown_for_active_plan(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+        $plan = $this->createPlan($psychologist, $client, $record);
+        $this->createStages($plan);
+
+        $url = route('psychologist.treatment-plans.edit', $plan);
+
+        $this->actingAs($psychologist)->get($url)
+            ->assertOk()
+            ->assertSee('حذف دائمی مسیر');
+
+        $plan->update([
+            'status' => TreatmentPlan::STATUS_COMPLETED,
+            'active_plan_guard' => null,
+            'status_reason' => 'تکمیل درمان',
+        ]);
+
+        $this->actingAs($psychologist)->get($url)
+            ->assertOk()
+            ->assertDontSee('حذف دائمی مسیر');
+    }
+
     private function createSessionAppointment(
         User $psychologist,
         User $client,

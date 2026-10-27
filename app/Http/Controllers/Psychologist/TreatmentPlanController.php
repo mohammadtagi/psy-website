@@ -77,6 +77,24 @@ class TreatmentPlanController extends Controller
         );
     }
 
+    public function destroy(
+        Request $request,
+        TreatmentPlan $treatmentPlan,
+        TreatmentPlanService $service,
+    ): RedirectResponse {
+        $this->ensurePlanBelongsToPsychologist($treatmentPlan);
+
+        $clientId = $treatmentPlan->client_id;
+
+        $service->delete($request->user(), $treatmentPlan);
+
+        return redirect()
+            ->route('psychologist.clinical-records.show', $clientId)
+            ->with(
+                'status',
+                'مسیر درمان حذف شد. جلسات، پرداخت‌ها و یادداشت‌ها حفظ شدند.',
+            );
+    }
 
     public function create(ClinicalRecord $clinicalRecord): View
     {
