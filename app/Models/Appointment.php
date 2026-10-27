@@ -13,6 +13,59 @@ use App\Models\ClinicalNote;
 class Appointment extends Model
 {
     use HasFactory;
+    public const BOOKING_SOURCE_WEBSITE = 'website';
+
+    public const BOOKING_SOURCE_MANUAL = 'manual';
+
+    public const MANUAL_PAYMENT_EXTERNAL = 'paid_outside';
+
+    public const MANUAL_PAYMENT_FREE = 'free';
+    public function isManuallyBooked(): bool
+    {
+        return $this->booking_source === self::BOOKING_SOURCE_MANUAL;
+    }
+
+    public function bookingSourceLabel(): string
+    {
+        return match ($this->booking_source) {
+            self::BOOKING_SOURCE_WEBSITE => 'رزرو سایت',
+            self::BOOKING_SOURCE_MANUAL => 'ثبت دستی مشاور',
+            default => 'نامشخص',
+        };
+    }
+
+    public function manualPaymentMethodLabel(): ?string
+    {
+        if (! $this->isManuallyBooked()) {
+            return null;
+        }
+
+        return match ($this->manual_payment_method) {
+            self::MANUAL_PAYMENT_EXTERNAL => 'پرداخت‌شده خارج از سایت',
+            self::MANUAL_PAYMENT_FREE => 'رایگان',
+            default => 'نامشخص',
+        };
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Appointment $appointment): void {
+            do {
+                $code = (string) random_int(1000000, 9999999);
+            } while (
+                static::query()
+                    ->where('tracking_code', $code)
+                    ->exists()
+            );
+
+            $appointment->tracking_code = $code;
+        });
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'tracking_code';
+    }
 
     public const SESSION_TYPE_ONLINE = 'online';
 

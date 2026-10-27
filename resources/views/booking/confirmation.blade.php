@@ -159,13 +159,14 @@ Appointment::STATUS_PENDING_PAYMENT =>
                 @endif
 
                 <div class="flex items-center justify-between border-b border-gray-100 pb-4">
-                    <span class="text-sm text-gray-500">
-                        کد نوبت
-                    </span>
+<span class="text-sm text-gray-500">
+    کد پیگیری نوبت
+</span>
 
-                    <strong class="font-mono text-sm text-gray-900">
-                        #{{ $appointment->getKey() }}
+                    <strong dir="ltr" class="break-all font-mono text-sm text-gray-900">
+                        {{ $appointment->tracking_code }}
                     </strong>
+
                 </div>
 
                 <div class="grid gap-5 sm:grid-cols-2">

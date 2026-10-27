@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use App\Models\Appointment;
+use App\Services\Booking\ManualAppointmentService;
 
 class ClinicalRecordController extends Controller
 {
@@ -49,13 +50,29 @@ class ClinicalRecordController extends Controller
                 Appointment::STATUS_NO_SHOW,
             ])
             ->orderByDesc('starts_at')
-            ->get();
+            ->orderByDesc('id')
+            ->paginate(10, ['*'], 'appointments_page')
+            ->withQueryString();
+
+
+
+        $manualDefaultDuration = (int) config(
+            'booking.manual_default_duration_minutes',
+            45,
+        );
+
+        $manualDefaultAmount = app(
+            \App\Services\Booking\BookingService::class,
+        )->amountForDuration($manualDefaultDuration);
 
         return view('psychologist.clinical-records.show', [
             'client' => $client,
             'record' => $record,
-            'appointments' => $appointments,
+            'recordAppointments' => $appointments,
+            'manualDefaultDuration' => $manualDefaultDuration,
+            'manualDefaultAmount' => $manualDefaultAmount,
         ]);
+
     }
 
     public function create(User $client): View|RedirectResponse
@@ -126,6 +143,33 @@ class ClinicalRecordController extends Controller
                 $clinicalRecord->client,
             )
             ->with('status', 'پرونده بالینی با موفقیت به‌روزرسانی شد.');
+    }
+    public function storeManualAppointment(
+        Request $request,
+        User $client,
+        ManualAppointmentService $service,
+    ): RedirectResponse {
+        $this->ensureClient($client);
+
+        $appointment = $service->create(
+            $request->user(),
+            $client,
+            $request->only([
+                'date',
+                'time',
+                'duration_minutes',
+                'session_type',
+                'manual_payment_method',
+                'amount',
+            ]),
+        );
+
+        return redirect()
+            ->route('psychologist.clinical-records.show', $client)
+            ->with(
+                'status',
+                'جلسه با کد پیگیری '.$appointment->tracking_code.' ثبت شد.',
+            );
     }
 
     private function validatedData(Request $request): array

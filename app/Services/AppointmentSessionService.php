@@ -127,6 +127,24 @@ class AppointmentSessionService
                         ],
                     ]);
                 }
+// ارتباط تاریخی موجود حفظ می‌شود، اما اتصال جدید به مسیر
+// غیرفعال یا تغییر مرحله آن مجاز نیست.
+                $isExistingPlanAssignment =
+                    $session->therapy_session_type === Appointment::THERAPY_TYPE_PLAN
+                    && (int) $session->treatment_plan_id === (int) $plan->id
+                    && (int) $session->treatment_plan_stage_id
+                    === (int) $data['treatment_plan_stage_id'];
+
+                if (
+                    $plan->status !== TreatmentPlan::STATUS_ACTIVE
+                    && ! $isExistingPlanAssignment
+                ) {
+                    throw ValidationException::withMessages([
+                        'treatment_plan_id' => [
+                            'اتصال جلسه جدید به مسیر درمان آرشیوشده مجاز نیست.',
+                        ],
+                    ]);
+                }
 
                 $stage = TreatmentPlanStage::query()
                     ->whereKey($data['treatment_plan_stage_id'])

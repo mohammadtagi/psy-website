@@ -54,6 +54,7 @@ Route::post('/logout', [
 
 
 Route::middleware('auth')->group(function (): void {
+
     Route::post(
         'treatment-plans/{treatmentPlan}/activate',
         [
@@ -169,6 +170,11 @@ Route::middleware(['auth', 'role:psychologist'])
     ->prefix('psychologist')
     ->name('psychologist.')
     ->group(function (): void {
+        Route::post(
+            '/clients/{client}/manual-appointments',
+            [ClinicalRecordController::class, 'storeManualAppointment'],
+        )->name('clinical-records.manual-appointments.store');
+
         Route::get('/', [PsychologistDashboardController::class, 'index'])
             ->name('dashboard');
 

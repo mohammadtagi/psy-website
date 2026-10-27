@@ -98,6 +98,26 @@
                         </article>
                     @endforeach
                 </section>
+            @else
+                <section class="mt-6 rounded-lg border border-gray-200 bg-white p-5">
+                    <h2 class="font-semibold text-gray-900">
+                        مسیر درمان
+                    </h2>
+
+                    <p class="mt-3 text-sm leading-7 text-gray-600">
+                        هنوز مسیر درمانی برای شما فعال نشده است.
+                        برای شروع، یک جلسه ارزیابی رزرو کنید.
+                        مسیر درمان پس از تعیین و فعال‌سازی مشاور در این بخش نمایش داده می‌شود.
+                    </p>
+
+                    <a
+                        href="{{ route('booking.index') }}"
+                        class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800"
+                    >
+                        رزرو جلسه ارزیابی
+                    </a>
+                </section>
+
             @endif
 
 

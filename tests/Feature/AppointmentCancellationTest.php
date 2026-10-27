@@ -224,11 +224,17 @@ class AppointmentCancellationTest extends TestCase
             ->forPsychologist($psychologist)
             ->usingAvailability($availability)
             ->at($startsAt)
-            ->create();
+            ->create([
+                'created_at' => $now->subMinutes(
+                    (int) config('booking.new_booking_grace_minutes', 60) + 1
+                ),
+            ]);
+
 
         $response = $this
             ->actingAs($client)
             ->post(route('client.appointments.cancel', $appointment));
+
 
         $response->assertSessionHasErrors('appointment');
 

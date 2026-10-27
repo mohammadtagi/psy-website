@@ -19,6 +19,7 @@ use Throwable;
 class OtpLoginController extends Controller
 {
     private const SESSION_MOBILE_KEY = 'auth.otp.mobile';
+    private const SESSION_REMEMBER_KEY = 'auth.otp.remember';
 
     public function __construct(
         private readonly MelipayamakService $sms,
@@ -36,7 +37,9 @@ class OtpLoginController extends Controller
     {
         $request->validate([
             'mobile' => ['required', 'string', 'max:30'],
+            'remember' => ['sometimes', 'boolean'],
         ]);
+
 
         $mobile = $this->normalizeMobile(
             (string) $request->input('mobile')
@@ -50,10 +53,11 @@ class OtpLoginController extends Controller
 
         $this->sendCode($mobile);
 
-        $request->session()->put(
-            self::SESSION_MOBILE_KEY,
-            $mobile
-        );
+        $request->session()->put([
+            self::SESSION_MOBILE_KEY => $mobile,
+            self::SESSION_REMEMBER_KEY => $request->boolean('remember'),
+        ]);
+
 
         return redirect()
             ->route('auth.otp.form')
@@ -177,9 +181,28 @@ class OtpLoginController extends Controller
         /** @var User $user */
         $user = $result['user'];
 
-        Auth::login($user);
+        $remember = (bool) $request->session()->get(
+                self::SESSION_REMEMBER_KEY,
+                false
+            ) && in_array($user->role, [
 
-        $request->session()->forget(self::SESSION_MOBILE_KEY);
+                User::ROLE_CLIENT,
+                User::ROLE_PSYCHOLOGIST,
+            ], true);
+
+        /** @var \Illuminate\Auth\SessionGuard $guard */
+        $guard = Auth::guard('web');
+
+// مدت کوکی ورود پایدار، بر حسب دقیقه: ۳۰ روز
+        $guard->setRememberDuration(60 * 24 * 30);
+
+        $guard->login($user, $remember);
+
+        $request->session()->forget([
+            self::SESSION_MOBILE_KEY,
+            self::SESSION_REMEMBER_KEY,
+        ]);
+
         $request->session()->regenerate();
 
         return match ($user->role) {

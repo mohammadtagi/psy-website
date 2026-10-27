@@ -280,68 +280,87 @@ class TreatmentPlanWorkflowTest extends TestCase
         $response->assertNotFound();
     }
 
+
     public function test_free_session_clears_plan_and_stage_ids(): void
     {
         [$psychologist, $client, $record] = $this->clinicalContext();
         $plan = $this->createPlan($psychologist, $client, $record);
         $stage = $this->createStages($plan)[0];
 
-        $response = $this->actingAs($psychologist)->post(
-            route('psychologist.clinical-notes.store', [
-                'clinicalRecord' => $record,
-            ]),
+        $appointment = $this->createSessionAppointment(
+            $psychologist,
+            $client,
+        );
+
+        $appointment->forceFill([
+            'therapy_session_type' => Appointment::THERAPY_TYPE_PLAN,
+            'treatment_plan_id' => $plan->id,
+            'treatment_plan_stage_id' => $stage->id,
+        ])->save();
+
+        $response = $this->actingAs($psychologist)->put(
+            route('psychologist.appointments.session.update', $appointment),
             [
-                'session_type' => ClinicalNote::SESSION_TYPE_FREE,
+                'therapy_session_type' => Appointment::THERAPY_TYPE_FREE,
+                'attendance_status' => Appointment::ATTENDANCE_PENDING,
                 'treatment_plan_id' => $plan->id,
                 'treatment_plan_stage_id' => $stage->id,
-                'summary' => 'یادداشت جلسه آزاد',
             ],
         );
 
         $response
+            ->assertSessionHasNoErrors()
             ->assertRedirect(
-                route('psychologist.clinical-records.show', $client),
+                route('psychologist.appointments.session.show', $appointment),
             )
             ->assertSessionHas('status');
 
-        $note = ClinicalNote::query()->latest('id')->firstOrFail();
+        $appointment->refresh();
 
-        $this->assertNull($note->treatment_plan_id);
-        $this->assertNull($note->treatment_plan_stage_id);
+        $this->assertNull($appointment->treatment_plan_id);
+        $this->assertNull($appointment->treatment_plan_stage_id);
         $this->assertSame(
-            ClinicalNote::SESSION_TYPE_FREE,
-            $note->session_type,
+            Appointment::THERAPY_TYPE_FREE,
+            $appointment->therapy_session_type,
         );
+
+        $this->assertDatabaseCount('clinical_notes', 0);
     }
 
     public function test_plan_session_requires_a_plan_and_stage(): void
     {
         [$psychologist, $client, $record] = $this->clinicalContext();
-
-        $withoutPlan = $this->actingAs($psychologist)->post(
-            route('psychologist.clinical-notes.store', [
-                'clinicalRecord' => $record,
-            ]),
-            [
-                'session_type' => ClinicalNote::SESSION_TYPE_PLAN,
-            ],
+        $appointment = $this->createSessionAppointment(
+            $psychologist,
+            $client,
         );
 
-        $withoutPlan->assertSessionHasErrors('treatment_plan_id');
+        $url = route(
+            'psychologist.appointments.session.update',
+            $appointment,
+        );
+
+        $withoutPlan = $this->actingAs($psychologist)->put($url, [
+            'therapy_session_type' => Appointment::THERAPY_TYPE_PLAN,
+            'attendance_status' => Appointment::ATTENDANCE_PENDING,
+        ]);
+
+        $withoutPlan->assertSessionHasErrors([
+            'treatment_plan_id',
+            'treatment_plan_stage_id',
+        ]);
 
         $plan = $this->createPlan($psychologist, $client, $record);
 
-        $withoutStage = $this->actingAs($psychologist)->post(
-            route('psychologist.clinical-notes.store', [
-                'clinicalRecord' => $record,
-            ]),
-            [
-                'session_type' => ClinicalNote::SESSION_TYPE_PLAN,
-                'treatment_plan_id' => $plan->id,
-            ],
-        );
+        $withoutStage = $this->actingAs($psychologist)->put($url, [
+            'therapy_session_type' => Appointment::THERAPY_TYPE_PLAN,
+            'attendance_status' => Appointment::ATTENDANCE_PENDING,
+            'treatment_plan_id' => $plan->id,
+        ]);
 
         $withoutStage->assertSessionHasErrors('treatment_plan_stage_id');
+
+        $this->assertSessionRemainsUnassigned($appointment);
     }
 
     public function test_plan_session_rejects_stage_belonging_to_another_plan(): void
@@ -351,18 +370,24 @@ class TreatmentPlanWorkflowTest extends TestCase
         $secondPlan = $this->createPlanForAnotherClient();
         $foreignStage = $this->createStages($secondPlan)[0];
 
-        $response = $this->actingAs($psychologist)->post(
-            route('psychologist.clinical-notes.store', [
-                'clinicalRecord' => $record,
-            ]),
+        $appointment = $this->createSessionAppointment(
+            $psychologist,
+            $client,
+        );
+
+        $response = $this->actingAs($psychologist)->put(
+            route('psychologist.appointments.session.update', $appointment),
             [
-                'session_type' => ClinicalNote::SESSION_TYPE_PLAN,
+                'therapy_session_type' => Appointment::THERAPY_TYPE_PLAN,
+                'attendance_status' => Appointment::ATTENDANCE_PENDING,
                 'treatment_plan_id' => $firstPlan->id,
                 'treatment_plan_stage_id' => $foreignStage->id,
             ],
         );
 
         $response->assertSessionHasErrors('treatment_plan_stage_id');
+
+        $this->assertSessionRemainsUnassigned($appointment);
     }
 
     public function test_plan_session_cannot_be_added_to_an_archived_plan(): void
@@ -377,18 +402,24 @@ class TreatmentPlanWorkflowTest extends TestCase
             'active_plan_guard' => null,
         ]);
 
-        $response = $this->actingAs($psychologist)->post(
-            route('psychologist.clinical-notes.store', [
-                'clinicalRecord' => $record,
-            ]),
+        $appointment = $this->createSessionAppointment(
+            $psychologist,
+            $client,
+        );
+
+        $response = $this->actingAs($psychologist)->put(
+            route('psychologist.appointments.session.update', $appointment),
             [
-                'session_type' => ClinicalNote::SESSION_TYPE_PLAN,
+                'therapy_session_type' => Appointment::THERAPY_TYPE_PLAN,
+                'attendance_status' => Appointment::ATTENDANCE_PENDING,
                 'treatment_plan_id' => $plan->id,
                 'treatment_plan_stage_id' => $stage->id,
             ],
         );
 
         $response->assertSessionHasErrors('treatment_plan_id');
+
+        $this->assertSessionRemainsUnassigned($appointment);
     }
 
     public function test_unrelated_psychologist_cannot_create_note_for_the_record(): void
@@ -401,13 +432,49 @@ class TreatmentPlanWorkflowTest extends TestCase
                 'clinicalRecord' => $record,
             ]),
             [
-                'session_type' => ClinicalNote::SESSION_TYPE_FREE,
-                'summary' => 'دسترسی غیرمجاز',
+                'private_note' => 'دسترسی غیرمجاز',
             ],
+
         );
 
         $response->assertNotFound();
         $this->assertDatabaseCount('clinical_notes', 0);
+    }
+    private function createSessionAppointment(
+        User $psychologist,
+        User $client,
+    ): Appointment {
+        $appointment = Appointment::query()
+            ->where('psychologist_id', $psychologist->id)
+            ->where('client_id', $client->id)
+            ->sole();
+
+        $appointment->forceFill([
+            'status' => Appointment::STATUS_CONFIRMED,
+            'therapy_session_type' => Appointment::THERAPY_TYPE_FREE,
+            'attendance_status' => Appointment::ATTENDANCE_PENDING,
+            'treatment_plan_id' => null,
+            'treatment_plan_stage_id' => null,
+        ])->save();
+
+        return $appointment->refresh();
+    }
+
+    private function assertSessionRemainsUnassigned(
+        Appointment $appointment,
+    ): void {
+        $appointment->refresh();
+
+        $this->assertSame(
+            Appointment::THERAPY_TYPE_FREE,
+            $appointment->therapy_session_type,
+        );
+        $this->assertSame(
+            Appointment::ATTENDANCE_PENDING,
+            $appointment->attendance_status,
+        );
+        $this->assertNull($appointment->treatment_plan_id);
+        $this->assertNull($appointment->treatment_plan_stage_id);
     }
 
     private function clinicalContext(): array

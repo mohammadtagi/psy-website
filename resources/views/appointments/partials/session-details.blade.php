@@ -27,6 +27,16 @@
     <h2 class="text-lg font-semibold">اطلاعات جلسه</h2>
 
     <dl class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+            <dt class="text-sm text-gray-500">کد پیگیری نوبت</dt>
+
+            <dd class="mt-1">
+        <span dir="ltr" class="inline-block break-all font-mono text-sm">
+            {{ $appointment->tracking_code }}
+        </span>
+            </dd>
+        </div>
+
         <div>
             <dt class="text-sm text-gray-500">تاریخ</dt>
             <dd>

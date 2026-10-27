@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Validation\ValidationException;
 use App\Support\PersianDate;
+use App\Models\Appointment;
 
 class BookingController extends Controller
 {
@@ -204,16 +205,20 @@ class BookingController extends Controller
                 ?? null;
 
             if ($pendingAppointmentId !== null) {
+                $pendingAppointment = $client->clientAppointments()
+                    ->findOrFail((int) $pendingAppointmentId);
+
                 return redirect()
                     ->route(
                         'booking.confirmation',
-                        ['appointment' => (int) $pendingAppointmentId],
+                        ['appointment' => $pendingAppointment],
                     )
                     ->withErrors([
                         'booking' =>
                             'شما یک نوبت پرداخت‌نشده دارید. ابتدا پرداخت همان نوبت را تکمیل کنید.',
                     ]);
             }
+
 
             throw $exception;
         }
@@ -227,22 +232,27 @@ class BookingController extends Controller
             );
 
     }
-    public function confirmation(int $appointment): View
-    {
-        $client = request()->user();
+    public function confirmation(
+        Request $request,
+        Appointment $appointment,
+    ): View {
+        abort_unless(
+            $request->user()?->isClient()
+            && (int) $appointment->client_id
+            === (int) $request->user()->getKey(),
+            404,
+        );
 
-        $appointmentModel = $client->clientAppointments()
-            ->with([
-                'psychologist:id,first_name,last_name',
-                'availability:id',
-            ])
-            ->findOrFail($appointment);
-
+        $appointment->load([
+            'psychologist:id,first_name,last_name',
+            'availability:id',
+        ]);
 
         return view('booking.confirmation', [
-            'appointment' => $appointmentModel,
+            'appointment' => $appointment,
         ]);
     }
+
 
     private function psychologist(): User
     {

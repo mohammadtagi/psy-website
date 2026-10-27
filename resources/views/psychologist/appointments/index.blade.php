@@ -75,6 +75,13 @@
                         <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-900">
                             {{ $appointment->client->first_name }}
                             {{ $appointment->client->last_name }}
+
+                            <div class="mt-2 text-xs text-gray-500">
+                                کد پیگیری:
+                                <span dir="ltr" class="inline-block font-mono">
+            {{ $appointment->tracking_code }}
+        </span>
+                            </div>
                         </td>
 
                         {{-- ۲. تاریخ و ساعت --}}

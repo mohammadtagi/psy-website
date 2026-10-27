@@ -313,7 +313,10 @@ class BookingService
                     $query
                         ->whereIn('status', [
                             Appointment::STATUS_CONFIRMED,
+                            Appointment::STATUS_COMPLETED,
+                            Appointment::STATUS_NO_SHOW,
                         ])
+
                         ->orWhere(function ($pending) use ($now): void {
                             $pending
                                 ->where(
@@ -373,7 +376,7 @@ class BookingService
         }
     }
 
-    private function amountForDuration(int $durationMinutes): int
+    public function amountForDuration(int $durationMinutes): int
     {
         return match ($durationMinutes) {
             45 => self::PRICE_45_MINUTES,

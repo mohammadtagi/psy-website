@@ -123,6 +123,13 @@ $canCancel = $isActive
                     @endphp
 
                     <article class="border border-gray-200 bg-white p-5 shadow-sm">
+                        <p class="mb-4 text-xs text-gray-500">
+                            کد پیگیری:
+                            <span dir="ltr" class="inline-block break-all font-mono">
+        {{ $appointment->tracking_code }}
+    </span>
+                        </p>
+
                         <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                             <div class="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
                                 <div>

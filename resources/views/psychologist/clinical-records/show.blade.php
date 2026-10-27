@@ -199,6 +199,14 @@
                 @endforelse
             </section>
 
+            @include('psychologist.clinical-records.partials.appointments', [
+    'recordAppointments' => $recordAppointments,
+])
+
+
+            @include('psychologist.clinical-records.partials.manual-appointment')
+
+
             <section class="border border-gray-200 bg-white p-5 md:col-span-2">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -223,7 +231,7 @@
                 </div>
 
                 <div class="mt-5 space-y-4">
-                    @forelse ($record->notes as $note)
+                @forelse ($record->notes as $note)
                         <article class="space-y-4 border border-gray-200 p-4">
                             <div class="space-y-1 text-xs text-gray-500">
                                 <p>

@@ -18,6 +18,15 @@ class ZarinpalPaymentService
                 'Zarinpal merchant ID is not configured.'
             );
         }
+        $payment->loadMissing('appointment');
+
+        $trackingCode = $payment->appointment?->tracking_code;
+
+        if (! is_string($trackingCode) || $trackingCode === '') {
+            throw new RuntimeException(
+                'کد پیگیری نوبت پیدا نشد.'
+            );
+        }
 
         $response = Http::acceptJson()
             ->asJson()
@@ -27,9 +36,10 @@ class ZarinpalPaymentService
                 'amount' => $payment->amount * 10,
                 'callback_url' => config('services.zarinpal.callback_url'),
                 'description' => sprintf(
-                    'پرداخت نوبت شماره %d',
-                    $payment->appointment_id,
+                    'پرداخت نوبت با کد پیگیری %s',
+                    $trackingCode,
                 ),
+
                 'metadata' => [
                     'mobile' => $payment->client?->mobile,
                     'email' => $payment->client?->email,

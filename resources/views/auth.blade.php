@@ -14,6 +14,24 @@
         @error('mobile')
         <p>{{ $message }}</p>
         @enderror
+        <label>
+            <input
+                type="checkbox"
+                name="remember"
+                value="1"
+                @checked(old('remember', false))
+            >
+
+            منو به خاطر بسپار — ۳۰ روز
+        </label>
+
+        <p>
+            در دستگاه‌های عمومی یا مشترک این گزینه را فعال نکنید.
+        </p>
+
+        @error('remember')
+        <p>{{ $message }}</p>
+        @enderror
 
         <button type="submit">
             دریافت کد ورود

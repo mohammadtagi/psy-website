@@ -10,4 +10,6 @@ return [
         'APPOINTMENT_NEW_BOOKING_GRACE_MINUTES',
         60,
     ),
+    'manual_default_duration_minutes' => 45,
+
 ];
