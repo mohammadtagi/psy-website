@@ -57,16 +57,16 @@
             @enderror
         </form>
 
-        @if ($query !== '')
+        @if ($query !== '' || $clients->isNotEmpty())
             @if ($clients->isNotEmpty())
                 <section aria-labelledby="client-results-title">
                     <div class="mb-4 flex items-center justify-between gap-4">
                         <h2 id="client-results-title" class="text-lg font-semibold text-gray-900">
-                            نتایج جستجو
+                            {{ $query !== '' ? 'نتایج جستجو' : 'مراجعان دارای پرونده' }}
                         </h2>
 
                         <span class="text-sm text-gray-500">
-                            {{ $clients->count() }} نتیجه
+{{ $clients->total() }} مراجع
                         </span>
                     </div>
 
@@ -125,6 +125,10 @@
                             </article>
                         @endforeach
                     </div>
+                    <div class="mt-6">
+                        {{ $clients->links() }}
+                    </div>
+
                 </section>
             @elseif ($canCreateClient)
                 <section

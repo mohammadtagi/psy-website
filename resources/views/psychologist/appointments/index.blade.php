@@ -22,6 +22,18 @@
                 {{ session('status') }}
             </div>
         @endif
+        @if ($errors->any())
+            <div
+                role="alert"
+                class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            >
+                <ul class="list-inside list-disc">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <section class="overflow-x-auto border border-gray-200 bg-white shadow-sm">
             <table class="min-w-full divide-y divide-gray-200 text-right">
@@ -65,6 +77,10 @@
                             && $appointment->hold_expires_at?->isFuture();
 
                         $isActive = $appointment->status === Appointment::STATUS_CONFIRMED || $isPendingAndValid;
+$canCancel = in_array($appointment->status, [
+    Appointment::STATUS_CONFIRMED,
+    Appointment::STATUS_PENDING_PAYMENT,
+], true) && $appointment->starts_at->isFuture();
 
                         $latestPayment = $appointment->payments->first();
                     @endphp
@@ -162,6 +178,7 @@
                         </td>
 
                         {{-- ۸. عملیات --}}
+                        {{-- ۸. عملیات --}}
                         <td class="min-w-52 px-4 py-4">
                             @if ($isActive)
                                 <a
@@ -170,11 +187,13 @@
                                 >
                                     مدیریت جلسه
                                 </a>
+                            @endif
 
+                            @if ($canCancel)
                                 <form
                                     method="POST"
                                     action="{{ route('psychologist.appointments.cancel', $appointment) }}"
-                                    class="space-y-2"
+                                    class="mt-3 space-y-2"
                                     onsubmit="return confirm('آیا از لغو این نوبت مطمئن هستید؟')"
                                 >
                                     @csrf
@@ -182,7 +201,7 @@
                                     <textarea
                                         name="cancellation_reason"
                                         rows="2"
-                                        maxlength="500"
+                                        maxlength="255"
                                         placeholder="دلیل لغو، اختیاری"
                                         class="w-full border-gray-300 text-xs"
                                     ></textarea>
@@ -194,12 +213,15 @@
                                         لغو نوبت
                                     </button>
                                 </form>
-                            @else
+                            @endif
+
+                            @if (! $isActive && ! $canCancel)
                                 <span class="text-xs text-gray-400">
-                                    بدون عملیات
-                                </span>
+            بدون عملیات
+        </span>
                             @endif
                         </td>
+
                     </tr>
                 @empty
                     <tr>

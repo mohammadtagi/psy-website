@@ -15,10 +15,11 @@ class AppointmentService
 
     public function cancel(
         Appointment $appointment,
-        User $actor,
-        ?string $reason = null,
-        bool $bypassClientTimeLimit = false,
-    ): Appointment {
+        User        $actor,
+        ?string     $reason = null,
+        bool        $bypassClientTimeLimit = false,
+    ): Appointment
+    {
         return \DB::transaction(function () use (
             $appointment,
             $actor,
@@ -62,11 +63,12 @@ class AppointmentService
 
     private function ensureCanCancel(
         Appointment $appointment,
-        User $actor,
-        bool $bypassClientTimeLimit,
-    ): void {
+        User        $actor,
+        bool        $bypassClientTimeLimit,
+    ): void
+    {
         if (
-            ! in_array($appointment->status, [
+            !in_array($appointment->status, [
                 Appointment::STATUS_CONFIRMED,
                 Appointment::STATUS_PENDING_PAYMENT,
             ], true)
@@ -84,25 +86,41 @@ class AppointmentService
             ]);
         }
 
-        $isClient = (int) $appointment->client_id === (int) $actor->getKey();
+        $isClient = (int)$appointment->client_id === (int)$actor->getKey();
         $isPsychologist = (
-            (int) $appointment->psychologist_id
-            === (int) $actor->getKey()
+            (int)$appointment->psychologist_id
+            === (int)$actor->getKey()
         );
 
-        if (! $isClient && ! $isPsychologist) {
+        if (!$isClient && !$isPsychologist) {
             abort(403);
         }
 
-        if ($isClient && ! $bypassClientTimeLimit) {
+        if (
+            $isClient
+            && $appointment->status === Appointment::STATUS_PENDING_PAYMENT
+            && (
+                $appointment->hold_expires_at === null
+                || $appointment->hold_expires_at->lessThanOrEqualTo(
+                    CarbonImmutable::now('UTC')
+                )
+            )
+        ) {
+            throw ValidationException::withMessages([
+                'appointment' => 'مهلت پرداخت این نوبت تمام شده و امکان لغو آن وجود ندارد.',
+            ]);
+        }
+
+        if ($isClient && !$bypassClientTimeLimit) {
+
             $now = CarbonImmutable::now('UTC');
 
-            $graceMinutes = (int) config(
+            $graceMinutes = (int)config(
                 'booking.new_booking_grace_minutes',
                 60,
             );
 
-            $cancellationBeforeMinutes = (int) config(
+            $cancellationBeforeMinutes = (int)config(
                 'booking.cancellation_before_minutes',
                 720,
             );
@@ -115,7 +133,7 @@ class AppointmentService
                 $createdAt->addMinutes($graceMinutes)
             );
 
-            if (! $isWithinNewBookingGracePeriod) {
+            if (!$isWithinNewBookingGracePeriod) {
                 $latestCancellationAt = $appointment->starts_at
                     ->copy()
                     ->subMinutes($cancellationBeforeMinutes);
@@ -130,7 +148,6 @@ class AppointmentService
                 }
             }
         }
-
 
     }
 }

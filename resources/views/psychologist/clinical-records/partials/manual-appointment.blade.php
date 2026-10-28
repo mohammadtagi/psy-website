@@ -4,8 +4,11 @@
     </h2>
 
     <p class="mb-5 text-sm text-gray-600">
-        ثبت جلسه، وضعیت حضور را تعیین نمی‌کند و مسیر درمان را فعال نمی‌کند.
+        جلسه‌ای که زمان پایان آن گذشته باشد، برگزارشده ثبت می‌شود؛
+        سایر جلسات در انتظار برگزاری خواهند بود.
+        ثبت دستی جلسه، مسیر درمان را فعال نمی‌کند.
         تاریخ و ساعت بر اساس زمان تهران هستند.
+
     </p>
 
     <form
@@ -16,23 +19,34 @@
         @csrf
 
         <div class="grid gap-4 md:grid-cols-2">
-            <div>
-                <label for="manual-date" class="mb-1 block">
-                    تاریخ جلسه ـ میلادی
+            <div><label for="manual-date" class="mb-1 block">
+                    تاریخ جلسه ـ شمسی
                 </label>
 
                 <input
                     id="manual-date"
-                    name="date"
-                    type="date"
+                    name="date_jalali"
+                    type="text"
+                    dir="ltr"
                     required
-                    value="{{ old('date', now('Asia/Tehran')->format('Y-m-d')) }}"
+                    maxlength="10"
+                    placeholder="مثلاً ۱۴۰۵/۰۸/۰۵"
+                    value="{{ old('date_jalali', \App\Support\PersianDate::format(now('Asia/Tehran'), 'yyyy/MM/dd')) }}"
                     class="w-full rounded-lg border-gray-300"
                 >
+
+                <p class="mt-1 text-xs text-gray-500">
+                    تاریخ را به صورت سال/ماه/روز وارد کنید.
+                </p>
+
+                @error('date_jalali')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
 
                 @error('date')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
+
             </div>
 
             <div>

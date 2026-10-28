@@ -128,6 +128,10 @@
                         @disabled($plan->isArchived())
                         class="mt-2 w-full border border-gray-300 px-3 py-2"
                     >{{ old("stages.{$stage->stage_number}.goal", $stage->goal) }}</textarea>
+                    <p class="mt-2 text-xs leading-6 text-gray-500">
+                        هدف مرحله پس از فعال‌سازی مسیر، برای مراجع نمایش داده می‌شود.
+                        یادداشت‌های محرمانه را در این بخش وارد نکنید.
+                    </p>
 
                     <label
                         for="stage_sessions_{{ $stage->stage_number }}"

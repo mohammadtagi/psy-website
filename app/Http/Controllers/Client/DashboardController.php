@@ -40,7 +40,29 @@ class DashboardController extends Controller
 
         $treatmentPlans = $client->treatmentPlans()
             ->whereNotNull('activated_at')
-            ->with('stages')
+            ->whereHas('clinicalRecord', function ($query) use ($client): void {
+                $query->where('client_id', $client->id);
+            })
+            ->select([
+                'treatment_plans.id',
+                'treatment_plans.psychologist_id',
+                'treatment_plans.client_id',
+                'treatment_plans.title',
+                'treatment_plans.status',
+                'treatment_plans.current_stage',
+            ])
+            ->with([
+                'stages' => function ($query): void {
+                    $query->select([
+                        'id',
+                        'treatment_plan_id',
+                        'stage_number',
+                        'title',
+                        'goal',
+                        'estimated_sessions',
+                    ]);
+                },
+            ])
             ->latest('id')
             ->get();
 

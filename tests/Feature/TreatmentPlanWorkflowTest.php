@@ -245,6 +245,189 @@ class TreatmentPlanWorkflowTest extends TestCase
 
         $response->assertNotFound();
     }
+    public function test_client_sees_public_stage_details_without_private_information(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+
+        $plan = $this->createPlan($psychologist, $client, $record);
+        $stages = $this->createStages($plan);
+
+        $plan->forceFill([
+            'activated_at' => now(),
+            'current_stage' => 2,
+            'main_problem' => 'PRIVATE_MAIN_PROBLEM_MARKER',
+            'status_reason' => 'PRIVATE_STATUS_REASON_MARKER',
+        ])->save();
+
+        $record->update([
+            'clinical_formulation' => 'PRIVATE_FORMULATION_MARKER',
+        ]);
+
+        $this->actingAs($psychologist)->post(
+            route('psychologist.clinical-notes.store', $record),
+            ['private_note' => 'PRIVATE_CLINICAL_NOTE_MARKER'],
+        )->assertSessionHasNoErrors();
+
+        $appointment = $this->createSessionAppointment($psychologist, $client);
+
+        $appointment->forceFill([
+            'therapy_session_type' => Appointment::THERAPY_TYPE_PLAN,
+            'attendance_status' => Appointment::ATTENDANCE_HELD,
+            'treatment_plan_id' => $plan->id,
+            'treatment_plan_stage_id' => $stages[1]->id,
+        ])->save();
+
+        $response = $this->actingAs($client)
+            ->get(route('client.dashboard'));
+
+        $response
+            ->assertOk()
+            ->assertSeeText('هدف مرحله 1')
+            ->assertSeeText('هدف مرحله 2')
+            ->assertSeeText('هدف مرحله 3')
+            ->assertSeeText('مرحله فعلی')
+            ->assertDontSee('PRIVATE_MAIN_PROBLEM_MARKER')
+            ->assertDontSee('PRIVATE_STATUS_REASON_MARKER')
+            ->assertDontSee('PRIVATE_FORMULATION_MARKER')
+            ->assertDontSee('PRIVATE_CLINICAL_NOTE_MARKER');
+
+        $visiblePlan = $response->viewData('treatmentPlans')->sole();
+
+        $this->assertSame(2, $visiblePlan->current_stage);
+        $this->assertSame(1, $visiblePlan->held_sessions_count);
+        $this->assertSame(8, $visiblePlan->progress_percent);
+        $this->assertSame(
+            1,
+            $visiblePlan->stages
+                ->firstWhere('stage_number', 2)
+                ->held_sessions_count,
+        );
+
+        $this->assertArrayNotHasKey(
+            'main_problem',
+            $visiblePlan->getAttributes(),
+        );
+        $this->assertArrayNotHasKey(
+            'status_reason',
+            $visiblePlan->getAttributes(),
+        );
+    }
+
+    public function test_stage_details_require_explicit_activation(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+
+        $plan = $this->createPlan($psychologist, $client, $record);
+        $stages = $this->createStages($plan);
+
+        $stages[0]->update(['goal' => 'ACTIVATION_REQUIRED_GOAL']);
+
+        // حتی جلسه تأییدشده و برگزارشده، مسیر را فعال نمی‌کند.
+        $appointment = $this->createSessionAppointment($psychologist, $client);
+
+        $appointment->forceFill([
+            'therapy_session_type' => Appointment::THERAPY_TYPE_PLAN,
+            'attendance_status' => Appointment::ATTENDANCE_HELD,
+            'treatment_plan_id' => $plan->id,
+            'treatment_plan_stage_id' => $stages[0]->id,
+        ])->save();
+
+        $this->actingAs($client)
+            ->get(route('client.dashboard'))
+            ->assertOk()
+            ->assertDontSee('ACTIVATION_REQUIRED_GOAL')
+            ->assertViewHas(
+                'treatmentPlans',
+                fn ($plans) => $plans->isEmpty(),
+            );
+
+        $this->actingAs($psychologist)
+            ->post(route('psychologist.treatment-plans.activate', $plan))
+            ->assertRedirect(
+                route('psychologist.treatment-plans.edit', $plan),
+            )
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($client)
+            ->get(route('client.dashboard'))
+            ->assertOk()
+            ->assertSeeText('ACTIVATION_REQUIRED_GOAL');
+    }
+
+    public function test_client_cannot_see_another_clients_stage_details(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+
+        $plan = $this->createPlan($psychologist, $client, $record);
+        $stages = $this->createStages($plan);
+
+        $plan->forceFill(['activated_at' => now()])->save();
+        $stages[0]->update(['goal' => 'OTHER_CLIENT_GOAL_MARKER']);
+
+        $otherClient = User::factory()->client()->create();
+
+        $this->actingAs($otherClient)
+            ->get(route('client.dashboard'))
+            ->assertOk()
+            ->assertDontSee('OTHER_CLIENT_GOAL_MARKER')
+            ->assertViewHas(
+                'treatmentPlans',
+                fn ($plans) => $plans->isEmpty(),
+            );
+    }
+
+    public function test_dashboard_hides_plan_with_mismatched_record(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+
+        $plan = $this->createPlan($psychologist, $client, $record);
+        $stages = $this->createStages($plan);
+
+        $otherClient = User::factory()->client()->create();
+        $otherRecord = $this->createClinicalRecord($otherClient);
+
+        $plan->forceFill([
+            'activated_at' => now(),
+            'clinical_record_id' => $otherRecord->id,
+        ])->save();
+
+        $stages[0]->update(['goal' => 'MISMATCHED_RECORD_GOAL']);
+
+        $this->actingAs($client)
+            ->get(route('client.dashboard'))
+            ->assertOk()
+            ->assertDontSee('MISMATCHED_RECORD_GOAL')
+            ->assertViewHas(
+                'treatmentPlans',
+                fn ($plans) => $plans->isEmpty(),
+            );
+    }
+
+    public function test_stage_goal_is_escaped_and_missing_goal_has_fallback(): void
+    {
+        [$psychologist, $client, $record] = $this->clinicalContext();
+
+        $plan = $this->createPlan($psychologist, $client, $record);
+        $stages = $this->createStages($plan);
+
+        $plan->forceFill(['activated_at' => now()])->save();
+
+        $unsafeGoal = '<script>alert("stage-goal")</script>';
+
+        $stages[0]->update(['goal' => $unsafeGoal]);
+        $stages[1]->update([
+            'goal' => null,
+            'estimated_sessions' => null,
+        ]);
+
+        $this->actingAs($client)
+            ->get(route('client.dashboard'))
+            ->assertOk()
+            ->assertSee(e($unsafeGoal), false)
+            ->assertDontSee($unsafeGoal, false)
+            ->assertSeeText('هدف این مرحله هنوز ثبت نشده است.')
+            ->assertSeeText('بدون تخمین');
+    }
 
     public function test_psychologist_cannot_edit_a_plan_with_mismatched_record_client(): void
     {

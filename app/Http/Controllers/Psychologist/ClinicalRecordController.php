@@ -151,17 +151,41 @@ class ClinicalRecordController extends Controller
     ): RedirectResponse {
         $this->ensureClient($client);
 
+        $data = $request->only([
+            'date',
+            'time',
+            'duration_minutes',
+            'session_type',
+            'manual_payment_method',
+            'amount',
+        ]);
+
+        // فرم جدید تاریخ شمسی می‌فرستد.
+        // قرارداد قبلی تاریخ میلادی برای درخواست‌های موجود حفظ می‌شود.
+        if ($request->exists('date_jalali')) {
+            $validated = $request->validate([
+                'date_jalali' => ['required', 'string', 'max:10'],
+            ], [
+                'date_jalali.required' => 'تاریخ جلسه را وارد کنید.',
+                'date_jalali.string' => 'تاریخ جلسه معتبر نیست.',
+                'date_jalali.max' => 'تاریخ را به صورت سال/ماه/روز وارد کنید.',
+            ]);
+
+            try {
+                $data['date'] = \App\Support\PersianDate::toGregorian(
+                    $validated['date_jalali'],
+                );
+            } catch (\InvalidArgumentException $exception) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'date_jalali' => 'تاریخ شمسی معتبر وارد کنید؛ مانند ۱۴۰۵/۰۸/۰۵.',
+                ]);
+            }
+        }
+
         $appointment = $service->create(
             $request->user(),
             $client,
-            $request->only([
-                'date',
-                'time',
-                'duration_minutes',
-                'session_type',
-                'manual_payment_method',
-                'amount',
-            ]),
+            $data,
         );
 
         return redirect()

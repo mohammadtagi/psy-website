@@ -19,6 +19,14 @@
                 {{ session('status') }}
             </div>
         @endif
+        @error('appointment')
+        <div
+            role="alert"
+            class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+        >
+            {{ $message }}
+        </div>
+        @enderror
 
         @if ($appointments->isEmpty())
             <section class="rounded-lg border border-gray-200 bg-white px-6 py-12 text-center shadow-sm">
@@ -37,89 +45,92 @@
             <div class="space-y-4">
                 @foreach ($appointments as $appointment)
                     @php
-                        $startsAtUtc = $appointment->starts_at->utc();
-                        $endsAtUtc = $appointment->ends_at->utc();
+                        $startsAtUtc = $appointment->starts_at->toImmutable()->utc();
+                        $endsAtUtc = $appointment->ends_at->toImmutable()->utc();
 
                         $startsAt = $startsAtUtc->setTimezone('Asia/Tehran');
                         $endsAt = $endsAtUtc->setTimezone('Asia/Tehran');
 
-                        $now = now('UTC');
+                        $now = \Carbon\CarbonImmutable::now('UTC');
 
-                                                $isPendingPayment =
-                                                    $appointment->status === \App\Models\Appointment::STATUS_PENDING_PAYMENT;
+                                                                        $isPendingPayment =
+                                                                            $appointment->status === \App\Models\Appointment::STATUS_PENDING_PAYMENT;
 
-                                                $holdExpired = $isPendingPayment
-                                                    && (
-                                                        $appointment->hold_expires_at === null
-                                                        || $appointment->hold_expires_at
-                                                            ->setTimezone('Asia/Tehran')
-                                                            ->lessThanOrEqualTo($now)
-                                                    );
+$holdExpired = $isPendingPayment
+    && (
+        $appointment->hold_expires_at === null
+        || $appointment->hold_expires_at
+            ->toImmutable()
+            ->lessThanOrEqualTo($now)
+    );
 
-                                                $isActive = in_array($appointment->status, [
-                                                    \App\Models\Appointment::STATUS_CONFIRMED,
-                                                    \App\Models\Appointment::STATUS_PENDING_PAYMENT,
-                                                ], true);
 
-$cancellationBeforeMinutes = (int) config(
-    'booking.cancellation_before_minutes',
-    720,
-);
+                                                                        $isActive = in_array($appointment->status, [
+                                                                            \App\Models\Appointment::STATUS_CONFIRMED,
+                                                                            \App\Models\Appointment::STATUS_PENDING_PAYMENT,
+                                                                        ], true);
 
-$newBookingGraceMinutes = (int) config(
-    'booking.new_booking_grace_minutes',
-    60,
-);
+                        $cancellationBeforeMinutes = (int) config(
+                            'booking.cancellation_before_minutes',
+                            720,
+                        );
 
-$createdAtUtc = \Carbon\CarbonImmutable::parse(
-    $appointment->created_at
-)->utc();
+                        $newBookingGraceMinutes = (int) config(
+                            'booking.new_booking_grace_minutes',
+                            60,
+                        );
 
-$isBeforeAppointmentStart = $startsAtUtc->greaterThan($now);
+                        $createdAtUtc = \Carbon\CarbonImmutable::parse(
+                            $appointment->created_at
+                        )->utc();
 
-$isWithinNewBookingGracePeriod = $now->lt(
-    $createdAtUtc->addMinutes($newBookingGraceMinutes)
-);
+                        $isBeforeAppointmentStart = $startsAtUtc->greaterThan($now);
 
-$isBeforeCancellationDeadline = $now->lt(
-    $startsAtUtc->subMinutes($cancellationBeforeMinutes)
-);
+                        $isWithinNewBookingGracePeriod = $now->lt(
+                            $createdAtUtc->addMinutes($newBookingGraceMinutes)
+                        );
+
+                        $isBeforeCancellationDeadline = $now->lt(
+                            $startsAtUtc->subMinutes($cancellationBeforeMinutes)
+                        );
 
 $canCancel = $isActive
+    && ! $holdExpired
     && $isBeforeAppointmentStart
     && (
         $isWithinNewBookingGracePeriod
         || $isBeforeCancellationDeadline
     );
 
-                                                $latestPayment = $appointment->payments->first();
 
-                                                $canPay = $isPendingPayment
-                                                    && ! $holdExpired
-                                                    && $latestPayment
-                                                    && $latestPayment->isPending();
+                                                                        $latestPayment = $appointment->payments->first();
 
-                                                $statusLabel = match ($appointment->status) {
-\App\Models\Appointment::STATUS_CONFIRMED => $appointment->sessionStatusLabel(),
-                                                    \App\Models\Appointment::STATUS_PENDING_PAYMENT => $holdExpired
-                                                        ? 'مهلت پرداخت تمام شده'
-                                                        : 'در انتظار پرداخت',
-                                                    \App\Models\Appointment::STATUS_CANCELLED => 'لغو شده',
-                                                    \App\Models\Appointment::STATUS_COMPLETED => 'تکمیل شده',
-                                                    \App\Models\Appointment::STATUS_NO_SHOW => 'عدم حضور',
-                                                    default => $appointment->status,
-                                                };
+                                                                        $canPay = $isPendingPayment
+                                                                            && ! $holdExpired
+                                                                            && $latestPayment
+                                                                            && $latestPayment->isPending();
 
-                                                $paymentStatusLabel = $latestPayment?->status
-                                                    ? match ($latestPayment->status) {
-                                                        \App\Models\Payment::STATUS_INITIATED => 'شروع نشده',
-                                                        \App\Models\Payment::STATUS_PENDING => 'در حال پرداخت',
-                                                        \App\Models\Payment::STATUS_PAID => 'پرداخت موفق',
-                                                        \App\Models\Payment::STATUS_FAILED => 'ناموفق',
-                                                        \App\Models\Payment::STATUS_CANCELLED => 'لغو شده',
-                                                        default => $latestPayment->status,
-                                                    }
-                                                    : 'ثبت نشده';
+                                                                        $statusLabel = match ($appointment->status) {
+                        \App\Models\Appointment::STATUS_CONFIRMED => $appointment->sessionStatusLabel(),
+                                                                            \App\Models\Appointment::STATUS_PENDING_PAYMENT => $holdExpired
+                                                                                ? 'مهلت پرداخت تمام شده'
+                                                                                : 'در انتظار پرداخت',
+                                                                            \App\Models\Appointment::STATUS_CANCELLED => 'لغو شده',
+                                                                            \App\Models\Appointment::STATUS_COMPLETED => 'تکمیل شده',
+                                                                            \App\Models\Appointment::STATUS_NO_SHOW => 'عدم حضور',
+                                                                            default => $appointment->status,
+                                                                        };
+
+                                                                        $paymentStatusLabel = $latestPayment?->status
+                                                                            ? match ($latestPayment->status) {
+                                                                                \App\Models\Payment::STATUS_INITIATED => 'شروع نشده',
+                                                                                \App\Models\Payment::STATUS_PENDING => 'در حال پرداخت',
+                                                                                \App\Models\Payment::STATUS_PAID => 'پرداخت موفق',
+                                                                                \App\Models\Payment::STATUS_FAILED => 'ناموفق',
+                                                                                \App\Models\Payment::STATUS_CANCELLED => 'لغو شده',
+                                                                                default => $latestPayment->status,
+                                                                            }
+                                                                            : 'ثبت نشده';
                     @endphp
 
                     <article class="border border-gray-200 bg-white p-5 shadow-sm">

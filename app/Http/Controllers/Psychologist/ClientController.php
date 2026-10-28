@@ -16,58 +16,67 @@ class ClientController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
+        abort_unless($request->user()?->isPsychologist(), 403);
+
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $query = trim((string) ($validated['q'] ?? ''));
+        // تبدیل ارقام فارسی و عربی برای جست‌وجوی شماره موبایل.
+        $query = strtr(trim((string) ($validated['q'] ?? '')), [
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+        ]);
 
-        $clients = collect();
+        $clientsQuery = User::query()
+            ->where('role', User::ROLE_CLIENT);
 
-        if ($query !== '') {
-            $psychologistId = auth()->id();
+        if ($query === '') {
+            // در سیستم تک‌مشاور، صفحه اولیه فهرست صاحبان پرونده است.
+            $clientsQuery->whereHas('clinicalRecord');
+        } elseif ($this->looksLikeMobileSearch($query)) {
+            $clientsQuery->where('mobile', 'like', '%' . $query . '%');
+        } else {
+            // جست‌وجوی نام بدون وابستگی به CONCAT، سازگار با SQLite و MySQL.
+            // برای نام کامل، تمام کلمات باید در نام یا نام خانوادگی پیدا شوند.
+            $words = preg_split('/\s+/u', $query, -1, PREG_SPLIT_NO_EMPTY);
 
-            $clientsQuery = User::query()
-                ->where('role', User::ROLE_CLIENT)
-                ->where(function ($clientQuery) use ($psychologistId): void {
-                    $clientQuery
-                        ->where('created_by_psychologist_id', $psychologistId)
-                        ->orWhereHas('clientAppointments', function ($appointmentQuery) use (
-                            $psychologistId
-                        ): void {
-                            $appointmentQuery->where(
-                                'psychologist_id',
-                                $psychologistId,
-                            );
-                        });
-                });
+            foreach ($words as $word) {
+                // جلوگیری از تبدیل % و _ ورودی به wildcard جست‌وجو.
+                $pattern = '%' . str_replace(
+                        ['!', '%', '_'],
+                        ['!!', '!%', '!_'],
+                        $word,
+                    ) . '%';
 
-
-            if ($this->looksLikeMobileSearch($query)) {
-                $clientsQuery->where('mobile', 'like', '%' . $query . '%');
-            } else {
-                $clientsQuery->where(function ($nameQuery) use ($query): void {
+                $clientsQuery->where(function ($nameQuery) use ($pattern): void {
                     $nameQuery
-                        ->where('first_name', 'like', '%' . $query . '%')
-                        ->orWhere('last_name', 'like', '%' . $query . '%')
+                        ->whereRaw(
+                            "first_name LIKE ? ESCAPE '!'",
+                            [$pattern],
+                        )
                         ->orWhereRaw(
-                            "CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) LIKE ?",
-                            ['%' . $query . '%'],
+                            "last_name LIKE ? ESCAPE '!'",
+                            [$pattern],
                         );
                 });
             }
-
-            $clients = $clientsQuery
-                ->with('clinicalRecord:id,client_id,status')
-                ->orderBy('first_name')
-                ->orderBy('last_name')
-                ->orderBy('mobile')
-                ->limit(50)
-                ->get();
-
         }
 
-        $canCreateClient = $this->isCompleteMobileNumber($query);
+        $clients = $clientsQuery
+            ->with('clinicalRecord:id,client_id,status')
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->orderBy('mobile')
+            ->orderBy('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        // شماره متعلق به هر حساب موجود باشد، فرم ساخت حساب تکراری نشان نده.
+        $canCreateClient = $this->isCompleteMobileNumber($query)
+            && ! User::query()->where('mobile', $query)->exists();
 
         return view('psychologist.clients.index', [
             'query' => $query,

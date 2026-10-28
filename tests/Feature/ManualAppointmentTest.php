@@ -165,17 +165,125 @@ class ManualAppointmentTest extends TestCase
             'session_type' => 'online',
         ];
     }
+    public function test_manual_form_accepts_jalali_date(): void
+    {
+        $payload = $this->payload();
+        unset($payload['date']);
+
+        $payload['date_jalali'] = \App\Support\PersianDate::format(
+            CarbonImmutable::parse('2030-01-11 12:00:00', 'Asia/Tehran'),
+            'yyyy/MM/dd',
+        );
+
+        $this->actingAs($this->psychologist)
+            ->post($this->storeUrl(), $payload)
+            ->assertSessionHasNoErrors()
+            ->assertRedirect($this->recordUrl());
+
+        $appointment = Appointment::query()
+            ->where('client_id', $this->client->id)
+            ->sole();
+
+        $this->assertSame(
+            '2030-01-11 08:30:00',
+            $appointment->starts_at->copy()->utc()->format('Y-m-d H:i:s'),
+        );
+    }
+
+    public function test_invalid_jalali_date_does_not_create_appointment(): void
+    {
+        $payload = $this->payload();
+
+        // حتی با وجود تاریخ میلادی معتبر، ورودی شمسی نامعتبر نباید نادیده گرفته شود.
+        $payload['date_jalali'] = '۱۴۰۵/۰۷/۳۱';
+
+        $this->actingAs($this->psychologist)
+            ->post($this->storeUrl(), $payload)
+            ->assertSessionHasErrors('date_jalali');
+
+        $this->assertDatabaseCount('appointments', 0);
+    }
 
     public static function validSessions(): array
     {
         return [
             'past external online' => [
                 '2030-01-09', 'paid_outside', 'online', 75, 123456,
+                Appointment::ATTENDANCE_HELD,
             ],
             'future free in person' => [
                 '2030-01-11', 'free', 'in_person', 30, 0,
+                Appointment::ATTENDANCE_PENDING,
             ],
         ];
+    }
+
+    public static function manualAttendanceBoundaries(): array
+    {
+        // زمان ثابت تست: 2030-01-10، ساعت 09:30 تهران.
+        return [
+            'ended one minute ago' => [
+                '08:29', Appointment::ATTENDANCE_HELD,
+            ],
+            'ends exactly now' => [
+                '08:30', Appointment::ATTENDANCE_HELD,
+            ],
+            'still in progress' => [
+                '09:00', Appointment::ATTENDANCE_PENDING,
+            ],
+            'starts exactly now' => [
+                '09:30', Appointment::ATTENDANCE_PENDING,
+            ],
+            'future session' => [
+                '10:00', Appointment::ATTENDANCE_PENDING,
+            ],
+        ];
+    }
+
+    #[DataProvider('manualAttendanceBoundaries')]
+    public function test_manual_attendance_depends_on_end_time(
+        string $time,
+        string $expectedAttendance,
+    ): void {
+        $appointment = $this->createManual([
+            'date' => '2030-01-10',
+            'time' => $time,
+            'duration_minutes' => 60,
+
+            // ورودی دستکاری‌شده نباید تصمیم سرویس را تغییر دهد.
+            'attendance_status' => $expectedAttendance
+            === Appointment::ATTENDANCE_HELD
+                ? Appointment::ATTENDANCE_PENDING
+                : Appointment::ATTENDANCE_HELD,
+        ]);
+
+        $this->assertSame(
+            $expectedAttendance,
+            $appointment->fresh()->attendance_status,
+        );
+
+        $this->assertSame(
+            Appointment::STATUS_CONFIRMED,
+            $appointment->fresh()->status,
+        );
+    }
+
+    public function test_future_manual_session_does_not_automatically_become_held(): void
+    {
+        $appointment = $this->createManual([
+            'date' => '2030-01-11',
+            'time' => '12:00',
+            'duration_minutes' => 60,
+        ]);
+
+        $this->travelTo(
+            CarbonImmutable::parse('2030-01-12 06:00:00', 'UTC'),
+        );
+
+        $this->assertSame(
+            Appointment::ATTENDANCE_PENDING,
+            $appointment->fresh()->attendance_status,
+        );
     }
 
     #[DataProvider('validSessions')]

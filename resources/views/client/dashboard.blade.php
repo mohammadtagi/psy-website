@@ -73,22 +73,57 @@
                                         $stageCount = (int) $stage->held_sessions_count;
                                     @endphp
 
-                                    <div class="border border-gray-200 p-3">
-                                        <p class="text-sm font-medium text-gray-900">
-                                            مرحله {{ $stage->stage_number }}
-                                        </p>
 
-                                        <p class="mt-1 text-sm text-gray-600">
+                                    <div
+                                        @class([
+                                            'rounded-lg border p-4',
+                                            'border-indigo-300 bg-indigo-50' =>
+                                                (int) $plan->current_stage === (int) $stage->stage_number,
+                                            'border-gray-200' =>
+                                                (int) $plan->current_stage !== (int) $stage->stage_number,
+                                        ])
+                                    >
+                                        <div class="flex flex-wrap items-center justify-between gap-2">
+                                            <h4 class="text-sm font-medium text-gray-900">
+                                                مرحله {{ $stage->stage_number }}
+                                            </h4>
+
+                                            @if ((int) $plan->current_stage === (int) $stage->stage_number)
+                                                <span class="rounded bg-indigo-100 px-2 py-1 text-xs text-indigo-800">
+                                                    {{ $plan->isActive() ? 'مرحله فعلی' : 'آخرین مرحله ثبت‌شده' }}
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        <p class="mt-2 text-sm font-medium text-gray-700">
                                             {{ $stage->title }}
                                         </p>
 
-                                        <p class="mt-2 text-xs text-gray-500">
-                                            جلسات برگزارشده:
-                                            {{ $stageCount }}
-                                            /
-                                            {{ $stage->estimated_sessions ?? 'بدون تخمین' }}
-                                        </p>
+                                        <h5 class="mt-4 text-xs font-semibold text-gray-700">
+                                            هدف مرحله
+                                        </h5>
+
+                                        @if (filled($stage->goal))
+                                            <p class="mt-2 whitespace-pre-line break-words text-sm leading-7 text-gray-600">{{ $stage->goal }}</p>
+                                        @else
+                                            <p class="mt-2 text-sm text-gray-500">
+                                                هدف این مرحله هنوز ثبت نشده است.
+                                            </p>
+                                        @endif
+
+                                        <dl class="mt-4 space-y-2 text-xs text-gray-600">
+                                            <div class="flex justify-between gap-3">
+                                                <dt>جلسات برگزارشده</dt>
+                                                <dd>{{ $stageCount }}</dd>
+                                            </div>
+
+                                            <div class="flex justify-between gap-3">
+                                                <dt>تعداد جلسات تخمینی</dt>
+                                                <dd>{{ $stage->estimated_sessions ?? 'بدون تخمین' }}</dd>
+                                            </div>
+                                        </dl>
                                     </div>
+
                                 @endforeach
                             </div>
 

@@ -144,7 +144,9 @@ class ManualAppointmentService
             $appointment->session_type = $data['session_type'];
 
             $appointment->status = Appointment::STATUS_CONFIRMED;
-            $appointment->attendance_status = Appointment::ATTENDANCE_PENDING;
+            $appointment->attendance_status = $endsAt->lessThanOrEqualTo($now)
+                ? Appointment::ATTENDANCE_HELD
+                : Appointment::ATTENDANCE_PENDING;
             $appointment->hold_expires_at = null;
 
             $appointment->booking_source = Appointment::BOOKING_SOURCE_MANUAL;
