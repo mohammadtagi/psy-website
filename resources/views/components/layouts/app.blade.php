@@ -67,6 +67,11 @@
                                 'label' => 'مراجعان و پرونده‌ها',
                                 'route' => 'psychologist.clients.index',
                             ],
+                                                        [
+                                'label' => 'کدهای تخفیف',
+                                'route' => 'psychologist.discounts.index',
+                            ],
+
                         ],
 
                         'client' => [

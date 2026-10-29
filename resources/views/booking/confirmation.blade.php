@@ -103,14 +103,19 @@ Appointment::STATUS_PENDING_PAYMENT =>
                 </div>
             @endif
 
-            @if ($errors->has('payment'))
+            @if ($errors->any())
                 <div
-                    class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-800"
+                    class="mx-6 mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-800"
                     role="alert"
                 >
-                    {{ $errors->first('payment') }}
+                    <ul class="list-inside list-disc">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
+
 
             <div class="space-y-6 p-6">
                 @if ($isPendingPayment)
@@ -151,7 +156,8 @@ Appointment::STATUS_PENDING_PAYMENT =>
                             </p>
 
                             <p class="mt-1">
-                                تأیید نهایی به پرداخت موفق و معتبر بودن زمان نوبت وابسته است.
+                                تأیید نهایی به پرداخت موفق یا تأیید رایگان با کد تخفیف معتبر،
+                                و معتبر بودن زمان نوبت وابسته است.
                                 مهلت نگهداری موقت، امکان پرداخت پس از شروع جلسه را تضمین نمی‌کند.
                             </p>
                         @endif
@@ -240,55 +246,7 @@ Appointment::STATUS_PENDING_PAYMENT =>
                     </div>
                 </div>
 
-                <div class="rounded-lg bg-gray-50 p-4">
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-600">
-                            مبلغ جلسه
-                        </span>
-
-                        <strong class="text-gray-900">
-                            {{ number_format((int) $appointment->amount) }}
-                            تومان
-                        </strong>
-                    </div>
-
-                    @if ($isPendingPayment && $hasActiveHold && ! $hasSessionStarted)
-                        <p class="mt-3 text-xs leading-6 text-gray-600">
-                            با انتخاب گزینه پرداخت، به درگاه زرین‌پال منتقل می‌شوید.
-                            تأیید نهایی نوبت پس از پرداخت موفق و تأیید سمت سرور انجام می‌شود.
-                        </p>
-                    @elseif (! $isConfirmed)
-                        <p class="mt-3 text-xs leading-6 text-gray-600">
-                            نمایش مبلغ یا وضعیت نوبت، به‌تنهایی رسید پرداخت محسوب نمی‌شود.
-                        </p>
-                    @endif
-
-
-
-
-                @if ($isPendingPayment && $hasActiveHold && ! $hasSessionStarted)
-                        <form
-                            method="POST"
-                            action="{{ route('payments.pay', $appointment) }}"
-                            class="mt-4"
-                        >
-                            @csrf
-
-                            <button
-                                type="submit"
-                                class="inline-flex min-h-11 items-center justify-center rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                            >
-                                پرداخت و تأیید نوبت
-                            </button>
-                        </form>
-                    @endif
-
-                    @if ($appointment->session_type === Appointment::SESSION_TYPE_ONLINE)
-                        <p class="mt-3 text-xs leading-6 text-gray-500">
-                            لینک جلسه آنلاین، در صورت فعال‌شدن، در اطلاعات نوبت نمایش داده خواهد شد.
-                        </p>
-                    @endif
-                </div>
+                    @include('booking._invoice')
 
                 <div class="flex flex-col gap-3 border-t border-gray-200 pt-6 sm:flex-row">
                     <a

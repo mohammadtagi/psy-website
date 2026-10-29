@@ -28,6 +28,25 @@ class PaymentController extends Controller
             403,
         );
 
+        if (! config('payment.online_enabled', false)) {
+            return redirect()
+                ->route('booking.confirmation', $appointment)
+                ->withErrors([
+                    'payment' =>
+                        'پرداخت آنلاین فعلاً در دسترس نیست.',
+                ]);
+        }
+
+        // تا زمان اتصال امن تخفیف به درگاه، پرداخت آنلاین
+        // نوبت دارای تخفیف حتی با فعال‌شدن تنظیمات مجاز نیست.
+        if ($appointment->discount_code_id !== null) {
+            return redirect()
+                ->route('booking.confirmation', $appointment)
+                ->withErrors([
+                    'payment' =>
+                        'پرداخت آنلاین نوبت دارای تخفیف هنوز فعال نشده است.',
+                ]);
+        }
 
         try {
             $authority = DB::transaction(function () use (
@@ -37,6 +56,21 @@ class PaymentController extends Controller
                     ->whereKey($appointment->getKey())
                     ->lockForUpdate()
                     ->firstOrFail();
+                if (
+                    $lockedAppointment->discount_code_id !== null
+                    || (int) $lockedAppointment->discount_amount > 0
+                ) {
+                    throw new RuntimeException(
+                        'پرداخت آنلاین نوبت دارای تخفیف هنوز فعال نیست. '
+                        . 'اگر مبلغ نهایی صفر است، از گزینه تأیید رایگان استفاده کنید.',
+                    );
+                }
+
+                if ($lockedAppointment->discount_code_id !== null) {
+                    throw new RuntimeException(
+                        'پرداخت آنلاین نوبت دارای تخفیف هنوز فعال نشده است.'
+                    );
+                }
 
                 $now = CarbonImmutable::now('UTC');
 

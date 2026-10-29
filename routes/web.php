@@ -16,6 +16,8 @@ use App\Http\Controllers\Psychologist\ClinicalNoteController;
 use App\Http\Controllers\Psychologist\ClinicalAttachmentController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\Psychologist\TreatmentPlanController;
+use App\Http\Controllers\Psychologist\DiscountCodeController;
+use App\Http\Controllers\BookingDiscountController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [
@@ -321,6 +323,32 @@ Route::get('/booking/confirmation/{appointment}', [
     ->name('booking.confirmation');
 
 
+Route::middleware(['auth', 'role:psychologist'])
+    ->prefix('psychologist/discounts')
+    ->name('psychologist.discounts.')
+    ->group(function (): void {
+        Route::get('/', [DiscountCodeController::class, 'index'])
+            ->name('index');
+
+        Route::get('/create', [DiscountCodeController::class, 'create'])
+            ->name('create');
+
+        Route::post('/', [DiscountCodeController::class, 'store'])
+            ->name('store');
+
+        Route::get('/{discount}', [DiscountCodeController::class, 'show'])
+            ->whereNumber('discount')
+            ->name('show');
+
+        Route::patch(
+            '/{discount}/status',
+            [DiscountCodeController::class, 'updateStatus'],
+        )
+            ->whereNumber('discount')
+            ->name('status');
+    });
+
+
 Route::middleware(['auth', 'role:client'])
     ->prefix('profile')
     ->name('client.profile.')
@@ -349,6 +377,22 @@ Route::middleware(['auth', 'role:client'])
             ClientAppointmentController::class,
             'cancel',
         ])->name('cancel');
+    });
+Route::middleware(['auth', 'role:client'])
+    ->prefix('booking/appointments/{appointment}')
+    ->where(['appointment' => '[0-9]+'])
+    ->name('booking.')
+    ->group(function (): void {
+        Route::post('/discount', [BookingDiscountController::class, 'store'])
+            ->name('discount.store');
+
+        Route::delete('/discount', [BookingDiscountController::class, 'destroy'])
+            ->name('discount.destroy');
+
+        Route::post(
+            '/confirm-free',
+            [BookingDiscountController::class, 'confirmFree'],
+        )->name('confirm-free');
     });
 
 // شروع پرداخت: فقط کاربر لاگین‌شده (کلاینت)

@@ -13,6 +13,7 @@ use Illuminate\View\View;
 use Illuminate\Validation\ValidationException;
 use App\Support\PersianDate;
 use App\Models\Appointment;
+use App\Models\DiscountCode;
 
 class BookingController extends Controller
 {
@@ -248,9 +249,17 @@ class BookingController extends Controller
             'availability:id',
         ]);
 
+        $appliedDiscountCode = $appointment->discount_code_id !== null
+            ? DiscountCode::query()
+                ->whereKey($appointment->discount_code_id)
+                ->value('code')
+            : null;
+
         return view('booking.confirmation', [
             'appointment' => $appointment,
+            'appliedDiscountCode' => $appliedDiscountCode,
         ]);
+
     }
 
 
