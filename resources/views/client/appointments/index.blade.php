@@ -1,49 +1,26 @@
 @extends('components.layouts.app')
-
 @section('title', 'نوبت‌های من')
-
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('website/style/care-client-appointments.css') }}?v=2">
+@endpush
 @section('content')
-    <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <header class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">
-                نوبت‌های من
-            </h1>
-
-            <p class="mt-2 text-sm text-gray-600">
-                فهرست نوبت‌های رزروشده و وضعیت آن‌ها
-            </p>
-        </header>
-
-        @if (session('status'))
-            <div class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-                {{ session('status') }}
-            </div>
-        @endif
-        @error('appointment')
-        <div
-            role="alert"
-            class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
-        >
-            {{ $message }}
-        </div>
-        @enderror
-
-        @if ($appointments->isEmpty())
-            <section class="rounded-lg border border-gray-200 bg-white px-6 py-12 text-center shadow-sm">
-                <p class="text-sm text-gray-600">
-                    هنوز نوبتی برای شما ثبت نشده است.
-                </p>
-
-                <a
-                    href="{{ route('booking.index') }}"
-                    class="mt-4 inline-flex min-h-11 items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-                >
-                    رزرو نوبت
-                </a>
-            </section>
+    <main class="cca" dir="rtl">
+        <header class="cca-header"><div><h1>نوبت‌های من</h1><p class="cca-muted">زمان جلسه و اقدام بعدی، در یک نگاه · ساعت‌ها به وقت تهران</p></div><a class="cca-button" href="{{ route('booking.index') }}">رزرو جلسه جدید</a></header>
+        @if(session('status'))<p class="cca-feedback" role="status">{{ session('status') }}</p>@endif
+        @error('appointment')<p class="cca-error" role="alert">{{ $message }}</p>@enderror
+        @if($appointments->isEmpty())
+            <section class="cca-card cca-empty"><h2>نوبتی برای نمایش وجود ندارد</h2><p class="cca-muted">برای انتخاب زمان جلسه، زمان‌های قابل رزرو را ببینید.</p><a href="{{ route('booking.index') }}">مشاهده زمان‌ها و رزرو</a></section>
         @else
-            <div class="space-y-4">
-                @foreach ($appointments as $appointment)
+            <div class="cca-filters" hidden data-filters role="group" aria-label="فیلتر نوبت‌های همین صفحه">
+                <span class="cca-muted">در همین صفحه:</span>
+                <button type="button" data-filter="all" aria-pressed="true">همه</button>
+                <button type="button" data-filter="upcoming" aria-pressed="false">جلسات پیش رو</button>
+                <button type="button" data-filter="past" aria-pressed="false">جلسات گذشته</button>
+                <button type="button" data-filter="cancelled" aria-pressed="false">لغو شده</button>
+            </div>
+            <p class="cca-filter-status cca-muted" role="status" aria-live="polite"></p>
+            <div class="cca-list">
+                @foreach($appointments as $appointment)
                     @php
                         $startsAtUtc = $appointment->starts_at->toImmutable()->utc();
                         $endsAtUtc = $appointment->ends_at->toImmutable()->utc();
@@ -132,173 +109,79 @@ $canCancel = $isActive
                                                                             }
                                                                             : 'ثبت نشده';
                     @endphp
+                    @php
+                        // Presentation grouping only; payment/cancellation eligibility above is unchanged.
+                        $upcoming = $isActive && ! $holdExpired && $endsAtUtc->greaterThan($now);
+                    @endphp
+                    <article class="cca-card" data-appointment data-group="{{ $appointment->status === \App\Models\Appointment::STATUS_CANCELLED ? 'cancelled' : ($upcoming ? 'upcoming' : 'past') }}">
+                        <div class="cca-card-top">
+                            <div><h2>{{ $appointment->psychologist->first_name }} {{ $appointment->psychologist->last_name }}</h2><p class="cca-date">{{ \App\Support\PersianDate::format($startsAt, 'yyyy/MM/dd') }} <span aria-hidden="true"> · </span><bdi dir="ltr">{{ $startsAt->format('H:i') }} – {{ $endsAt->format('H:i') }}</bdi></p></div>
+                            <span @class(['cca-badge', 'cca-warning' => $isPendingPayment, 'cca-cancelled' => $appointment->status === \App\Models\Appointment::STATUS_CANCELLED])>{{ $statusLabel }}</span>
+                        </div>
+                        <div class="cca-actions">
+                            @if($canPay)
+                                <form method="POST" action="{{ route('payments.pay', $appointment) }}">@csrf<button type="submit" class="cca-button">پرداخت {{ number_format($appointment->amount) }} تومان</button></form>
+                            @endif
+                            @if($appointment->status === \App\Models\Appointment::STATUS_CONFIRMED && filled($appointment->meeting_url))
+                                <a class="cca-button" href="{{ $appointment->meeting_url }}" target="_blank" rel="noopener noreferrer">ورود به جلسه <span class="cca-small">(زبانه جدید)</span></a>
+                            @endif
+                            <a class="cca-secondary" href="{{ route('client.appointments.session.show', $appointment) }}">جلسه و یادداشت‌ها</a>
+                        </div>
+                        <details class="cca-details"><summary>جزئیات پرداخت و پیگیری</summary>
+                            <dl><div><dt>مبلغ</dt><dd>{{ number_format($appointment->amount) }} تومان</dd></div><div><dt>وضعیت پرداخت</dt><dd>{{ $paymentStatusLabel }}</dd></div><div><dt>کد پیگیری</dt><dd><bdi dir="ltr">{{ $appointment->tracking_code }}</bdi></dd></div></dl>
+                        </details>
+                        @if($canCancel)
+                            <details class="cca-cancel"><summary>لغو نوبت</summary><p class="cca-muted">آیا از لغو این نوبت مطمئن هستید؟ برای ادامه، دکمه تأیید را بزنید.</p>
+                                <form method="POST" action="{{ route('client.appointments.cancel', $appointment) }}" onsubmit="return confirm('آیا از لغو این نوبت مطمئن هستید؟')">@csrf<button type="submit" class="cca-danger">تأیید لغو نوبت</button></form>
+                            </details>
+                        @endif
+                        <div class="cca-cancellation-info">
+                            @if ($appointment->status === \App\Models\Appointment::STATUS_CANCELLED)
+                                @php
+                                    $cancelledAt = $appointment->cancelled_at
+                                        ? $appointment->cancelled_at->copy()->setTimezone('Asia/Tehran')
+                                        : null;
 
-                    <article class="border border-gray-200 bg-white p-5 shadow-sm">
-                        <p class="mb-4 text-xs text-gray-500">
-                            کد پیگیری:
-                            <span dir="ltr" class="inline-block break-all font-mono">
-        {{ $appointment->tracking_code }}
-    </span>
-                        </p>
+                                    $cancelledByPsychologist = $appointment->cancelled_by !== null
+                                        && (int) $appointment->cancelled_by === (int) $appointment->psychologist_id;
+                                @endphp
 
-                        <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                            <div class="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
-                                <div>
-                                    <span class="block text-xs text-gray-500">روان‌شناس</span>
-                                    <strong class="mt-1 block text-sm text-gray-900">
-                                        {{ $appointment->psychologist->first_name }}
-                                        {{ $appointment->psychologist->last_name }}
-                                    </strong>
+                                <div class="mt-4 border-t border-gray-100 pt-4">
+                                    <p class="text-xs text-gray-500">
+                                        این نوبت
+                                        @if ($cancelledAt)
+                                            در
+                                            {{ \App\Support\PersianDate::format($cancelledAt, 'yyyy/MM/dd') }}
+                                            ساعت
+                                            {{ $cancelledAt->format('H:i') }}
+                                        @endif
+
+                                        @if ($cancelledByPsychologist)
+                                            توسط روان‌شناس
+                                        @endif
+
+                                        لغو شده است.
+                                    </p>
+
+                                    @if (filled($appointment->cancellation_reason))
+                                        <div class="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                                            <p class="text-sm font-semibold text-red-900">
+                                                دلیل لغو نوبت
+                                            </p>
+
+                                            <p class="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-red-800">{{ $appointment->cancellation_reason }}</p>
+                                        </div>
+                                    @endif
                                 </div>
-
-                                <div>
-                                    <span class="block text-xs text-gray-500">تاریخ</span>
-                                    <strong class="mt-1 block text-sm text-gray-900">
-                                        {{ \App\Support\PersianDate::format($startsAt, 'yyyy/MM/dd') }}
-                                    </strong>
-                                </div>
-
-                                <div>
-                                    <span class="block text-xs text-gray-500">ساعت</span>
-                                    <strong class="mt-1 block text-sm text-gray-900">
-                                        {{ $startsAt->format('H:i') }}
-                                        تا
-                                        {{ $endsAt->format('H:i') }}
-                                    </strong>
-                                </div>
-
-                                <div>
-                                    <span class="block text-xs text-gray-500">وضعیت نوبت</span>
-
-                                    <strong class="mt-1 block text-sm text-gray-900">
-                                        {{ $statusLabel }}
-                                    </strong>
-                                </div>
-
-                                <div>
-                                    <span class="block text-xs text-gray-500">وضعیت پرداخت</span>
-
-                                    <strong class="mt-1 block text-sm text-gray-900">
-                                        {{ $paymentStatusLabel }}
-                                    </strong>
-                                </div>
-
-
-                                <div>
-                                    <span class="block text-xs text-gray-500">مبلغ</span>
-
-                                    <strong class="mt-1 block text-sm text-gray-900">
-                                        {{ number_format($appointment->amount) }}
-                                        تومان
-                                    </strong>
-                                </div>
-
-                            </div>
-                            <div class="flex shrink-0 flex-wrap gap-2">
-                                <a
-                                    href="{{ route('client.appointments.session.show', $appointment) }}"
-                                    class="inline-flex min-h-10 items-center border border-indigo-300 px-4 py-2 text-sm text-indigo-700"
-                                >
-                                    جزئیات جلسه
-                                </a>
-
-                                @if ($canPay)
-                                    <form
-                                        method="POST"
-                                        action="{{ route('payments.pay', $appointment) }}"
-                                        class="shrink-0"
-                                    >
-                                        @csrf
-
-                                        <button
-                                            type="submit"
-                                            class="inline-flex min-h-10 items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-                                        >
-                                            پرداخت نوبت
-                                        </button>
-                                    </form>
-                                @endif
-
-                                @if (
-                                    $appointment->status === \App\Models\Appointment::STATUS_CONFIRMED
-                                    && filled($appointment->meeting_url)
-                                )
-                                    <a
-                                        href="{{ $appointment->meeting_url }}"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        class="inline-flex min-h-10 items-center rounded-lg border border-indigo-300 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
-                                    >
-                                        ورود به جلسه
-                                    </a>
-                                @endif
-
-                                @if ($canCancel)
-                                    <form
-                                        method="POST"
-                                        action="{{ route('client.appointments.cancel', $appointment) }}"
-                                        class="shrink-0"
-                                        onsubmit="return confirm('آیا از لغو این نوبت مطمئن هستید؟')"
-                                    >
-                                        @csrf
-
-                                        <button
-                                            type="submit"
-                                            class="inline-flex min-h-10 items-center rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
-                                        >
-                                            لغو نوبت
-                                        </button>
-                                    </form>
-                                @endif
-                            </div>
+                            @endif
 
                         </div>
-
-                        @if ($appointment->status === \App\Models\Appointment::STATUS_CANCELLED)
-                            @php
-                                $cancelledAt = $appointment->cancelled_at
-                                    ? $appointment->cancelled_at->copy()->setTimezone('Asia/Tehran')
-                                    : null;
-
-                                $cancelledByPsychologist = $appointment->cancelled_by !== null
-                                    && (int) $appointment->cancelled_by === (int) $appointment->psychologist_id;
-                            @endphp
-
-                            <div class="mt-4 border-t border-gray-100 pt-4">
-                                <p class="text-xs text-gray-500">
-                                    این نوبت
-                                    @if ($cancelledAt)
-                                        در
-                                        {{ \App\Support\PersianDate::format($cancelledAt, 'yyyy/MM/dd') }}
-                                        ساعت
-                                        {{ $cancelledAt->format('H:i') }}
-                                    @endif
-
-                                    @if ($cancelledByPsychologist)
-                                        توسط روان‌شناس
-                                    @endif
-
-                                    لغو شده است.
-                                </p>
-
-                                @if (filled($appointment->cancellation_reason))
-                                    <div class="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                                        <p class="text-sm font-semibold text-red-900">
-                                            دلیل لغو نوبت
-                                        </p>
-
-                                        <p class="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-red-800">{{ $appointment->cancellation_reason }}</p>
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
                     </article>
                 @endforeach
             </div>
-
-            <div class="mt-6">
-                {{ $appointments->links() }}
-            </div>
+            <p class="cca-filter-empty cca-card" hidden>در این صفحه نوبتی با این فیلتر وجود ندارد. «همه» یا صفحات دیگر را بررسی کنید.</p>
+            <div class="cca-pagination">{{ $appointments->links() }}</div>
         @endif
     </main>
+    <script src="{{ asset('website/js/care-client-appointments.js') }}" defer></script>
 @endsection

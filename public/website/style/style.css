@@ -1,0 +1,2126 @@
+
+:root {
+    --frame: 1440px;
+    --col: 80px;
+    --gutter: 30px;
+    --cols: 12;
+    --content: 1290px;
+    --margin: 75px;
+    --green: #1f4f39;
+    --green-2: #285b43;
+    --green-3: #dfe9df;
+    --cream: #f4ecdf;
+    --cream-2: #f6f1e7;
+    --gold: #d7bf67;
+    --text: #1d1d1b;
+    --muted: #6f6a60;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-family: 'IRANYekan', 'IRANSansX', system-ui, sans-serif;
+}
+
+html, body {
+    background: #fff;
+    color: var(--text);
+    overflow-x: hidden;
+}
+
+body {
+    overflow-x: hidden;
+}
+button, input, textarea, select {
+    font: inherit;
+}
+.layout {
+    width: min(100%, var(--frame));
+    margin-inline: auto;
+    padding-inline: 16px;
+}
+
+@media (min-width: 640px) {
+    .layout {
+        padding-inline: 40px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .layout {
+        padding-inline: var(--margin);
+    }
+}
+
+.layout-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+}
+
+@media (min-width: 1440px) {
+    .layout-grid {
+        grid-template-columns: repeat(12, var(--col));
+        justify-content: center;
+    }
+}
+
+.soft-shadow {
+    box-shadow: 0 18px 40px rgba(26, 44, 34, .08);
+}
+
+.hero-panel {
+    clip-path: polygon(0 0, 68% 0, 100% 100%, 0 100%);
+}
+
+.hero-content {
+    direction: ltr;
+}
+
+.hero-copy, .hero-header, .benefit {
+    direction: rtl;
+}
+
+@media (max-width: 1023px) {
+    .hero-panel {
+        clip-path: polygon(0 0, 100% 0, 100% 42%, 0 52%);
+    }
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+@media (min-width: 768px) and (max-width: 1023.98px) {
+    .hero-content {
+        grid-template-columns: 300px minmax(0, 1fr);
+        align-items: end;
+        column-gap: 1.5rem;
+        padding-bottom: 1.25rem;
+    }
+
+    .hero-portrait-col {
+        order: 1;
+        margin-top: 0.75rem;
+        justify-content: flex-start;
+        align-items: flex-end;
+    }
+
+    .hero-portrait {
+        width: 300px;
+        height: 460px;
+        max-width: none;
+    }
+
+    .hero-portrait-glow {
+        width: 280px;
+        height: 280px;
+    }
+
+    .hero-copy-main {
+        order: 2;
+        padding-top: 2rem;
+        padding-bottom: 1rem;
+    }
+
+    .hero-copy-main .hero-copy-inner,
+    .hero-copy-main h1 {
+        max-width: none;
+    }
+
+    .hero-copy-main h1 {
+        font-size: 30px;
+        line-height: 1.7;
+    }
+
+    .hero-benefits-mobile {
+        order: 3;
+        grid-column: 1 / -1;
+        padding-block: 1.25rem;
+    }
+
+    .hero-benefits-mobile .benefit {
+        flex-direction: row;
+        justify-content: flex-start;
+        text-align: right;
+        gap: 0.75rem;
+    }
+}
+@keyframes gallery-marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.gallery-marquee {
+    animation: gallery-marquee 20s linear infinite;
+    pointer-events: none;
+    user-select: none;
+}
+
+.gallery-marquee img {
+    -webkit-user-drag: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gallery-marquee {
+        animation: none;
+    }
+}
+
+
+.faq-answer {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s ease;
+}
+
+.faq-item.is-open .faq-answer {
+    grid-template-rows: 1fr;
+}
+
+.faq-answer > div {
+    overflow: hidden;
+}
+/* =========================================
+   Psychology Services - Minimal Animation
+   ========================================= */
+
+#services {
+    isolation: isolate;
+}
+
+/* دایره‌های پس‌زمینه؛ حس تنفس و آرامش */
+#services [class*="rounded-full"][class*="border"] {
+    animation: services-breathe 9s ease-in-out infinite;
+    transform-origin: center;
+    will-change: opacity, scale;
+}
+
+#services [class*="rounded-full"][class*="border"]:nth-of-type(2) {
+    animation-delay: -3s;
+    animation-duration: 11s;
+}
+
+#services [class*="rounded-full"][class*="border"]:nth-of-type(3) {
+    animation-delay: -6s;
+    animation-duration: 13s;
+}
+
+@keyframes services-breathe {
+    0%,
+    100% {
+        opacity: 0.42;
+        scale: 1;
+    }
+
+    50% {
+        opacity: 0.72;
+        scale: 1.018;
+    }
+}
+
+
+/* ورود نرم تیتر مرکزی */
+#services h2,
+#services h2 + p {
+    animation: services-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#services h2 + p {
+    animation-delay: 0.16s;
+}
+
+@keyframes services-fade-up {
+    from {
+        opacity: 0;
+        translate: 0 14px;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+
+/* ورود نرم کارت‌ها */
+#services .relative.z-20 > article {
+    animation: services-card-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transition:
+            transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            box-shadow 0.45s ease,
+            background-color 0.45s ease;
+    will-change: transform;
+}
+
+/* کارت‌های دسکتاپ */
+#services .relative.z-20 > article:nth-child(1) {
+    animation-delay: 0.18s;
+}
+
+#services .relative.z-20 > article:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+#services .relative.z-20 > article:nth-child(3) {
+    animation-delay: 0.42s;
+}
+
+#services .relative.z-20 > article:nth-child(4) {
+    animation-delay: 0.54s;
+}
+
+@keyframes services-card-in {
+    from {
+        opacity: 0;
+        translate: 0 24px;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+
+/* هاور بسیار ظریف و آرام روی کارت‌ها */
+#services .relative.z-20 > article:hover {
+    transform: translateY(-7px);
+    box-shadow: 0 20px 42px rgba(31, 61, 46, 0.14);
+}
+
+
+/* حرکت خیلی آرام آیکون‌ها */
+#services article svg {
+    animation: services-icon-float 5s ease-in-out infinite;
+    transform-origin: center;
+}
+
+#services article:nth-child(2) svg {
+    animation-delay: -1.2s;
+}
+
+#services article:nth-child(3) svg {
+    animation-delay: -2.4s;
+}
+
+#services article:nth-child(4) svg {
+    animation-delay: -3.6s;
+}
+
+@keyframes services-icon-float {
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-3px) rotate(1deg);
+    }
+}
+
+
+/* تأکید خیلی ظریف روی رنگ طلایی تیتر */
+#services h2 span {
+    background: linear-gradient(
+            90deg,
+            #e6af00 0%,
+            #e8c670 50%,
+            #e6af00 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: services-gold-shimmer 7s ease-in-out infinite;
+}
+
+@keyframes services-gold-shimmer {
+    0%,
+    100% {
+        background-position: 0% center;
+    }
+
+    50% {
+        background-position: 100% center;
+    }
+}
+
+
+/* در موبایل حرکت کارت‌ها کمی کمتر باشد */
+@media (max-width: 1279px) {
+    #services .relative.z-20 > article:hover {
+        transform: translateY(-4px);
+    }
+
+    #services .relative.z-20 > article {
+        animation-duration: 0.7s;
+    }
+}
+
+
+/* احترام به تنظیمات کاهش حرکت سیستم */
+@media (prefers-reduced-motion: reduce) {
+    #services *,
+    #services *::before,
+    #services *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    #services .relative.z-20 > article {
+        opacity: 1 !important;
+        translate: 0 0 !important;
+    }
+}
+/* =========================================
+   Experience Stats - Minimal Animation
+   ========================================= */
+
+section[aria-label="آمار تجربه و جلسات"] {
+    isolation: isolate;
+}
+
+/* پنل اصلی؛ حس آرام و تنفس‌گونه */
+section[aria-label="آمار تجربه و جلسات"] .rounded-4xl {
+    position: relative;
+    overflow: hidden;
+    animation: stats-panel-breathe 8s ease-in-out infinite;
+    box-shadow: 0 18px 42px rgba(31, 61, 46, 0.12);
+}
+
+/* هاله‌ی بسیار ظریف داخل پنل */
+section[aria-label="آمار تجربه و جلسات"] .rounded-4xl::before {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    pointer-events: none;
+    background: radial-gradient(
+            circle at center,
+            rgba(232, 198, 112, 0.12) 0%,
+            rgba(232, 198, 112, 0.04) 28%,
+            transparent 62%
+    );
+    animation: stats-glow-move 12s ease-in-out infinite;
+}
+
+@keyframes stats-panel-breathe {
+    0%,
+    100% {
+        box-shadow: 0 18px 42px rgba(31, 61, 46, 0.12);
+    }
+
+    50% {
+        box-shadow: 0 22px 50px rgba(31, 61, 46, 0.18);
+    }
+}
+
+@keyframes stats-glow-move {
+    0%,
+    100% {
+        transform: translate3d(-3%, -2%, 0) scale(0.96);
+        opacity: 0.55;
+    }
+
+    50% {
+        transform: translate3d(3%, 2%, 0) scale(1.04);
+        opacity: 1;
+    }
+}
+
+
+/* قرار گرفتن محتوا بالاتر از هاله */
+section[aria-label="آمار تجربه و جلسات"] ul {
+    position: relative;
+    z-index: 1;
+}
+
+
+/* ورود نرم آیتم‌های آماری */
+section[aria-label="آمار تجربه و جلسات"] li {
+    animation: stats-item-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transition:
+            transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+            background-color 0.4s ease;
+}
+
+section[aria-label="آمار تجربه و جلسات"] li:nth-child(1) {
+    animation-delay: 0.12s;
+}
+
+section[aria-label="آمار تجربه و جلسات"] li:nth-child(2) {
+    animation-delay: 0.24s;
+}
+
+section[aria-label="آمار تجربه و جلسات"] li:nth-child(3) {
+    animation-delay: 0.36s;
+}
+
+section[aria-label="آمار تجربه و جلسات"] li:nth-child(4) {
+    animation-delay: 0.48s;
+}
+
+@keyframes stats-item-in {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* هاور بسیار ملایم روی هر آمار */
+section[aria-label="آمار تجربه و جلسات"] li:hover {
+    transform: translateY(-5px);
+    background-color: rgba(255, 255, 255, 0.035);
+}
+
+
+/* تأکید آرام روی اعداد */
+section[aria-label="آمار تجربه و جلسات"] li > div {
+    display: inline-block;
+    transform-origin: center;
+    animation: stats-number-pulse 5s ease-in-out infinite;
+}
+
+section[aria-label="آمار تجربه و جلسات"] li:nth-child(2) > div {
+    animation-delay: -1.25s;
+}
+
+section[aria-label="آمار تجربه و جلسات"] li:nth-child(3) > div {
+    animation-delay: -2.5s;
+}
+
+section[aria-label="آمار تجربه و جلسات"] li:nth-child(4) > div {
+    animation-delay: -3.75s;
+}
+
+@keyframes stats-number-pulse {
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateY(-2px) scale(1.035);
+    }
+}
+
+
+/* درخشش خیلی نرم رنگ طلایی اعداد */
+section[aria-label="آمار تجربه و جلسات"] .text-gold {
+    text-shadow: 0 0 0 rgba(232, 198, 112, 0);
+    animation: stats-gold-glow 6s ease-in-out infinite;
+}
+
+@keyframes stats-gold-glow {
+    0%,
+    100% {
+        text-shadow: 0 0 0 rgba(232, 198, 112, 0);
+    }
+
+    50% {
+        text-shadow: 0 0 18px rgba(232, 198, 112, 0.22);
+    }
+}
+
+
+/* انیمیشن کمتر در موبایل */
+@media (max-width: 639px) {
+    section[aria-label="آمار تجربه و جلسات"] .rounded-4xl {
+        animation-duration: 10s;
+    }
+
+    section[aria-label="آمار تجربه و جلسات"] li:hover {
+        transform: translateY(-3px);
+    }
+}
+
+
+/* احترام به تنظیمات کاهش حرکت کاربر */
+@media (prefers-reduced-motion: reduce) {
+    section[aria-label="آمار تجربه و جلسات"] *,
+    section[aria-label="آمار تجربه و جلسات"] *::before,
+    section[aria-label="آمار تجربه و جلسات"] *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    section[aria-label="آمار تجربه و جلسات"] li {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+/* =========================================
+   Therapy Process - Minimal Animation
+   ========================================= */
+
+section[aria-labelledby="process-title"] {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+}
+
+/* هاله‌ی آرام و بسیار ظریف در پس‌زمینه */
+section[aria-labelledby="process-title"]::before {
+    content: "";
+    position: absolute;
+    top: 14%;
+    right: -180px;
+    width: 420px;
+    height: 420px;
+    pointer-events: none;
+    border-radius: 999px;
+    background: radial-gradient(
+            circle,
+            rgba(232, 198, 112, 0.12) 0%,
+            rgba(232, 198, 112, 0.04) 38%,
+            transparent 70%
+    );
+    animation: process-background-breathe 10s ease-in-out infinite;
+}
+
+@keyframes process-background-breathe {
+    0%,
+    100% {
+        transform: scale(0.95);
+        opacity: 0.55;
+    }
+
+    50% {
+        transform: scale(1.08);
+        opacity: 1;
+    }
+}
+
+
+/* ورود نرم عنوان */
+section[aria-labelledby="process-title"] header {
+    animation: process-header-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+section[aria-labelledby="process-title"] header > div {
+    transform-origin: right center;
+    animation: process-line-in 0.7s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes process-header-in {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes process-line-in {
+    from {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+
+/* خط اتصال مراحل */
+section[aria-labelledby="process-title"] .absolute[aria-hidden="true"] {
+    overflow: hidden;
+    transform-origin: right center;
+    animation:
+            process-connector-in 1.2s 0.65s cubic-bezier(0.22, 1, 0.36, 1) both,
+            process-connector-glow 5s 2s ease-in-out infinite;
+}
+
+section[aria-labelledby="process-title"] .absolute[aria-hidden="true"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 34%;
+    background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.75),
+            transparent
+    );
+    animation: process-light-pass 5s 2s ease-in-out infinite;
+}
+
+@keyframes process-connector-in {
+    from {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+@keyframes process-connector-glow {
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes process-light-pass {
+    from {
+        transform: translateX(320%);
+    }
+
+    to {
+        transform: translateX(-320%);
+    }
+}
+
+
+/* ورود مرحله‌ها */
+section[aria-labelledby="process-title"] ol > li {
+    animation: process-step-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+section[aria-labelledby="process-title"] ol > li:nth-child(1) {
+    animation-delay: 0.35s;
+}
+
+section[aria-labelledby="process-title"] ol > li:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+section[aria-labelledby="process-title"] ol > li:nth-child(3) {
+    animation-delay: 0.65s;
+}
+
+section[aria-labelledby="process-title"] ol > li:nth-child(4) {
+    animation-delay: 0.8s;
+}
+
+@keyframes process-step-in {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* شماره‌ی هر مرحله */
+section[aria-labelledby="process-title"] ol > li > div:first-child {
+    transition:
+            transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+            box-shadow 0.4s ease;
+    animation: process-number-pulse 4.5s ease-in-out infinite;
+}
+
+section[aria-labelledby="process-title"] ol > li:nth-child(2) > div:first-child {
+    animation-delay: -1.1s;
+}
+
+section[aria-labelledby="process-title"] ol > li:nth-child(3) > div:first-child {
+    animation-delay: -2.2s;
+}
+
+section[aria-labelledby="process-title"] ol > li:nth-child(4) > div:first-child {
+    animation-delay: -3.3s;
+}
+
+@keyframes process-number-pulse {
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    }
+
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 7px rgba(230, 175, 0, 0.1);
+    }
+}
+
+
+/* کارت‌های فرایند */
+section[aria-labelledby="process-title"] ol article {
+    position: relative;
+    overflow: hidden;
+    transition:
+            transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            box-shadow 0.45s ease,
+            border-color 0.45s ease;
+}
+
+/* یک نور خیلی ظریف در گوشه‌ی کارت */
+section[aria-labelledby="process-title"] ol article::before {
+    content: "";
+    position: absolute;
+    top: -90px;
+    left: -90px;
+    width: 180px;
+    height: 180px;
+    border-radius: 999px;
+    background: rgba(232, 198, 112, 0.08);
+    pointer-events: none;
+    transition: transform 0.6s ease;
+}
+
+section[aria-labelledby="process-title"] ol article:hover {
+    transform: translateY(-8px);
+    border-color: rgba(232, 198, 112, 0.45);
+    box-shadow: 0 18px 38px rgba(31, 61, 46, 0.12);
+}
+
+section[aria-labelledby="process-title"] ol article:hover::before {
+    transform: scale(1.35);
+}
+
+
+/* حرکت تنفسی تصاویر */
+section[aria-labelledby="process-title"] ol article img {
+    animation: process-image-float 5.5s ease-in-out infinite;
+    transform-origin: center;
+    will-change: transform;
+}
+
+section[aria-labelledby="process-title"] ol > li:nth-child(2) img {
+    animation-delay: -1.3s;
+}
+
+section[aria-labelledby="process-title"] ol > li:nth-child(3) img {
+    animation-delay: -2.6s;
+}
+
+section[aria-labelledby="process-title"] ol > li:nth-child(4) img {
+    animation-delay: -3.9s;
+}
+
+@keyframes process-image-float {
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateY(-5px) scale(1.025);
+    }
+}
+
+
+/* بخش محرمانگی */
+section[aria-labelledby="process-title"] .mt-10 > div:first-child {
+    animation: process-privacy-in 0.8s 1.1s ease both;
+}
+
+section[aria-labelledby="process-title"] .mt-10 > div:first-child > div {
+    transition:
+            transform 0.4s ease,
+            background-color 0.4s ease;
+}
+
+section[aria-labelledby="process-title"] .mt-10 > div:first-child:hover > div {
+    transform: translateY(-3px);
+    background-color: rgba(31, 61, 46, 0.14);
+}
+
+@keyframes process-privacy-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* دکمه‌ی درخواست نوبت */
+section[aria-labelledby="process-title"] a {
+    position: relative;
+    overflow: hidden;
+    transition:
+            transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+            box-shadow 0.35s ease,
+            background-color 0.35s ease;
+}
+
+section[aria-labelledby="process-title"] a::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: -100%;
+    width: 70%;
+    background: linear-gradient(
+            100deg,
+            transparent,
+            rgba(255, 255, 255, 0.18),
+            transparent
+    );
+    transition: right 0.7s ease;
+}
+
+section[aria-labelledby="process-title"] a:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(31, 61, 46, 0.2);
+}
+
+section[aria-labelledby="process-title"] a:hover::before {
+    right: 130%;
+}
+
+section[aria-labelledby="process-title"] a svg {
+    transition: transform 0.35s ease;
+}
+
+section[aria-labelledby="process-title"] a:hover svg {
+    transform: translateX(-4px) rotate(180deg);
+}
+
+
+/* کاهش شدت حرکت در موبایل */
+@media (max-width: 1279px) {
+    section[aria-labelledby="process-title"] ol article:hover {
+        transform: translateY(-5px);
+    }
+}
+
+@media (max-width: 767px) {
+    section[aria-labelledby="process-title"] header h2 {
+        font-size: 32px;
+        line-height: 1.5;
+    }
+
+    section[aria-labelledby="process-title"] .mt-10 > div:first-child {
+        align-items: flex-start;
+        text-align: right;
+    }
+
+    section[aria-labelledby="process-title"] button:hover {
+        transform: translateY(-2px);
+    }
+}
+
+
+/* احترام به تنظیمات کاهش حرکت کاربر */
+@media (prefers-reduced-motion: reduce) {
+    section[aria-labelledby="process-title"] *,
+    section[aria-labelledby="process-title"] *::before,
+    section[aria-labelledby="process-title"] *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    section[aria-labelledby="process-title"] ol > li {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+/* =========================================
+Hero Section - Calm Psychology Animation
+========================================= */
+
+#home {
+    isolation: isolate;
+}
+
+/* ورود نرم پنل کرم‌رنگ */
+#home .hero-panel {
+    transform-origin: left center;
+    animation: hero-panel-reveal 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes hero-panel-reveal {
+    from {
+        opacity: 0;
+        transform: scaleX(0.86);
+    }
+
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+
+/* یک هاله‌ی بسیار ظریف در پس‌زمینه‌ی سبز */
+#home::before {
+    content: "";
+    position: absolute;
+    top: 18%;
+    right: -180px;
+    z-index: 0;
+    width: 440px;
+    height: 440px;
+    border: 1px solid rgba(232, 198, 112, 0.12);
+    border-radius: 999px;
+    pointer-events: none;
+    animation: hero-orbit-breathe 12s ease-in-out infinite;
+}
+
+@keyframes hero-orbit-breathe {
+    0%,
+    100% {
+        opacity: 0.4;
+        transform: scale(0.94);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(1.06);
+    }
+}
+
+
+/* ورود نرم هدر */
+#home .hero-header {
+    animation: hero-header-in 0.75s 0.05s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes hero-header-in {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* لوگو و نام پزشک */
+#home .hero-header > div > a:last-child {
+    transition: transform 0.4s ease;
+}
+
+#home .hero-header > div > a:last-child:hover {
+    transform: translateY(-2px);
+}
+
+#home .hero-header > div > a:last-child span:last-child {
+    transition:
+            box-shadow 0.4s ease,
+            transform 0.4s ease;
+}
+
+#home .hero-header > div > a:last-child:hover span:last-child {
+    transform: rotate(-3deg);
+    box-shadow: 0 0 0 6px rgba(232, 198, 112, 0.12);
+}
+
+
+/* لینک‌های منوی دسکتاپ */
+#home .hero-header nav a {
+    position: relative;
+}
+
+#home .hero-header nav a::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: -8px;
+    left: 0;
+    height: 1px;
+    background: #e8c670;
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition: transform 0.35s ease;
+}
+
+#home .hero-header nav a:hover::after {
+    transform: scaleX(1);
+    transform-origin: left center;
+}
+
+
+/* ورود تصویر پزشک */
+#home .hero-content > div:first-child {
+    animation: hero-image-container-in 1s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#home .hero-content > div:first-child img {
+    animation:
+            hero-image-in 1.1s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both,
+            hero-image-float 7s 1.5s ease-in-out infinite;
+    transform-origin: center bottom;
+    will-change: transform;
+}
+
+@keyframes hero-image-container-in {
+    from {
+        opacity: 0;
+        transform: translateY(28px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes hero-image-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+
+/* ورود محتوای اصلی Hero */
+#home .hero-copy h1,
+#home .hero-copy p,
+#home .hero-copy > div > div {
+    animation: hero-copy-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#home .hero-copy h1 {
+    animation-delay: 0.35s;
+}
+
+#home .hero-copy h1 + p {
+    animation-delay: 0.5s;
+}
+
+#home .hero-copy h1 + p + div {
+    animation-delay: 0.65s;
+}
+
+@keyframes hero-copy-in {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* تأکید بسیار آرام روی عبارت «تنها نیستید» */
+#home .hero-copy h1 .text-gold {
+    display: inline-block;
+    animation: hero-highlight-breathe 4.5s ease-in-out infinite;
+}
+
+@keyframes hero-highlight-breathe {
+    0%,
+    100% {
+        color: #e6af00;
+        transform: translateY(0);
+    }
+
+    50% {
+        color: #e8c670;
+        transform: translateY(-2px);
+    }
+}
+
+
+/* دکمه‌های Hero */
+#home .hero-copy a {
+    position: relative;
+    overflow: hidden;
+    transition:
+            transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+            box-shadow 0.35s ease,
+            background-color 0.35s ease,
+            color 0.35s ease;
+}
+
+#home .hero-copy a::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: -100%;
+    width: 65%;
+    background: linear-gradient(
+            100deg,
+            transparent,
+            rgba(255, 255, 255, 0.22),
+            transparent
+    );
+    transition: right 0.7s ease;
+}
+
+#home .hero-copy a:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.16);
+}
+
+#home .hero-copy a:hover::before {
+    right: 130%;
+}
+
+
+/* ورود و حرکت آرام مزیت‌ها */
+#home .benefit {
+    animation: hero-benefit-in 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#home .benefit:nth-child(1) {
+    animation-delay: 0.8s;
+}
+
+#home .benefit:nth-child(2) {
+    animation-delay: 0.95s;
+}
+
+#home .benefit:nth-child(3) {
+    animation-delay: 1.1s;
+}
+
+#home .benefit img {
+    animation: hero-benefit-float 5s ease-in-out infinite;
+}
+
+#home .benefit:nth-child(2) img {
+    animation-delay: -1.6s;
+}
+
+#home .benefit:nth-child(3) img {
+    animation-delay: -3.2s;
+}
+
+@keyframes hero-benefit-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes hero-benefit-float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+
+/* منوی موبایل */
+#home #mobile-nav {
+    transform-origin: top center;
+}
+
+#home #mobile-nav a {
+    transition:
+            color 0.3s ease,
+            background-color 0.3s ease,
+            padding-right 0.3s ease;
+}
+
+#home #mobile-nav a:hover {
+    padding-right: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+
+/* تنظیمات تبلت و موبایل */
+@media (max-width: 1023px) {
+    #home::before {
+        top: 32%;
+        right: -240px;
+        width: 360px;
+        height: 360px;
+    }
+
+    #home .hero-copy a:hover {
+        transform: translateY(-2px);
+    }
+}
+
+@media (max-width: 639px) {
+    #home::before {
+        top: 42%;
+        right: -250px;
+        width: 330px;
+        height: 330px;
+    }
+
+    #home .hero-copy h1 .text-gold {
+        animation-duration: 5.5s;
+    }
+
+    #home .hero-copy a:hover {
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+    }
+}
+
+
+/* احترام به تنظیمات کاهش حرکت کاربر */
+@media (prefers-reduced-motion: reduce) {
+    #home *,
+    #home *::before,
+    #home *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    #home .hero-header,
+    #home .hero-content > div:first-child,
+    #home .hero-content > div:first-child img,
+    #home .hero-copy h1,
+    #home .hero-copy p,
+    #home .hero-copy > div > div,
+    #home .benefit {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+/* توقف انیمیشن‌ها تا زمان ورود سکشن به صفحه */
+
+/* انیمیشن‌ها تا زمان ورود سکشن به viewport متوقف هستند */
+
+#home:not(.is-visible),
+#home:not(.is-visible) *,
+#home:not(.is-visible)::before,
+#home:not(.is-visible)::after,
+
+#services:not(.is-visible),
+#services:not(.is-visible) *,
+#services:not(.is-visible)::before,
+#services:not(.is-visible)::after,
+
+section[aria-label="آمار تجربه و جلسات"]:not(.is-visible),
+section[aria-label="آمار تجربه و جلسات"]:not(.is-visible) *,
+section[aria-label="آمار تجربه و جلسات"]:not(.is-visible)::before,
+section[aria-label="آمار تجربه و جلسات"]:not(.is-visible)::after,
+
+section[aria-labelledby="process-title"]:not(.is-visible),
+section[aria-labelledby="process-title"]:not(.is-visible) *,
+section[aria-labelledby="process-title"]:not(.is-visible)::before,
+section[aria-labelledby="process-title"]:not(.is-visible)::after {
+    animation-play-state: paused !important;
+}
+
+/* اجرای انیمیشن پس از دیده‌شدن سکشن */
+
+#home.is-visible,
+#home.is-visible *,
+#home.is-visible::before,
+#home.is-visible::after,
+
+#services.is-visible,
+#services.is-visible *,
+#services.is-visible::before,
+#services.is-visible::after,
+
+section[aria-label="آمار تجربه و جلسات"].is-visible,
+section[aria-label="آمار تجربه و جلسات"].is-visible *,
+section[aria-label="آمار تجربه و جلسات"].is-visible::before,
+section[aria-label="آمار تجربه و جلسات"].is-visible::after,
+
+section[aria-labelledby="process-title"].is-visible,
+section[aria-labelledby="process-title"].is-visible *,
+section[aria-labelledby="process-title"].is-visible::before,
+section[aria-labelledby="process-title"].is-visible::after {
+    animation-play-state: running !important;
+}
+
+
+.site-footer {
+    min-height: 420px;
+    background: var(--bg);
+    color: var(--ink);
+    display: flex;
+    align-items: stretch;
+}
+
+.footer-inner {
+    width: min(1290px, calc(100% - 48px));
+    min-height: 420px;
+    margin: auto;
+    display: grid;
+
+    /*
+     * چهار ستون کاملا هم‌اندازه هستند.
+     * در حالت RTL ستون اول در سمت راست قرار می‌گیرد.
+     */
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 30px;
+
+    align-items: start;
+    padding-top: 72px;
+    position: relative;
+}
+
+.footer-section {
+    min-width: 0;
+    text-align: right;
+}
+
+.footer-brand,
+.footer-services,
+.footer-quick,
+.footer-contact {
+    grid-column: auto;
+    grid-row: 1;
+}
+
+.footer-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 25px;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.footer-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 2.25;
+}
+
+.footer-list a {
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.footer-list a:hover,
+.footer-list a:focus-visible {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.brand-mark {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--cream);
+    display: grid;
+    place-items: center;
+    margin-bottom: 17px;
+    color: var(--ink);
+    font-size: 25px;
+    font-weight: 800;
+    border: 2px solid var(--ink);
+}
+
+.brand-name {
+    font-size: 21px;
+    font-weight: 800;
+    margin: 0 0 12px;
+    color: var(--ink);
+    white-space: nowrap;
+}
+
+.brand-copy {
+    max-width: 230px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 2;
+    text-align: right;
+    margin: 0;
+}
+
+.contact-list {
+    display: grid;
+    gap: 17px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.contact-item svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    stroke: var(--ink);
+    stroke-width: 1.7;
+    fill: none;
+}
+
+.contact-item a {
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+    direction: ltr;
+    overflow-wrap: anywhere;
+}
+
+.contact-item a:hover,
+.contact-item a:focus-visible {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.footer-bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 24px;
+    border-top: 1px solid rgba(145, 145, 145, .65);
+    padding-top: 17px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+@media (max-width: 1199px) and (min-width: 768px) {
+    .site-footer {
+        min-height: auto;
+    }
+
+    .footer-inner {
+        min-height: 0;
+        width: min(900px, calc(100% - 56px));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 54px 70px;
+        padding: 58px 0 74px;
+    }
+
+    .footer-brand,
+    .footer-services,
+    .footer-quick,
+    .footer-contact {
+        grid-column: auto;
+        grid-row: auto;
+    }
+
+    .footer-bottom {
+        position: absolute;
+        bottom: 20px;
+    }
+}
+
+@media (max-width: 767px) {
+    .site-footer {
+        min-height: auto;
+    }
+
+    .footer-inner {
+        width: calc(100% - 40px);
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 38px;
+        padding: 42px 0 28px;
+    }
+
+    .footer-brand,
+    .footer-services,
+    .footer-quick,
+    .footer-contact {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .footer-section,
+    .brand-copy {
+        text-align: right;
+    }
+
+    .footer-title {
+        margin-bottom: 14px;
+    }
+
+    .brand-mark {
+        margin-right: 0;
+    }
+
+    .contact-list {
+        gap: 13px;
+    }
+
+    .footer-bottom {
+        position: static;
+        margin-top: 4px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(145, 145, 145, .45);
+    }
+}
+
+@media (max-width: 767px) {
+    .footer-bottom {
+        display: block;
+    }
+}
+
+.footer-brand > a {
+    position: relative;
+    min-height: 25px;
+    align-items: flex-start !important;
+}
+
+.footer-brand > a > span {
+    line-height: 1.4;
+}
+
+.footer-brand > a > img {
+    position: relative;
+    margin-top: -14px;
+}
+
+.circle_border {
+    border-color: #E8C670;
+    opacity: 1;
+}
+
+.cta-shell {
+    width: min(1352px, calc(100vw - 24px));
+    min-height: clamp(420px, 64vw, 596px);
+    padding: clamp(6px, 1vw, 9px);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.82);
+    border-radius: clamp(28px, 3vw, 43px);
+    background: rgba(255, 246, 237, 0.9);
+    box-shadow:
+            0 24px 34px rgba(229, 135, 76, 0.17),
+            0 8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.cta-panel {
+    position: relative;
+    width: 100%;
+    min-height: clamp(420px, 64vw, 420px);
+    overflow: hidden;
+    border-radius: clamp(22px, 2.2vw, 34px);
+    background: #4a7c83;
+    isolation: isolate;
+}
+
+.content-grid {
+    position: relative;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0 30px;
+    width: 100%;
+    max-width: 1290px;
+    height: 100%;
+    min-height: inherit;
+    margin: 0 auto;
+    padding: 0 clamp(22px, 5vw, 64px);
+}
+
+.content {
+    grid-column: 2 / span 6;
+    align-self: center;
+    width: 100%;
+    padding: 0;
+}
+
+.content h2 {
+    max-width: 440px;
+    margin-inline: auto;
+    font-size: 25px;
+    line-height: 1.7;
+}
+
+.content p {
+    max-width: 430px;
+    margin-inline: auto;
+    margin-top: 14px;
+    font-size: 12.5px;
+    line-height: 1.9;
+}
+
+.rings {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: clamp(-620px, -34vw, -505px);
+    width: clamp(820px, 74vw, 1050px);
+    aspect-ratio: 1 / 1;
+    height: auto;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    pointer-events: none;
+    background:
+            radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 255, 0.78) 0 8%,
+                    rgba(255, 255, 255, 0.55) 8% 16.2%,
+                    rgba(255, 255, 255, 0.34) 16.2% 24.4%,
+                    rgba(255, 255, 255, 0.22) 24.4% 32.6%,
+                    rgba(255, 255, 255, 0.13) 32.6% 40.8%,
+                    rgba(255, 255, 255, 0.08) 40.8% 50%,
+                    transparent 50% 100%
+            );
+}
+
+.cta-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+}
+
+.ring-one {
+    width: 81.5%;
+    height: 81.5%;
+    border: clamp(54px, 6vw, 86px) solid rgba(255, 255, 255, 0.13);
+}
+
+.ring-two {
+    width: 65.1%;
+    height: 65.1%;
+    border: clamp(54px, 6vw, 86px) solid rgba(255, 255, 255, 0.22);
+}
+
+.ring-three {
+    width: 48.8%;
+    height: 48.8%;
+    border: clamp(54px, 6vw, 86px) solid rgba(255, 255, 255, 0.34);
+}
+
+.ring-four {
+    width: 32.4%;
+    height: 32.4%;
+    border: clamp(54px, 6vw, 86px) solid rgba(255, 255, 255, 0.55);
+}
+
+.ring-center {
+    width: 16%;
+    height: 16%;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.cta-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    width: 100%;
+    height: 76px;
+    padding: 0 17px 0 20px;
+    border: 0;
+    border-radius: 9999px;
+    background: #000;
+    color: #fff;
+    font-family: "Vazirmatn", sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: left;
+    cursor: pointer;
+    transition:
+            transform 160ms ease,
+            background-color 160ms ease;
+}
+
+.cta-button:hover {
+    background: #151515;
+    transform: translateY(-2px);
+}
+
+.cta-button:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.92);
+    outline-offset: 4px;
+}
+
+.button-dot {
+    flex: 0 0 auto;
+    width: 31px;
+    height: 31px;
+    border-radius: 9999px;
+    background: radial-gradient(
+            circle at 34% 30%,
+            #fff 0%,
+            #f7f7f7 32%,
+            #bcbec2 72%,
+            #77797c 100%
+    );
+    box-shadow:
+            inset 1px 1px 2px rgba(255, 255, 255, 0.7),
+            0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.appointment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(100%, 385px);
+    margin: 26px auto 0;
+}
+
+.appointment-field {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    border: 1px solid rgba(35, 77, 60, 0.08);
+    border-radius: 10px;
+    background: #fff;
+    color: #234d3c;
+    font-family: "Vazirmatn", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    outline: none;
+    box-shadow:
+            0 8px 20px rgba(35, 77, 60, 0.08),
+            0 2px 5px rgba(35, 77, 60, 0.05);
+    transition:
+            border-color 180ms ease,
+            box-shadow 180ms ease,
+            transform 180ms ease;
+}
+
+.appointment-field::placeholder {
+    color: rgba(35, 77, 60, 0.58);
+}
+
+.appointment-field:focus {
+    border-color: rgba(35, 77, 60, 0.45);
+    box-shadow:
+            0 12px 24px rgba(35, 77, 60, 0.13),
+            0 0 0 3px rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.cta-appointment {
+    --cta-forest: #234d3c;
+
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    height: 50px;
+    min-height: 50px;
+    overflow: hidden;
+    margin-top: 2px;
+    padding: 0 18px;
+    border: 1px solid rgba(35, 77, 60, 0.08);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--cta-forest);
+    font-family: "Vazirmatn", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    cursor: pointer;
+    box-shadow:
+            0 8px 20px rgba(35, 77, 60, 0.08),
+            0 2px 5px rgba(35, 77, 60, 0.05);
+    transition:
+            color 280ms ease,
+            transform 280ms ease,
+            box-shadow 280ms ease;
+}
+
+.cta-appointment::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: var(--cta-forest);
+    transform: translateX(101%);
+    transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cta-appointment__text,
+.cta-appointment__icon {
+    position: relative;
+    z-index: 1;
+}
+
+.cta-appointment__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cta-appointment:hover {
+    color: #fff;
+    transform: translateY(-3px);
+    box-shadow:
+            0 16px 28px rgba(35, 77, 60, 0.22),
+            0 5px 10px rgba(35, 77, 60, 0.12);
+}
+
+.cta-appointment:hover::before {
+    transform: translateX(0);
+}
+
+.cta-appointment:hover .cta-appointment__icon {
+    transform: translateX(-5px);
+}
+
+.cta-appointment:active {
+    transform: translateY(-1px) scale(0.98);
+    box-shadow:
+            0 8px 16px rgba(35, 77, 60, 0.16),
+            0 2px 5px rgba(35, 77, 60, 0.08);
+}
+
+.cta-appointment:focus-visible {
+    outline: 3px solid rgba(35, 77, 60, 0.3);
+    outline-offset: 4px;
+}
+
+@media (max-width: 1100px) {
+    .content-grid {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 100%;
+        padding: 40px clamp(24px, 6vw, 72px);
+    }
+
+    .content {
+        width: min(460px, 100%);
+        margin: 0 auto;
+        padding: 0;
+    }
+
+    .rings {
+        left: clamp(-720px, -58vw, -560px);
+    }
+}
+
+@media (max-width: 780px) {
+    .cta-shell {
+        width: calc(100vw - 16px);
+        min-height: 620px;
+    }
+
+    .cta-panel {
+        min-height: 620px;
+    }
+
+    .content-grid {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 620px;
+        padding: 48px 28px;
+    }
+
+    .content {
+        width: min(100%, 560px);
+        margin: 0 auto;
+    }
+
+    .content h2 {
+        max-width: 330px;
+        margin-inline: auto;
+        font-size: clamp(28px, 7vw, 36px);
+        line-height: 1.45;
+    }
+
+    .content p {
+        max-width: 360px;
+        margin-inline: auto;
+        margin-top: 18px;
+        font-size: clamp(14px, 3.6vw, 16px);
+        line-height: 1.75;
+    }
+
+    .appointment-form {
+        width: min(100%, 340px);
+        margin: 40px auto 0;
+        gap: 14px;
+    }
+
+    .appointment-field {
+        height: 56px;
+        padding-inline: 18px;
+        font-size: 14px;
+    }
+
+    .cta-appointment {
+        height: 56px;
+        min-height: 56px;
+        font-size: 15px;
+    }
+
+    .cta-button {
+        width: min(100%, 340px) !important;
+        height: 68px;
+        font-size: 15px;
+    }
+
+    .rings {
+        left: clamp(-820px, -145vw, -600px);
+        transform: translateY(-50%) scale(0.74);
+        transform-origin: center;
+    }
+}
+
+@media (max-width: 520px) {
+    .cta-shell {
+        min-height: 590px;
+        border-radius: 26px;
+    }
+
+    .cta-panel {
+        min-height: 590px;
+        border-radius: 20px;
+    }
+
+    .content-grid {
+        min-height: 590px;
+        padding: 40px 22px;
+    }
+
+    .content {
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .content h2,
+    .content p {
+        max-width: 100%;
+    }
+
+    .appointment-form {
+        width: 100%;
+    }
+
+    .cta-appointment {
+        width: 100%;
+    }
+
+    .cta-button {
+        width: 100% !important;
+        padding-inline: 18px 14px;
+    }
+
+    .button-dot {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .appointment-field,
+    .cta-appointment,
+    .cta-appointment::before,
+    .cta-appointment__icon {
+        transition: none;
+    }
+}
+
+.price-value,
+.duration-label {
+    transition:
+            opacity 0.2s ease,
+            transform 0.2s ease;
+}
+
+.fade-update {
+    opacity: 0;
+    transform: translateY(4px);
+}
+
+/* پس‌زمینه نیمه‌شفاف هنگام بازبودن منوی موبایل */
+#mobile-nav::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(7, 35, 24, 0.18);
+    pointer-events: none;
+}
+/* جلوگیری از نمایش لحظه‌ای منوی موبایل قبل از اجرای Alpine */
+[x-cloak] {
+    display: none !important;
+}
+
+/* محتوای منو بالاتر از لایه پس‌زمینه قرار بگیرد */
+#mobile-nav > div {
+    position: relative;
+    z-index: 1;
+}
+
+/* جلوگیری از اسکرول صفحه هنگام باز بودن منو */
+body.menu-open {
+    overflow: hidden;
+}
+
+/* جلوگیری از تأثیر CSS صفحات دیگر روی انیمیشن هدر */
+.hero-header,
+.hero-header *,
+#mobile-nav,
+#mobile-nav * {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* تنظیم یکسان انیمیشن عناصر تعاملی */
+.hero-header a,
+.hero-header button {
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* فوکوس قابل مشاهده */
+.hero-header a:focus-visible,
+.hero-header button:focus-visible {
+    outline: 2px solid #e2c15f;
+    outline-offset: 4px;
+}
+
+/* کاهش حرکت برای کاربرانی که انیمیشن را غیرفعال کرده‌اند */
+@media (prefers-reduced-motion: reduce) {
+    .hero-header *,
+    #mobile-nav,
+    #mobile-nav * {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
+
+    .hero-header a:hover,
+    .hero-header button:hover,
+    #mobile-nav a:hover {
+        transform: none !important;
+    }
+}

@@ -1,11 +1,14 @@
 <x-layouts.app>
-    <main class="mx-auto max-w-3xl px-4 py-8">
-        <div class="mb-6 flex items-center justify-between gap-4">
-            <h1 class="text-2xl font-bold">ایجاد کد تخفیف</h1>
+    <link rel="stylesheet" href="{{ asset('website/style/care-discounts.css') }}">
+    <link rel="stylesheet" href="{{ asset('website/style/care-discount-expiry-picker.css') }}">
+    <script defer src="{{ asset('website/js/care-discount-expiry-picker.js') }}"></script>
+    <main class="dc dc-create mx-auto max-w-3xl px-4 py-8">
+        <div class="dc-header mb-6 flex items-center justify-between gap-4">
+            <div><h1 class="text-2xl font-bold">ایجاد کد تخفیف</h1><p class="dc-intro">مخاطب کد، میزان تخفیف و محدودیت استفاده را مشخص کنید.</p></div>
 
             <a
                 href="{{ route('psychologist.discounts.index') }}"
-                class="text-indigo-700"
+                class="dc-return text-indigo-700"
             >
                 بازگشت به فهرست
             </a>
@@ -17,7 +20,7 @@
             <h2 class="font-semibold">جست‌وجوی مراجع برای کد اختصاصی</h2>
 
             <p class="mt-2 text-sm text-gray-600">
-                برای کد عمومی نیازی به جست‌وجو نیست.
+                برای کد عمومی نیازی به جست‌وجو نیست. جست‌وجو صفحه را دوباره بارگذاری می‌کند؛ آن را پیش از تکمیل فرم انجام دهید.
                 برای کد اختصاصی، ابتدا جست‌وجو کنید و سپس فرم پایین را تکمیل کنید.
             </p>
 
@@ -58,7 +61,7 @@
             @csrf
 
             <fieldset class="space-y-3">
-                <legend class="mb-3 font-semibold">دامنه استفاده از کد</legend>
+                <legend class="mb-3 font-semibold">۱. دامنه استفاده از کد</legend>
 
                 <label class="flex items-center gap-2 rounded border p-3">
                     <input
@@ -128,7 +131,7 @@
 
             <fieldset class="space-y-4 rounded-lg border p-4">
                 <legend class="px-2 font-semibold">
-                    روش تعیین کد تخفیف
+                    ۲. روش تعیین کد تخفیف
                 </legend>
 
                 <label class="flex items-center gap-2">
@@ -182,6 +185,7 @@
                 </div>
             </fieldset>
 
+            <h2 class="dc-section-title">۳. میزان تخفیف</h2>
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
                     <label for="discount-type" class="mb-2 block text-sm font-medium">
@@ -226,12 +230,14 @@
                 تخفیف بیشتر از مبلغ جلسه، مبلغ نهایی را صفر می‌کند.
             </p>
 
+            <h2 class="dc-section-title">۴. پایان اعتبار</h2>
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
                     <label for="expires-date" class="mb-2 block text-sm font-medium">
                         تاریخ انقضای شمسی
                     </label>
 
+                    <div class="dc-expiry-field">
                     <input
                         id="expires-date"
                         name="expires_date"
@@ -242,6 +248,10 @@
                         required
                         class="w-full rounded border p-2"
                     >
+                        <button type="button" id="dc-expiry-open" hidden aria-label="انتخاب تاریخ و ساعت انقضا" aria-haspopup="dialog" title="انتخاب تاریخ و ساعت انقضا">
+                            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 11h18M7 15h3M14 15h3M7 18h3"/></svg>
+                        </button>
+                    </div>
                 </div>
 
                 <div>
@@ -266,6 +276,7 @@
                 اعتبار کد دقیقاً در ابتدای دقیقه واردشده پایان می‌یابد.
             </p>
 
+            <h2 class="dc-section-title">۵. محدودیت مصرف</h2>
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
                     <label for="usage-limit" class="mb-2 block text-sm font-medium">

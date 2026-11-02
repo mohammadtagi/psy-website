@@ -2,243 +2,87 @@
 @php use App\Models\Appointment; @endphp
 @php use App\Models\Payment; @endphp
 @extends('components.layouts.app')
-
 @section('title', 'مدیریت نوبت‌ها')
-
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('website/style/care-appointments.css') }}">
+@endpush
 @section('content')
-    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <header class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">
-                مدیریت نوبت‌ها
-            </h1>
-
-            <p class="mt-2 text-sm text-gray-600">
-                مشاهده و مدیریت نوبت‌های ثبت‌شده
-            </p>
+    <main class="ca-page">
+        <header class="ca-header">
+            <div><p class="ca-eyebrow">پنل مشاور / برنامه جلسات</p><h1>مدیریت نوبت‌ها</h1><p class="ca-muted">پیگیری رزرو، پرداخت و برگزاری؛ هرکدام با وضعیت مستقل.</p></div>
+            <a class="ca-button ca-secondary" href="{{ route('psychologist.availabilities.index') }}">تنظیم زمان‌های حضور</a>
         </header>
-
-        @if (session('status'))
-            <div class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-                {{ session('status') }}
-            </div>
-        @endif
-        @if ($errors->any())
-            <div
-                role="alert"
-                class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
-            >
-                <ul class="list-inside list-disc">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <section class="overflow-x-auto border border-gray-200 bg-white shadow-sm">
-            <table class="min-w-full divide-y divide-gray-200 text-right">
-                <thead class="bg-gray-50">
-                <tr>
-                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold text-gray-600">
-                        مراجع
-                    </th>
-                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold text-gray-600">
-                        تاریخ و ساعت
-                    </th>
-                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold text-gray-600">
-                        مدت
-                    </th>
-                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold text-gray-600">
-                        نوع جلسه
-                    </th>
-                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold text-gray-600">
-                        وضعیت نوبت
-                    </th>
-                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold text-gray-600">
-                        وضعیت پرداخت
-                    </th>
-                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold text-gray-600">
-                        مبلغ
-                    </th>
-                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold text-gray-600">
-                        عملیات
-                    </th>
-                </tr>
-                </thead>
-
-
-                <tbody class="divide-y divide-gray-100 bg-white">
-                @forelse ($appointments as $appointment)
-                    @php
-                        $startsAt = $appointment->starts_at->setTimezone('Asia/Tehran');
-                        $endsAt = $appointment->ends_at->setTimezone('Asia/Tehran');
-
-                        $isPendingAndValid = $appointment->status === Appointment::STATUS_PENDING_PAYMENT
-                            && $appointment->hold_expires_at?->isFuture();
-
-                        $isActive = $appointment->status === Appointment::STATUS_CONFIRMED || $isPendingAndValid;
-$canCancel = in_array($appointment->status, [
-    Appointment::STATUS_CONFIRMED,
-    Appointment::STATUS_PENDING_PAYMENT,
-], true) && $appointment->starts_at->isFuture();
-
-                        $latestPayment = $appointment->payments->first();
-                    @endphp
-
-
-                    <tr>
-                        {{-- ۱. مراجع --}}
-                        <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-900">
-                            {{ $appointment->client->first_name }}
-                            {{ $appointment->client->last_name }}
-
-                            <div class="mt-2 text-xs text-gray-500">
-                                کد پیگیری:
-                                <span dir="ltr" class="inline-block font-mono">
-            {{ $appointment->tracking_code }}
-        </span>
-                            </div>
-                        </td>
-
-                        {{-- ۲. تاریخ و ساعت --}}
-                        <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-700">
-                            {{ PersianDate::format($startsAt, 'yyyy/MM/dd') }}
-                            <br>
-                            <span class="text-xs text-gray-500">
-                                {{ $startsAt->format('H:i') }}
-                                تا
-                                {{ $endsAt->format('H:i') }}
-                            </span>
-                        </td>
-
-                        {{-- ۳. مدت --}}
-                        <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-700">
-                            {{ $appointment->duration_minutes }} دقیقه
-                        </td>
-
-                        {{-- ۴. نوع جلسه --}}
-                        <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-700">
-                            {{ $appointment->session_type === Appointment::SESSION_TYPE_ONLINE ? 'آنلاین' : 'حضوری' }}
-                        </td>
-
-                        {{-- ۵. وضعیت نوبت --}}
-                        <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-700">
-                            @switch($appointment->status)
-                                @case(Appointment::STATUS_PENDING_PAYMENT)
-                                    در انتظار پرداخت
-                                    @break
-
-                                @case(Appointment::STATUS_CONFIRMED)
-                                    {{ $appointment->sessionStatusLabel() }}
-                                    @break
-
-                                @case(Appointment::STATUS_CANCELLED)
-                                    لغوشده
-                                    @break
-
-                                @case(Appointment::STATUS_COMPLETED)
-                                    تکمیل‌شده
-                                    @break
-
-                                @case(Appointment::STATUS_NO_SHOW)
-                                    عدم حضور
-                                    @break
-
-                                @default
-                                    {{ $appointment->status ?: 'نامشخص' }}
-                            @endswitch
-                        </td>
-
-                        {{-- ۶. وضعیت پرداخت --}}
-                        <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-700">
-                            @if (! $latestPayment)
-                                بدون پرداخت
-                            @elseif ($latestPayment->status === Payment::STATUS_PAID)
-                                پرداخت‌شده
-                            @elseif ($latestPayment->status === Payment::STATUS_PENDING)
-                                در انتظار پرداخت
-                            @elseif ($latestPayment->status === Payment::STATUS_INITIATED)
-                                شروع‌شده
-                            @elseif ($latestPayment->status === Payment::STATUS_FAILED)
-                                ناموفق
-                            @elseif ($latestPayment->status === Payment::STATUS_CANCELLED)
-                                لغوشده
-                            @else
-                                {{ $latestPayment->status }}
-                            @endif
-                        </td>
-
-                        {{-- ۷. مبلغ --}}
-                        <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-700">
-                            @if ($latestPayment)
-                                {{ number_format((int) $latestPayment->amount) }} تومان
-                            @else
-                                {{ number_format((int) $appointment->amount) }} تومان
-                            @endif
-                        </td>
-
-                        {{-- ۸. عملیات --}}
-                        {{-- ۸. عملیات --}}
-                        <td class="min-w-52 px-4 py-4">
-                            @if ($isActive)
-                                <a
-                                    href="{{ route('psychologist.appointments.session.show', $appointment) }}"
-                                    class="inline-block border border-indigo-300 px-3 py-2 text-sm text-indigo-700"
-                                >
-                                    مدیریت جلسه
-                                </a>
-                            @endif
-
-                            @if ($canCancel)
-                                <form
-                                    method="POST"
-                                    action="{{ route('psychologist.appointments.cancel', $appointment) }}"
-                                    class="mt-3 space-y-2"
-                                    onsubmit="return confirm('آیا از لغو این نوبت مطمئن هستید؟')"
-                                >
-                                    @csrf
-
-                                    <textarea
-                                        name="cancellation_reason"
-                                        rows="2"
-                                        maxlength="255"
-                                        placeholder="دلیل لغو، اختیاری"
-                                        class="w-full border-gray-300 text-xs"
-                                    ></textarea>
-
-                                    <button
-                                        type="submit"
-                                        class="text-sm font-medium text-red-700 hover:text-red-900"
-                                    >
-                                        لغو نوبت
-                                    </button>
-                                </form>
-                            @endif
-
-                            @if (! $isActive && ! $canCancel)
-                                <span class="text-xs text-gray-400">
-            بدون عملیات
-        </span>
-                            @endif
-                        </td>
-
-                    </tr>
-                @empty
-                    <tr>
-                        <td
-                            colspan="8"
-                            class="px-4 py-12 text-center text-sm text-gray-500"
-                        >
-                            هنوز نوبتی ثبت نشده است.
-                        </td>
-                    </tr>
-                @endforelse
-                </tbody>
-            </table>
+        @if(session('status'))<div class="ca-alert ca-success" role="status">{{ session('status') }}</div>@endif
+        @if($errors->any())<div class="ca-alert ca-error" role="alert"><strong>درخواست انجام نشد</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+        <section class="ca-panel" aria-labelledby="ca-list-title">
+            <header class="ca-list-header"><div><h2 id="ca-list-title">فهرست نوبت‌ها <span class="ca-count">{{ number_format($appointments->total()) }}</span></h2><p class="ca-muted">مرتب‌شده از قدیمی‌ترین تاریخ جلسه · ساعت‌ها به وقت تهران</p></div>
+                @if($appointments->total())<span class="ca-range">نمایش {{ number_format($appointments->firstItem() ?? 0) }} تا {{ number_format($appointments->lastItem() ?? 0) }} از {{ number_format($appointments->total()) }}</span>@endif
+            </header>
+            @if($appointments->count())
+                <div class="ca-scroll" role="region" aria-label="فهرست نوبت‌ها؛ در نمایشگر متوسط امکان پیمایش افقی وجود دارد" tabindex="0">
+                    <table class="ca-table" role="table">
+                        <caption class="ca-sr-only">نوبت‌های مشاور، وضعیت‌های مستقل و عملیات هر جلسه</caption>
+                        <thead role="rowgroup"><tr role="row">
+                            @foreach(['مراجع','زمان و نوع جلسه','وضعیت رزرو','برگزاری جلسه','آخرین تلاش پرداخت','عملیات'] as $heading)<th scope="col" role="columnheader">{{ $heading }}</th>@endforeach
+                        </tr></thead>
+                        <tbody role="rowgroup">
+                        @foreach($appointments as $appointment)
+                            @php
+                                $startsAt = $appointment->starts_at->copy()->setTimezone('Asia/Tehran');
+                                $endsAt = $appointment->ends_at->copy()->setTimezone('Asia/Tehran');
+                                $isPendingAndValid = $appointment->status === Appointment::STATUS_PENDING_PAYMENT && $appointment->hold_expires_at?->isFuture();
+                                $isActive = $appointment->status === Appointment::STATUS_CONFIRMED || $isPendingAndValid;
+                                $canCancel = in_array($appointment->status, [Appointment::STATUS_CONFIRMED, Appointment::STATUS_PENDING_PAYMENT], true) && $appointment->starts_at->isFuture();
+                                $latestPayment = $appointment->payments->first();
+                                [$bookingLabel, $bookingTone] = match($appointment->status) {
+                                    Appointment::STATUS_CONFIRMED => ['تأییدشده', 'green'],
+                                    Appointment::STATUS_PENDING_PAYMENT => ['در انتظار پرداخت', 'gold'],
+                                    Appointment::STATUS_CANCELLED => ['لغوشده', 'red'],
+                                    Appointment::STATUS_COMPLETED => ['تکمیل‌شده (وضعیت قدیمی)', 'neutral'],
+                                    Appointment::STATUS_NO_SHOW => ['عدم حضور (وضعیت قدیمی)', 'neutral'],
+                                    default => ['نامشخص', 'neutral'],
+                                };
+                                $sessionLabel = in_array($appointment->status, [Appointment::STATUS_CONFIRMED, Appointment::STATUS_COMPLETED, Appointment::STATUS_NO_SHOW], true) ? $appointment->sessionStatusLabel() : '—';
+                                [$paymentLabel, $paymentTone] = match($latestPayment?->status) {
+                                    Payment::STATUS_PAID => ['پرداخت‌شده', 'green'],
+                                    Payment::STATUS_PENDING => ['در انتظار پرداخت', 'gold'],
+                                    Payment::STATUS_INITIATED => ['شروع‌شده', 'gold'],
+                                    Payment::STATUS_FAILED => ['ناموفق', 'red'],
+                                    Payment::STATUS_CANCELLED => ['لغوشده', 'neutral'],
+                                    default => [$latestPayment ? 'نامشخص' : 'بدون سابقه پرداخت', 'neutral'],
+                                };
+                                $clientName = trim(($appointment->client?->first_name ?? '').' '.($appointment->client?->last_name ?? ''));
+                            @endphp
+                            <tr role="row">
+                                <td role="cell" class="ca-client"><span class="ca-mobile-label" aria-hidden="true">مراجع</span><strong>{{ $clientName !== '' ? $clientName : 'نام ثبت نشده' }}</strong><small>کد پیگیری: <bdi>{{ $appointment->tracking_code }}</bdi></small></td>
+                                <td role="cell"><span class="ca-mobile-label" aria-hidden="true">زمان و نوع جلسه</span><strong>{{ PersianDate::format($startsAt, 'yyyy/MM/dd') }}</strong><small><bdi>{{ $startsAt->format('H:i') }} – {{ $endsAt->format('H:i') }}</bdi> · {{ $appointment->duration_minutes }} دقیقه</small><span class="ca-type">{{ match($appointment->session_type) { Appointment::SESSION_TYPE_ONLINE => 'آنلاین', Appointment::SESSION_TYPE_IN_PERSON => 'حضوری', default => 'نوع جلسه نامشخص' } }}</span></td>
+                                <td role="cell"><span class="ca-mobile-label" aria-hidden="true">وضعیت رزرو</span><span class="ca-badge ca-{{ $bookingTone }}">{{ $bookingLabel }}</span>@if($appointment->status === Appointment::STATUS_PENDING_PAYMENT && $appointment->hold_expires_at?->isPast())<small>مهلت پرداخت پایان یافته است</small>@endif</td>
+                                <td role="cell"><span class="ca-mobile-label" aria-hidden="true">برگزاری جلسه</span><span class="ca-session">{{ $sessionLabel }}</span>@if($sessionLabel === '—')<small>وضعیت برگزاری قابل نمایش نیست</small>@endif</td>
+                                <td role="cell"><span class="ca-mobile-label" aria-hidden="true">آخرین تلاش پرداخت</span><span class="ca-badge ca-{{ $paymentTone }}">{{ $paymentLabel }}</span><small class="ca-amount">{{ number_format((int) ($latestPayment ? $latestPayment->amount : $appointment->amount)) }} تومان</small><small>{{ $latestPayment ? 'مبلغ آخرین تلاش پرداخت' : 'مبلغ نوبت' }}</small></td>
+                                <td role="cell" class="ca-actions"><span class="ca-mobile-label" aria-hidden="true">عملیات</span>
+                                    @if($isActive)<a class="ca-button ca-primary" href="{{ route('psychologist.appointments.session.show', $appointment) }}">مدیریت جلسه<span class="ca-sr-only"> با {{ $clientName }}، {{ PersianDate::format($startsAt, 'yyyy/MM/dd') }} ساعت {{ $startsAt->format('H:i') }}</span></a>@endif
+                                    @if($canCancel)
+                                        <details class="ca-cancel"><summary>لغو نوبت</summary>
+                                            <form method="POST" action="{{ route('psychologist.appointments.cancel', $appointment) }}" onsubmit="return confirm('آیا از لغو این نوبت مطمئن هستید؟')">
+                                                @csrf
+                                                <label for="ca-reason-{{ $appointment->getKey() }}">دلیل لغو <span>(اختیاری)</span></label>
+                                                <textarea id="ca-reason-{{ $appointment->getKey() }}" name="cancellation_reason" rows="3" maxlength="255" placeholder="حداکثر ۲۵۵ نویسه"></textarea>
+                                                <p>لغو برای این نوبت ثبت می‌شود.</p><button type="submit" class="ca-button ca-danger">تأیید لغو نوبت</button>
+                                            </form>
+                                        </details>
+                                    @endif
+                                    @if(!$isActive && !$canCancel)<span class="ca-muted">بدون عملیات</span>@endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="ca-empty"><span aria-hidden="true">◇</span><h3>{{ $appointments->total() ? 'این صفحه نوبتی ندارد' : 'هنوز نوبتی ثبت نشده است' }}</h3><p class="ca-muted">{{ $appointments->total() ? 'برای مشاهده نوبت‌ها به صفحه اول برگردید.' : 'پس از ثبت رزرو، اطلاعات جلسه در این بخش نمایش داده می‌شود.' }}</p>@if($appointments->total())<a class="ca-button ca-secondary" href="{{ $appointments->url(1) }}">صفحه اول</a>@endif</div>
+            @endif
         </section>
-
-        <div class="mt-6">
-            {{ $appointments->links() }}
-        </div>
+        <p class="ca-note">وضعیت پرداخت مربوط به آخرین تلاش ثبت‌شده است؛ لغو رزرو به معنی استرداد وجه نیست.</p>
+        <div class="ca-pagination">{{ $appointments->links() }}</div>
     </main>
 @endsection

@@ -32,19 +32,25 @@ class DashboardController extends Controller
             ->orderBy('starts_at')
             ->get();
 
-        $upcomingAppointments = Appointment::query()
+        $upcomingAppointmentsQuery = Appointment::query()
             ->where('psychologist_id', $psychologistId)
             ->where('starts_at', '>', $endOfTodayUtc)
-            ->whereIn('status', $bookableStatuses)
+            ->whereIn('status', $bookableStatuses);
+
+        $upcomingAppointmentsCount = (clone $upcomingAppointmentsQuery)->count();
+        $upcomingAppointments = (clone $upcomingAppointmentsQuery)
             ->with('client')
             ->orderBy('starts_at')
             ->limit(8)
             ->get();
 
-        $upcomingAvailabilities = Availability::query()
+        $upcomingAvailabilitiesQuery = Availability::query()
             ->where('psychologist_id', $psychologistId)
             ->where('status', Availability::STATUS_ACTIVE)
-            ->where('starts_at', '>=', $nowUtc)
+            ->where('starts_at', '>=', $nowUtc);
+
+        $upcomingAvailabilitiesCount = (clone $upcomingAvailabilitiesQuery)->count();
+        $upcomingAvailabilities = (clone $upcomingAvailabilitiesQuery)
             ->orderBy('starts_at')
             ->limit(8)
             ->get();
@@ -53,6 +59,8 @@ class DashboardController extends Controller
             'todayAppointments',
             'upcomingAppointments',
             'upcomingAvailabilities',
+            'upcomingAppointmentsCount',
+            'upcomingAvailabilitiesCount',
         ));
     }
 }

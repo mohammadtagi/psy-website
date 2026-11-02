@@ -2,6 +2,10 @@
 
 @section('title', 'انتخاب زمان جلسه')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('website/style/care-booking.css') }}?v=1">
+<link rel="stylesheet" href="{{ asset('website/style/care-booking-inputs.css') }}?v=1">
+@endpush
 @section('content')
     @php
         $dateObject = \Carbon\CarbonImmutable::createFromFormat(
@@ -11,7 +15,8 @@
         );
     @endphp
 
-    <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <main class="cbk mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8" dir="rtl">
+        <ol class="cbk-steps" aria-label="مراحل رزرو"><li>۱. انتخاب تاریخ</li><li aria-current="step">۲. ساعت و اطلاعات</li><li>۳. بررسی و پرداخت</li></ol>
         <header class="mb-8">
             <a
                 href="{{ route('booking.index', ['duration' => $durationMinutes]) }}"
@@ -28,7 +33,7 @@
                 {{ $dateObject->locale('fa')->dayName }}
                 {{ \App\Support\PersianDate::format($dateObject) }}
                 -
-                جلسه {{ $durationMinutes }} دقیقه‌ای
+                جلسه {{ $durationMinutes }} دقیقه‌ای · ساعت‌ها به وقت تهران
             </p>
         </header>
 
@@ -61,7 +66,7 @@
                 </h2>
 
                 <p class="mt-2 text-sm text-amber-800">
-                    پس از ورود، زمان انتخاب‌شده را می‌توانید ثبت کنید.
+                    برای انتخاب ساعت و ثبت درخواست نوبت، ابتدا وارد حساب شوید.
                 </p>
 
                 <a
@@ -98,6 +103,9 @@
                             class="slot-button min-h-12 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-800 transition hover:border-indigo-500 hover:bg-indigo-50"
                             data-slot-index="{{ $index }}"
                             data-start-time="{{ $slot['start_time'] }}"
+                            aria-pressed="false"
+                            aria-controls="booking-form-container"
+                            @disabled(! $isAuthenticated)
                         >
                             {{ $slot['start_time'] }}
                             <span class="mt-1 block text-xs font-normal text-gray-500">
@@ -112,12 +120,14 @@
         @if ($isAuthenticated && ! empty($slots))
             <section
                 id="booking-form-container"
-                class="hidden border-t border-gray-200 pt-8"
+                class="cbk-form border-t border-gray-200 pt-8"
             >
                 <h2 class="mb-5 text-lg font-semibold text-gray-900">
                     اطلاعات مراجع
                 </h2>
 
+                <p class="cbk-selection-hint" id="booking-selection-hint" role="status">ابتدا یکی از ساعت‌های بالا را انتخاب کنید؛ سپس اطلاعات خود را بررسی کنید.</p>
+                <noscript><p class="cbk-notice">برای انتخاب ساعت و ثبت درخواست، JavaScript مرورگر باید فعال باشد.</p></noscript>
                 <form
                     method="POST"
                     action="{{ route('booking.store', ['date' => $date]) }}"
@@ -154,6 +164,7 @@
 
                             <input
                                 id="first_name"
+                                autocomplete="given-name"
                                 name="first_name"
                                 type="text"
                                 value="{{ old('first_name', auth()->user()->first_name) }}"
@@ -173,6 +184,7 @@
 
                             <input
                                 id="last_name"
+                                autocomplete="family-name"
                                 name="last_name"
                                 type="text"
                                 value="{{ old('last_name', auth()->user()->last_name) }}"
@@ -191,6 +203,7 @@
                             تاریخ تولد شمسی
                         </label>
 
+                        <div class="cbk-birth-field">
                         <input
                             id="birth_date_jalali"
                             name="birth_date_jalali"
@@ -210,6 +223,10 @@
                             class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
 
+                        <button type="button" id="cbk-birth-open" class="cbk-birth-open" hidden aria-label="باز کردن تقویم تاریخ تولد شمسی" aria-haspopup="dialog" title="انتخاب تاریخ تولد">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 11h18M7 15h2m3 0h2m3 0h1M7 18h2m3 0h2"/></svg>
+                        </button>
+                        </div>
                         <p id="birth-date-help" class="mt-2 text-xs text-gray-500">
                             به ترتیب سال/ماه/روز وارد کنید؛ اعداد فارسی و انگلیسی پذیرفته می‌شوند.
                         </p>
@@ -248,7 +265,7 @@
                     <div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
                         <div class="flex items-center justify-between">
                             <span>زمان انتخاب‌شده</span>
-                            <strong id="selected-time">انتخاب نشده</strong>
+                            <strong id="selected-time" dir="ltr" aria-live="polite">انتخاب نشده</strong>
                         </div>
 
                         <div class="mt-2 flex items-center justify-between">
@@ -260,11 +277,14 @@
                         </div>
                     </div>
 
+                    <p class="cbk-notice">با ادامه، درخواست نوبت موقت ثبت می‌شود. تأیید نهایی در مرحله بعد، پس از پرداخت موفق یا تأیید نوبت رایگان انجام می‌شود.</p>
                     <button
                         type="submit"
+                        id="booking-submit"
+                        disabled
                         class="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     >
-                        ثبت نهایی نوبت
+                        ثبت موقت و ادامه به بررسی و پرداخت
                     </button>
                 </form>
             </section>
@@ -281,12 +301,11 @@
             ]) }};
 
                 const buttons = document.querySelectorAll('.slot-button');
-                const formContainer = document.getElementById('booking-form-container');
                 const availabilityInput = document.getElementById('availability_id');
                 const startTimeInput = document.getElementById('start_time');
                 const selectedTime = document.getElementById('selected-time');
 
-                function selectSlot(button, shouldScroll = true) {
+                function selectSlot(button) {
                     const slot = slots[Number(button.dataset.slotIndex)];
 
                     if (!slot) {
@@ -328,14 +347,8 @@
                     selectedTime.textContent =
                         `${slot.start_time} تا ${slot.end_time}`;
 
-                    formContainer.classList.remove('hidden');
-
-                    if (shouldScroll) {
-                        formContainer.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start',
-                        });
-                    }
+                    document.getElementById('booking-submit').disabled = false;
+                    document.getElementById('booking-selection-hint').textContent = 'ساعت انتخاب شد؛ اطلاعات زیر را بررسی کنید و ادامه دهید.';
                 }
 
                 buttons.forEach((button) => {
@@ -354,9 +367,10 @@
                 });
 
                 if (previousButton) {
-                    selectSlot(previousButton, false);
+                    selectSlot(previousButton);
                 }
             })();
         </script>
     @endif
+    <script src="{{ asset('website/js/care-booking-birth-picker.js') }}?v=1" defer></script>
 @endsection

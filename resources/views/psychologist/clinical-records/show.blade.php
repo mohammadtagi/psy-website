@@ -1,5 +1,9 @@
 <x-layouts.app>
-    <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    @push('styles')
+        <link rel="stylesheet" href="{{ asset('website/style/care-clinical-record.css') }}?v=phase5-ux2">
+    @endpush
+        <script src="{{ asset('website/js/care-record-navigation.js') }}?v=phase5-ux2" defer></script>
+    <div class="care-record" dir="rtl">
         @error('treatment_plan')
         <div role="alert" class="mb-6 border-r-4 border-red-600 bg-red-50 px-4 py-3 text-sm text-red-700">
             {{ $message }}
@@ -7,31 +11,24 @@
         @enderror
 
         @php
+            $riskLabels = ['none' => 'بدون خطر گزارش‌شده', 'low' => 'کم', 'medium' => 'متوسط', 'high' => 'زیاد'];
             $clientName = trim(($client->first_name ?? '') . ' ' . ($client->last_name ?? ''));
         @endphp
 
         @if (session('status'))
-            <div class="mb-6 border-r-4 border-green-600 bg-green-50 px-4 py-3 text-sm text-green-700">
+            <div role="status" class="mb-6 border-r-4 border-green-600 bg-green-50 px-4 py-3 text-sm text-green-700">
                 {{ session('status') }}
             </div>
         @endif
 
-        <div class="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <a class="cr-back" href="{{ route('psychologist.clients.index', ['q' => $client->mobile]) }}">بازگشت به فهرست مراجع</a>
+        <div class="cr-hero">
             <div>
-                <a
-                    href="{{ route('psychologist.clients.index', ['q' => $client->mobile]) }}"
-                    class="text-sm text-indigo-700 hover:underline"
-                >
-                    بازگشت به فهرست مراجع
-                </a>
-
-                <h1 class="mt-4 text-2xl font-bold text-gray-900">
-                    پرونده بالینی
-                </h1>
+                <p class="cr-page-label">پرونده بالینی</p>
+                <h1>{{ $clientName ?: 'نام ثبت نشده' }}</h1>
+                <span class="cr-badge">{{ $record->isActive() ? 'پرونده فعال' : ($record->isClosed() ? 'پرونده بسته' : 'وضعیت نامشخص') }}</span>
 
                 <p class="mt-2 text-sm text-gray-600">
-                    {{ $clientName ?: 'نام ثبت نشده' }}
-                    -
                     <span dir="ltr">{{ $client->mobile }}</span>
                 </p>
             </div>
@@ -44,8 +41,16 @@
             </a>
         </div>
 
-        <div class="grid gap-5 md:grid-cols-2">
-            <section class="border border-gray-200 bg-white p-5 md:col-span-2">
+        <nav class="cr-nav" aria-label="بخش‌های پرونده">
+            <a href="#record-overview">خلاصه بالینی</a>
+            <a href="#record-plans">نقشه‌های درمان</a>
+            <a href="#client-sessions">جلسات</a>
+            <a href="#manual-session">ثبت دستی جلسه</a>
+            <a href="#record-notes">یادداشت‌های من</a>
+            <a href="#record-attachments">ضمائم</a>
+        </nav>
+        <div class="cr-grid">
+            <section id="record-overview" class="cr-panel cr-wide">
                 <h2 class="text-lg font-semibold text-gray-900">مسئله اصلی</h2>
 
                 <p class="mt-4 whitespace-pre-line text-sm leading-7 text-gray-700">
@@ -53,33 +58,39 @@
                 </p>
             </section>
 
-            <section class="border border-gray-200 bg-white p-5">
+            <section class="cr-panel">
                 <h2 class="text-lg font-semibold text-gray-900">سطح خطر</h2>
 
                 <dl class="mt-4 space-y-3 text-sm">
                     <div class="flex justify-between gap-4">
                         <dt class="text-gray-500">خودکشی</dt>
-                        <dd>{{ $record->suicide_risk ?: 'ثبت نشده' }}</dd>
+                        <dd class="cr-risk" data-risk="{{ $record->suicide_risk }}">{{ $riskLabels[$record->suicide_risk] ?? 'ثبت نشده' }}</dd>
                     </div>
 
                     <div class="flex justify-between gap-4">
                         <dt class="text-gray-500">خودآسیب‌رسانی</dt>
-                        <dd>{{ $record->self_harm_risk ?: 'ثبت نشده' }}</dd>
+                        <dd class="cr-risk" data-risk="{{ $record->self_harm_risk }}">{{ $riskLabels[$record->self_harm_risk] ?? 'ثبت نشده' }}</dd>
                     </div>
 
                     <div class="flex justify-between gap-4">
                         <dt class="text-gray-500">آسیب به دیگران</dt>
-                        <dd>{{ $record->harm_to_others_risk ?: 'ثبت نشده' }}</dd>
+                        <dd class="cr-risk" data-risk="{{ $record->harm_to_others_risk }}">{{ $riskLabels[$record->harm_to_others_risk] ?? 'ثبت نشده' }}</dd>
                     </div>
 
                     <div class="flex justify-between gap-4">
                         <dt class="text-gray-500">خطر کلی</dt>
-                        <dd>{{ $record->overall_risk_level ?: 'ثبت نشده' }}</dd>
+                        <dd class="cr-risk" data-risk="{{ $record->overall_risk_level }}">{{ $riskLabels[$record->overall_risk_level] ?? 'ثبت نشده' }}</dd>
                     </div>
                 </dl>
+                @if ($record->safety_actions)
+                    <div class="cr-safety">
+                        <h3>اقدامات ایمنی ثبت‌شده</h3>
+                        <p class="cr-text">{{ $record->safety_actions }}</p>
+                    </div>
+                @endif
             </section>
 
-            <section class="border border-gray-200 bg-white p-5">
+            <section class="cr-panel">
                 <h2 class="text-lg font-semibold text-gray-900">برنامه درمان</h2>
 
                 <p class="mt-4 whitespace-pre-line text-sm leading-7 text-gray-700">
@@ -87,7 +98,7 @@
                 </p>
             </section>
 
-            <section class="border border-gray-200 bg-white p-5 md:col-span-2">
+            <section id="record-plans" class="cr-panel cr-wide">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h2 class="text-lg font-semibold text-gray-900">
@@ -131,7 +142,7 @@
                     @endphp
 
 
-                    <article class="mt-5 border border-gray-200 p-4">
+                    <article class="cr-plan">
                         <div class="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <h3 class="font-semibold text-gray-900">
@@ -180,19 +191,19 @@
                                 <span>{{ $progress }}٪</span>
                             </div>
 
-                            <div class="mt-2 h-2 bg-gray-200">
+                            <div class="cr-progress" role="progressbar" aria-label="پیشرفت مسیر {{ $plan->title }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $progress }}">
                                 <div
-                                    class="h-2 bg-indigo-700"
+                                    class="cr-progress-fill"
                                     style="width: {{ $progress }}%"
                                 ></div>
                             </div>
 
                             <p class="mt-2 text-xs text-gray-500">
-                                {{ $completedSessions }} جلسه تکمیل‌شده از {{ $totalEstimated ?: 'بدون تخمین' }}
+                                {{ $completedSessions }} جلسه برگزارشده از {{ $totalEstimated ?: 'بدون تخمین' }}
                             </p>
                         </div>
 
-                        <div class="mt-5 grid gap-3 md:grid-cols-3">
+                        <div class="cr-stages">
                             @foreach ($plan->stages as $stage)
                                 @php
                                     $stageCount = $heldSessions
@@ -201,7 +212,7 @@
                                 @endphp
 
 
-                                <div class="border border-gray-200 p-3">
+                                <div class="cr-stage">
                                     <p class="text-sm font-medium text-gray-900">
                                         مرحله {{ $stage->stage_number }}
                                     </p>
@@ -230,7 +241,7 @@
             @include('psychologist.clinical-records.partials.manual-appointment')
 
 
-            <section class="border border-gray-200 bg-white p-5 md:col-span-2">
+            <section id="record-notes" class="cr-panel cr-wide">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h2 class="text-lg font-semibold text-gray-900">
@@ -255,7 +266,7 @@
 
                 <div class="mt-5 space-y-4">
                 @forelse ($record->notes as $note)
-                        <article class="space-y-4 border border-gray-200 p-4">
+                        <article class="cr-note">
                             <div class="space-y-1 text-xs text-gray-500">
                                 <p>
                                     ثبت:
@@ -312,7 +323,7 @@
 
 
 
-            <section class="border border-gray-200 bg-white p-5 md:col-span-2">
+            <section id="record-attachments" class="cr-panel cr-wide">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h2 class="text-lg font-semibold text-gray-900">

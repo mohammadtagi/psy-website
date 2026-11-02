@@ -2,8 +2,12 @@
 
 @section('title', 'انتخاب زمان مشاوره')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('website/style/care-booking.css') }}?v=1">
+@endpush
 @section('content')
-    <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <main class="cbk mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8" dir="rtl">
+        <ol class="cbk-steps" aria-label="مراحل رزرو"><li aria-current="step">۱. انتخاب تاریخ</li><li>۲. ساعت و اطلاعات</li><li>۳. بررسی و پرداخت</li></ol>
         <header class="mb-8">
             <p class="text-sm font-medium text-indigo-600">
                 رزرو جلسه مشاوره
@@ -14,7 +18,7 @@
             </h1>
 
             <p class="mt-2 text-sm text-gray-600">
-                ابتدا مدت جلسه و سپس یکی از تاریخ‌های دارای زمان آزاد را انتخاب کنید.
+                ابتدا مدت جلسه را انتخاب کنید؛ سپس تاریخ‌های دارای زمان آزاد را ببینید. ساعت‌ها به وقت تهران هستند.
             </p>
         </header>
 
@@ -27,6 +31,7 @@
             <div class="flex flex-wrap gap-3">
                 <a
                     href="{{ route('booking.index', ['duration' => 45]) }}"
+                    aria-current="{{ $durationMinutes === 45 ? 'true' : 'false' }}"
                     class="inline-flex min-h-11 items-center rounded-lg border px-4 py-2 text-sm font-medium transition
                     {{ $durationMinutes === 45
                         ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
@@ -40,6 +45,7 @@
 
                 <a
                     href="{{ route('booking.index', ['duration' => 60]) }}"
+                    aria-current="{{ $durationMinutes === 60 ? 'true' : 'false' }}"
                     class="inline-flex min-h-11 items-center rounded-lg border px-4 py-2 text-sm font-medium transition
                     {{ $durationMinutes === 60
                         ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
@@ -85,7 +91,7 @@
                                 'date' => $date,
                                 'duration' => $durationMinutes,
                             ]) }}"
-                            class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-500 hover:shadow-md"
+                            class="cbk-date group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-500 hover:shadow-md"
                         >
                             <span class="block text-sm text-gray-500">
                                 {{ $dateObject->locale('fa')->dayName }}

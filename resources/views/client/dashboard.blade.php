@@ -1,168 +1,94 @@
 <x-layouts.app>
-        <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <h1 class="text-2xl font-bold text-gray-900">داشبورد مراجع</h1>
-
-                <div class="mt-6 grid gap-4 sm:grid-cols-2">
-                        <section class="border-t border-gray-200 py-4">
-                                <h2 class="text-sm text-gray-600">نوبت‌های قطعی آینده</h2>
-                                <p class="mt-2 text-2xl font-bold text-gray-900">{{ $activeAppointmentsCount }}</p>
-                            </section>
-                        <section class="border-t border-gray-200 py-4">
-                                <h2 class="text-sm text-gray-600">در انتظار پرداخت</h2>
-                                <p class="mt-2 text-2xl font-bold text-gray-900">{{ $pendingPaymentCount }}</p>
-                            </section>
-                    </div>
-
-                <section class="mt-6 border-t border-gray-200 py-5">
-                        <h2 class="font-semibold text-gray-900">نوبت بعدی</h2>
-                        @if ($nextAppointment)
-                                <p class="mt-3 text-sm text-gray-700">
-                                        {{ $nextAppointment->starts_at->copy()->setTimezone('Asia/Tehran')->format('Y/m/d H:i') }}
-                                        <span class="mx-1">|</span>
-                                        {{ trim(($nextAppointment->psychologist?->first_name ?? '') . ' ' . ($nextAppointment->psychologist?->last_name ?? '')) }}
-                                        <span class="mx-1">|</span>
-                                        {{ $nextAppointment->status === \App\Models\Appointment::STATUS_PENDING_PAYMENT ? 'در انتظار پرداخت' : 'قطعی' }}
-                                    </p>
-                            @else
-                                <p class="mt-3 text-sm text-gray-600">نوبت آینده‌ای ندارید.</p>
-                            @endif
-                    </section>
-
-            @if ($treatmentPlans->isNotEmpty())
-                <section class="mt-6 border-t border-gray-200 py-5">
-                    <h2 class="font-semibold text-gray-900">مسیر درمان</h2>
-
-                    @foreach ($treatmentPlans as $plan)
-                        @php
-                            $progress = (int) $plan->progress_percent;
-                        @endphp
-
-
-                        <article class="mt-4 border border-gray-200 p-4">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
-                                <div>
-                                    <h3 class="font-semibold text-gray-900">
-                                        {{ $plan->title }}
-                                    </h3>
-
-                                    <p class="mt-1 text-sm text-gray-600">
-                                        @switch($plan->status)
-                                            @case('active') فعال @break
-                                            @case('completed') تکمیل‌شده @break
-                                            @case('dropped_out') انصراف مراجع @break
-                                            @case('referred') ارجاع‌شده @break
-                                        @endswitch
-                                    </p>
-                                </div>
-
-                                <span class="text-sm text-gray-600">
-                        {{ $progress }}٪ پیشرفت
-                    </span>
-                            </div>
-
-                            <div class="mt-3 h-2 bg-gray-200">
-                                <div
-                                    class="h-2 bg-indigo-700"
-                                    style="width: {{ $progress }}%"
-                                ></div>
-                            </div>
-
-                            <div class="mt-5 grid gap-3 sm:grid-cols-3">
-                                @foreach ($plan->stages as $stage)
-                                    @php
-                                        $stageCount = (int) $stage->held_sessions_count;
-                                    @endphp
-
-
-                                    <div
-                                        @class([
-                                            'rounded-lg border p-4',
-                                            'border-indigo-300 bg-indigo-50' =>
-                                                (int) $plan->current_stage === (int) $stage->stage_number,
-                                            'border-gray-200' =>
-                                                (int) $plan->current_stage !== (int) $stage->stage_number,
-                                        ])
-                                    >
-                                        <div class="flex flex-wrap items-center justify-between gap-2">
-                                            <h4 class="text-sm font-medium text-gray-900">
-                                                مرحله {{ $stage->stage_number }}
-                                            </h4>
-
-                                            @if ((int) $plan->current_stage === (int) $stage->stage_number)
-                                                <span class="rounded bg-indigo-100 px-2 py-1 text-xs text-indigo-800">
-                                                    {{ $plan->isActive() ? 'مرحله فعلی' : 'آخرین مرحله ثبت‌شده' }}
-                                                </span>
-                                            @endif
-                                        </div>
-
-                                        <p class="mt-2 text-sm font-medium text-gray-700">
-                                            {{ $stage->title }}
-                                        </p>
-
-                                        <h5 class="mt-4 text-xs font-semibold text-gray-700">
-                                            هدف مرحله
-                                        </h5>
-
-                                        @if (filled($stage->goal))
-                                            <p class="mt-2 whitespace-pre-line break-words text-sm leading-7 text-gray-600">{{ $stage->goal }}</p>
-                                        @else
-                                            <p class="mt-2 text-sm text-gray-500">
-                                                هدف این مرحله هنوز ثبت نشده است.
-                                            </p>
-                                        @endif
-
-                                        <dl class="mt-4 space-y-2 text-xs text-gray-600">
-                                            <div class="flex justify-between gap-3">
-                                                <dt>جلسات برگزارشده</dt>
-                                                <dd>{{ $stageCount }}</dd>
-                                            </div>
-
-                                            <div class="flex justify-between gap-3">
-                                                <dt>تعداد جلسات تخمینی</dt>
-                                                <dd>{{ $stage->estimated_sessions ?? 'بدون تخمین' }}</dd>
-                                            </div>
-                                        </dl>
-                                    </div>
-
-                                @endforeach
-                            </div>
-
-                            <p class="mt-4 text-xs text-gray-500">
-                                یادداشت‌های خصوصی مشاور در این بخش نمایش داده نمی‌شوند.
-                            </p>
-                        </article>
-                    @endforeach
-                </section>
+    @section('title', 'داشبورد مراجع')
+    @push('styles')
+        <link rel="stylesheet" href="{{ asset('website/style/care-client-dashboard.css') }}">
+    @endpush
+    <main class="ccd">
+        <header class="ccd-header">
+            <div><p class="ccd-eyebrow">پنل مراجع</p><h1>داشبورد شما</h1><p class="ccd-muted">نوبت‌ها و مسیر درمان خود را در یک نگاه دنبال کنید.</p></div>
+            <a class="ccd-button" href="{{ route('booking.index') }}">رزرو جلسه جدید <span aria-hidden="true">←</span></a>
+        </header>
+        <div class="ccd-stats">
+            <section class="ccd-card"><h2>نوبت‌های قطعی آینده</h2><strong class="ccd-number">{{ $activeAppointmentsCount }}</strong><p class="ccd-muted">جلسه تأییدشده پیش رو</p></section>
+            <section class="ccd-card"><h2>در انتظار پرداخت</h2><strong class="ccd-number">{{ $pendingPaymentCount }}</strong><a class="ccd-link" href="{{ route('client.appointments.index') }}">بررسی نوبت‌های من ←</a></section>
+        </div>
+        <section class="ccd-card ccd-next" aria-labelledby="ccd-next-title">
+            <div class="ccd-section-head"><h2 id="ccd-next-title">نوبت بعدی</h2><span class="ccd-muted">به وقت تهران</span></div>
+            @if ($nextAppointment)
+                @php
+                    $nextDate = $nextAppointment->starts_at->copy()->setTimezone('Asia/Tehran');
+                    $psychologistName = trim(($nextAppointment->psychologist?->first_name ?? '') . ' ' . ($nextAppointment->psychologist?->last_name ?? ''));
+                    $pending = $nextAppointment->status === \App\Models\Appointment::STATUS_PENDING_PAYMENT;
+                @endphp
+                <div class="ccd-next-body">
+                    <div><p class="ccd-date">{{ \App\Support\PersianDate::format($nextDate, 'EEEE، d MMMM yyyy') }}</p><p>ساعت <bdi dir="ltr">{{ $nextDate->format('H:i') }}</bdi></p><p class="ccd-muted">مشاور: {{ $psychologistName !== '' ? $psychologistName : 'نام مشاور ثبت نشده' }}</p></div>
+                    <div class="ccd-next-actions"><span @class(['ccd-badge', 'ccd-warning' => $pending])>{{ $pending ? 'در انتظار پرداخت' : 'قطعی' }}</span><a class="ccd-button ccd-secondary" href="{{ route('client.appointments.index') }}">مشاهده نوبت‌ها</a></div>
+                </div>
             @else
-                <section class="mt-6 rounded-lg border border-gray-200 bg-white p-5">
-                    <h2 class="font-semibold text-gray-900">
-                        مسیر درمان
-                    </h2>
-
-                    <p class="mt-3 text-sm leading-7 text-gray-600">
-                        هنوز مسیر درمانی برای شما فعال نشده است.
-                        برای شروع، یک جلسه ارزیابی رزرو کنید.
-                        مسیر درمان پس از تعیین و فعال‌سازی مشاور در این بخش نمایش داده می‌شود.
-                    </p>
-
-                    <a
-                        href="{{ route('booking.index') }}"
-                        class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800"
-                    >
-                        رزرو جلسه ارزیابی
-                    </a>
-                </section>
-
+                <div class="ccd-empty"><h3>نوبت آینده‌ای ندارید</h3><p class="ccd-muted">برای انتخاب زمان جلسه بعدی، زمان‌های قابل رزرو را ببینید.</p><a class="ccd-link" href="{{ route('booking.index') }}">مشاهده زمان‌ها و رزرو جلسه ←</a></div>
             @endif
-
-
-            <nav aria-label="دسترسی سریع مراجع" class="mt-2 border-t border-gray-200 py-5">
-                        <h2 class="font-semibold text-gray-900">دسترسی سریع</h2>
-                        <div class="mt-3 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-                                <a class="text-indigo-700 hover:underline" href="{{ route('booking.index') }}">رزرو نوبت</a>
-                                <a class="text-indigo-700 hover:underline" href="{{ route('client.appointments.index') }}">نوبت‌های من</a>
-                                <a class="text-indigo-700 hover:underline" href="{{ route('client.profile.show') }}">پروفایل</a>
-                            </div>
-                    </nav>
-            </main>
-    </x-layouts.app>
+        </section>
+        @if ($nextAppointment)
+            <section class="ccd-card ccd-preparation" aria-labelledby="ccd-preparation-title">
+                <h2 id="ccd-preparation-title">آمادگی برای جلسه پیش رو</h2>
+                <p class="ccd-muted">برای جلسه {{ \App\Support\PersianDate::format($nextDate, 'd MMMM yyyy') }}، ساعت <bdi dir="ltr">{{ $nextDate->format('H:i') }}</bdi> به وقت تهران</p>
+                <form data-ccd-note data-success-url="{{ route('client.appointments.session.show', $nextAppointment) }}" method="POST" action="{{ route('client.appointments.session.notes.store', $nextAppointment) }}">
+                    @csrf
+                    <label for="ccd-note-body">دوست دارید در این جلسه درباره چه چیزی صحبت کنید؟</label>
+                    <p id="ccd-note-hint" class="ccd-muted">سؤال‌ها، موضوعات مهم یا چیزهایی که نمی‌خواهید فراموش کنید را بنویسید. حداکثر ۱۰٬۰۰۰ نویسه.</p>
+                    <textarea id="ccd-note-body" name="body" rows="3" maxlength="10000" required aria-describedby="ccd-note-hint ccd-note-save-hint{{ $errors->has('body') ? ' ccd-note-error' : '' }}" @if($errors->has('body')) aria-invalid="true" @endif>{{ old('body') }}</textarea>
+                    @error('body')<p id="ccd-note-error" class="ccd-note-error" role="alert">{{ $message }}</p>@enderror
+                    <p id="ccd-note-save-hint" class="ccd-muted">ذخیره خودکار نیست؛ هر بار ذخیره یک یادداشت جدید می‌سازد. بدون JavaScript، پس از ذخیره صفحه جلسه باز می‌شود.</p>
+                    <p class="ccd-note-status" role="status" aria-live="polite" tabindex="-1"></p>
+                    <div class="ccd-note-actions"><button class="ccd-button" type="submit">ذخیره یادداشت برای این جلسه</button><a class="ccd-link" href="{{ route('client.appointments.session.show', $nextAppointment) }}">مشاهده یادداشت‌های این جلسه</a></div>
+                </form>
+            </section>
+        @endif
+        <section class="ccd-treatment" aria-labelledby="ccd-treatment-title">
+            <div class="ccd-section-head"><div><h2 id="ccd-treatment-title">مسیر درمان</h2><p class="ccd-muted">مراحل، هدف‌ها و جلسات برگزارشده</p></div></div>
+            @forelse ($treatmentPlans as $plan)
+                @php
+                    $progress = (int) $plan->progress_percent;
+                    $statusLabel = match ($plan->status) {
+                        'active' => 'فعال', 'completed' => 'تکمیل‌شده',
+                        'dropped_out' => 'انصراف مراجع', 'referred' => 'ارجاع‌شده',
+                        default => 'وضعیت نامشخص',
+                    };
+                @endphp
+                <article class="ccd-card ccd-plan">
+                    <div class="ccd-section-head"><h3>{{ $plan->title }}</h3><span class="ccd-badge">{{ $statusLabel }}</span></div>
+                    <div class="ccd-progress-label"><span>پیشرفت مسیر</span><strong>{{ $progress }}٪</strong></div>
+                    <progress class="ccd-progress" value="{{ $progress }}" max="100" aria-label="پیشرفت مسیر {{ $plan->title }}">{{ $progress }}٪</progress>
+                    <details class="ccd-plan-details">
+                        <summary>مشاهده مراحل و جزئیات</summary>
+                        <p class="ccd-small ccd-muted">این درصد بر اساس جلسات برگزارشده نسبت به تعداد جلسات تخمینی است؛ شاخص بهبود بالینی نیست. بدون تخمین، صفر نمایش داده می‌شود.</p>
+                        <div class="ccd-stages">
+                            @foreach ($plan->stages as $stage)
+                                @php
+                                    $stageCount = (int) $stage->held_sessions_count;
+                                    $isCurrent = (int) $plan->current_stage === (int) $stage->stage_number;
+                                @endphp
+                                <section @class(['ccd-stage', 'ccd-stage-current' => $isCurrent])>
+                                    <div class="ccd-section-head"><h4>مرحله {{ $stage->stage_number }}</h4>@if ($isCurrent)<span class="ccd-badge">{{ $plan->isActive() ? 'مرحله فعلی' : 'آخرین مرحله ثبت‌شده' }}</span>@endif</div>
+                                    <p class="ccd-stage-title">{{ $stage->title }}</p>
+                                    <h5>هدف مرحله</h5>
+                                    @if (filled($stage->goal))
+                                        <p class="ccd-goal">{{ $stage->goal }}</p>
+                                    @else
+                                        <p class="ccd-muted">هدف این مرحله هنوز ثبت نشده است.</p>
+                                    @endif
+                                    <dl><div><dt>جلسات برگزارشده</dt><dd>{{ $stageCount }}</dd></div><div><dt>تعداد جلسات تخمینی</dt><dd>{{ $stage->estimated_sessions ?? 'بدون تخمین' }}</dd></div></dl>
+                                </section>
+                            @endforeach
+                        </div>
+                        <p class="ccd-privacy">یادداشت‌های خصوصی مشاور در این بخش نمایش داده نمی‌شوند.</p>
+                    </details>
+                </article>
+            @empty
+                <div class="ccd-card ccd-empty"><h3>مسیر درمان شما هنوز فعال نشده است</h3><p class="ccd-muted">برای شروع، یک جلسه ارزیابی رزرو کنید. مسیر درمان پس از تعیین و فعال‌سازی مشاور در این بخش نمایش داده می‌شود.</p><a class="ccd-button" href="{{ route('booking.index') }}">رزرو جلسه ارزیابی</a></div>
+            @endforelse
+        </section>
+        <nav class="ccd-card ccd-quick" aria-label="دسترسی سریع مراجع"><h2>دسترسی سریع</h2><div><a href="{{ route('booking.index') }}">رزرو نوبت <span aria-hidden="true">←</span></a><a href="{{ route('client.appointments.index') }}">نوبت‌های من <span aria-hidden="true">←</span></a><a href="{{ route('client.profile.show') }}">پروفایل <span aria-hidden="true">←</span></a></div></nav>
+    </main>
+    <script src="{{ asset('website/js/care-client-dashboard.js') }}" defer></script>
+</x-layouts.app>

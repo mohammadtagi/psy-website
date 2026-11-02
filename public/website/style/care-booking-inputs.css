@@ -1,0 +1,25 @@
+/* Scoped booking form focus and Persian birth picker */
+.cbk .cbk-form input:not([type=hidden]):not([type=radio]):focus,
+.cbk .cbk-form input:not([type=hidden]):not([type=radio]):focus-visible{outline:none!important;border-color:#24543e!important;box-shadow:0 0 0 2px #24543e26!important;--tw-ring-shadow:0 0 transparent;--tw-ring-offset-shadow:0 0 transparent}
+.cbk .cbk-form input[aria-invalid=true]{border-color:#a33f35!important}
+.cbk-birth-field{position:relative}
+.cbk .cbk-birth-field input{padding-right:52px!important}
+.cbk .cbk-birth-open{position:absolute;right:3px;top:50%;transform:translateY(-50%);width:42px;height:40px;display:flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:transparent;color:#24543e;cursor:pointer}
+.cbk .cbk-birth-open[hidden]{display:none}
+.cbk .cbk-birth-open:hover{background:#edf4ef}
+.cbk-birth-dialog{box-sizing:border-box;width: min(390px,calc(100% - 24px));max-height:85vh;overflow:auto;margin:auto;padding:20px;border:1px solid #b8c8bd;border-radius:16px;background:white;color:#28382e;font:inherit;line-height:1.8}
+.cbk-birth-dialog::backdrop{background:#172b2266}
+.cbk-birth-dialog h2{font-size:17px;font-weight:700;margin:0 0 16px}
+.cbk-birth-selectors{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cbk-birth-selectors label{display:grid;gap:6px;font-size:14px}
+.cbk-birth-dialog select{width:100%;min-height:44px;border:1px solid #b8c8bd;border-radius:8px;background:white;color:inherit;padding:6px;font:inherit}
+.cbk-birth-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.cbk-birth-dialog button{font:inherit;cursor:pointer;color:inherit;border:1px solid #dfe5e0;background:white;border-radius:8px;min-height:40px}
+.cbk-birth-days button:hover:not(:disabled){background:#edf4ef;border-color:#24543e}
+.cbk-birth-days button[aria-pressed=true]{background:#24543e;color:white}
+.cbk-birth-days button:disabled{opacity:.4;cursor:not-allowed}
+.cbk-birth-dialog p{font-size:12px;margin:14px 0}
+.cbk-birth-dialog [data-close]{width:100%;padding:8px}
+.cbk-birth-dialog :is(button,select):focus-visible{outline:2px solid #24543e;outline-offset:2px;box-shadow:none}
+@media(forced-colors:active){.cbk .cbk-form input:not([type=hidden]):not([type=radio]):focus-visible{outline:2px solid Highlight!important;outline-offset:2px}}
+@media(prefers-reduced-motion:reduce){.cbk-birth-dialog *{animation:none!important;transition:none!important}}

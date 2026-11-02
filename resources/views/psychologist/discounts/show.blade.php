@@ -1,6 +1,7 @@
 <x-layouts.app>
-    <main class="mx-auto max-w-5xl px-4 py-8">
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <link rel="stylesheet" href="{{ asset('website/style/care-discounts.css') }}">
+    <main class="dc dc-show mx-auto max-w-5xl px-4 py-8">
+        <div class="dc-header mb-6 flex flex-wrap items-center justify-between gap-4">
             <h1 class="text-2xl font-bold">
                 کد تخفیف
                 <bdi class="font-mono">{{ $discount->code }}</bdi>
@@ -8,7 +9,7 @@
 
             <a
                 href="{{ route('psychologist.discounts.index') }}"
-                class="text-indigo-700"
+                class="dc-return text-indigo-700"
             >
                 بازگشت به فهرست
             </a>
@@ -117,16 +118,17 @@
         <section class="mt-8">
             <h2 class="mb-4 text-lg font-semibold">سوابق مصرف موفق</h2>
 
-            <div class="overflow-x-auto rounded-lg border bg-white">
+            <p class="dc-table-hint">در نمایشگر کوچک، جدول را به چپ و راست پیمایش کنید.</p>
+            <div class="dc-table overflow-x-auto rounded-lg border bg-white" tabindex="0" role="region" aria-label="جدول قابل پیمایش">
                 <table class="w-full text-right text-sm">
                     <thead class="bg-gray-100">
                     <tr>
-                        <th class="p-3">مراجع</th>
-                        <th class="p-3">کد پیگیری نوبت</th>
-                        <th class="p-3">مبلغ اصلی</th>
-                        <th class="p-3">تخفیف</th>
-                        <th class="p-3">مبلغ نهایی</th>
-                        <th class="p-3">زمان مصرف ـ تهران</th>
+                        <th scope="col" class="p-3">مراجع</th>
+                        <th scope="col" class="p-3">کد پیگیری نوبت</th>
+                        <th scope="col" class="p-3">مبلغ اصلی</th>
+                        <th scope="col" class="p-3">تخفیف</th>
+                        <th scope="col" class="p-3">مبلغ نهایی</th>
+                        <th scope="col" class="p-3">زمان مصرف ـ تهران</th>
                     </tr>
                     </thead>
 

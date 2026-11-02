@@ -1,7 +1,8 @@
 <x-layouts.app>
-    <main class="mx-auto max-w-7xl px-4 py-8">
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <h1 class="text-2xl font-bold">کدهای تخفیف</h1>
+    <link rel="stylesheet" href="{{ asset('website/style/care-discounts.css') }}">
+    <main class="dc dc-index mx-auto max-w-7xl px-4 py-8">
+        <div class="dc-header mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div><h1 class="text-2xl font-bold">کدهای تخفیف</h1><p class="dc-intro">مدیریت اعتبار، محدودیت مصرف و کدهای عمومی یا اختصاصی مراجعان</p></div>
 
             <a
                 href="{{ route('psychologist.discounts.create') }}"
@@ -13,17 +14,18 @@
 
         @include('psychologist.discounts._messages')
 
-        <div class="overflow-x-auto rounded-lg border bg-white">
+        <p class="dc-table-hint">در نمایشگر کوچک، جدول را به چپ و راست پیمایش کنید.</p>
+            <div class="dc-table overflow-x-auto rounded-lg border bg-white" tabindex="0" role="region" aria-label="جدول قابل پیمایش">
             <table class="w-full text-right text-sm">
                 <thead class="bg-gray-100">
                 <tr>
-                    <th class="p-3">کد</th>
-                    <th class="p-3">تخفیف</th>
-                    <th class="p-3">مراجع</th>
-                    <th class="p-3">انقضا ـ تهران</th>
-                    <th class="p-3">مصرف موفق</th>
-                    <th class="p-3">وضعیت</th>
-                    <th class="p-3">جزئیات</th>
+                    <th scope="col" class="p-3">کد</th>
+                    <th scope="col" class="p-3">تخفیف</th>
+                    <th scope="col" class="p-3">مراجع</th>
+                    <th scope="col" class="p-3">انقضا ـ تهران</th>
+                    <th scope="col" class="p-3">مصرف موفق</th>
+                    <th scope="col" class="p-3">وضعیت</th>
+                    <th scope="col" class="p-3">جزئیات</th>
                 </tr>
                 </thead>
 
@@ -82,7 +84,7 @@
                             {{ $discount->usage_limit ?? 'نامحدود' }}
                         </td>
 
-                        <td class="p-3">{{ $label }}</td>
+                        <td class="p-3"><span class="dc-badge {{ ! $discount->is_active ? 'dc-inactive' : ($expired ? 'dc-expired' : ($full ? 'dc-full' : 'dc-active')) }}">{{ $label }}</span></td>
 
                         <td class="p-3">
                             <a

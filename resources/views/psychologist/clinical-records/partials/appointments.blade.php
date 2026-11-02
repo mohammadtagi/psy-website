@@ -1,6 +1,6 @@
 <section
     id="client-sessions"
-    class="border border-gray-200 bg-white p-5 md:col-span-2"
+    class="cr-panel cr-wide"
 >
     <header>
         <h2 class="text-lg font-semibold text-gray-900">
@@ -8,17 +8,18 @@
         </h2>
 
         <p class="mt-2 text-sm text-gray-600">
-            همه نوبت‌های این مراجع با شما؛ مدیریت جلسه برای نوبت‌های تأییدشده در دسترس است.
+            نوبت‌های تأییدشده، تکمیل‌شده و عدم حضور این مراجع با شما؛ مدیریت جلسه برای نوبت‌های تأییدشده در دسترس است.
         </p>
     </header>
 
     @if ($recordAppointments->isEmpty())
         <p class="mt-5 text-sm text-gray-500">
-            نوبتی برای این مراجع با شما ثبت نشده است.
+            نوبتی با وضعیت‌های قابل نمایش در این فهرست وجود ندارد.
         </p>
     @else
-        <div class="mt-5 overflow-x-auto">
-            <table class="w-full text-right text-sm">
+        <div class="cr-table-scroll" role="region" aria-label="فهرست جلسات؛ برای ستون‌های بیشتر پیمایش کنید" tabindex="0">
+            <table class="cr-table">
+                <caption class="cr-sr-only">جلسات مراجع؛ وضعیت رزرو و حضور به‌صورت مستقل نمایش داده می‌شوند.</caption>
                 <thead class="border-b border-gray-200 text-gray-600">
                 <tr>
                     <th scope="col" class="whitespace-nowrap px-3 py-3">

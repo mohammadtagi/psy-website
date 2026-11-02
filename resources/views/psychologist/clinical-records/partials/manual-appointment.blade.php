@@ -1,4 +1,10 @@
-<section class="border border-gray-200 bg-white p-5 md:col-span-2">
+@once
+    @push('styles')
+        <link rel="stylesheet" href="{{ asset('website/style/care-manual-picker.css') }}?v=1">
+    @endpush
+    <script src="{{ asset('website/js/care-manual-picker.js') }}?v=1" defer></script>
+@endonce
+<section id="manual-session" class="cr-panel cr-wide">
     <h2 class="mb-2 text-lg font-bold">
         ثبت دستی جلسه
     </h2>
@@ -18,34 +24,43 @@
     >
         @csrf
 
-        <div class="grid gap-4 md:grid-cols-2">
+        <div class="cr-form-grid">
             <div><label for="manual-date" class="mb-1 block">
                     تاریخ جلسه ـ شمسی
                 </label>
 
-                <input
-                    id="manual-date"
-                    name="date_jalali"
-                    type="text"
-                    dir="ltr"
-                    required
-                    maxlength="10"
-                    placeholder="مثلاً ۱۴۰۵/۰۸/۰۵"
-                    value="{{ old('date_jalali', \App\Support\PersianDate::format(now('Asia/Tehran'), 'yyyy/MM/dd')) }}"
-                    class="w-full rounded-lg border-gray-300"
-                >
+                <div class="cmp-date-wrap">
+                    <input
+                        id="manual-date"
+                        aria-invalid="{{ ($errors->has('date_jalali') || $errors->has('date')) ? 'true' : 'false' }}"
+                        aria-describedby="manual-date-feedback"
+                        name="date_jalali"
+                        type="text"
+                        dir="ltr"
+                        required
+                        maxlength="10"
+                        placeholder="مثلاً ۱۴۰۵/۰۸/۰۵"
+                        value="{{ old('date_jalali', \App\Support\PersianDate::format(now('Asia/Tehran'), 'yyyy/MM/dd')) }}"
+                        class="w-full rounded-lg border-gray-300"
+                    >
 
+                    <button hidden id="cmp-open" class="cmp-calendar" type="button" aria-label="انتخاب تاریخ و ساعت جلسه" aria-haspopup="dialog" title="انتخاب تاریخ و ساعت">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 11h18M7 15h2m3 0h2m3 0h1M7 18h2m3 0h2"/></svg>
+                    </button>
+                </div>
                 <p class="mt-1 text-xs text-gray-500">
                     تاریخ را به صورت سال/ماه/روز وارد کنید.
                 </p>
 
-                @error('date_jalali')
-                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+                <div id="manual-date-feedback">
+                    @error('date_jalali')
+                    <p role="alert" class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
 
-                @error('date')
-                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+                    @error('date')
+                    <p role="alert" class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
             </div>
 
@@ -56,6 +71,8 @@
 
                 <input
                     id="manual-time"
+                    aria-invalid="{{ ($errors->has('time')) ? 'true' : 'false' }}"
+                    aria-describedby="manual-time-feedback"
                     name="time"
                     type="time"
                     required
@@ -64,7 +81,7 @@
                 >
 
                 @error('time')
-                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                <p id="manual-time-feedback" role="alert" class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
 
@@ -75,6 +92,8 @@
 
                 <input
                     id="manual-duration"
+                    aria-invalid="{{ ($errors->has('duration_minutes')) ? 'true' : 'false' }}"
+                    aria-describedby="manual-duration-feedback"
                     name="duration_minutes"
                     type="number"
                     min="1"
@@ -86,7 +105,7 @@
                 >
 
                 @error('duration_minutes')
-                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                <p id="manual-duration-feedback" role="alert" class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
 
@@ -97,6 +116,8 @@
 
                 <select
                     id="manual-session-type"
+                    aria-invalid="{{ ($errors->has('session_type')) ? 'true' : 'false' }}"
+                    aria-describedby="manual-session-type-feedback"
                     name="session_type"
                     required
                     class="w-full rounded-lg border-gray-300"
@@ -117,7 +138,7 @@
                 </select>
 
                 @error('session_type')
-                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                <p id="manual-session-type-feedback" role="alert" class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
 
@@ -128,6 +149,8 @@
 
                 <select
                     id="manual-payment-method"
+                    aria-invalid="{{ ($errors->has('manual_payment_method')) ? 'true' : 'false' }}"
+                    aria-describedby="manual-payment-method-feedback"
                     name="manual_payment_method"
                     required
                     class="w-full rounded-lg border-gray-300"
@@ -148,7 +171,7 @@
                 </select>
 
                 @error('manual_payment_method')
-                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                <p id="manual-payment-method-feedback" role="alert" class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
 
@@ -159,6 +182,8 @@
 
                 <input
                     id="manual-amount"
+                    aria-invalid="{{ ($errors->has('amount')) ? 'true' : 'false' }}"
+                    aria-describedby="manual-amount-feedback"
                     name="amount"
                     type="number"
                     min="0"
@@ -175,7 +200,7 @@
                 </p>
 
                 @error('amount')
-                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                <p id="manual-amount-feedback" role="alert" class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
         </div>

@@ -1,158 +1,62 @@
 @php
     $failedForm = (string) old('_note_form', '');
 @endphp
-
-<section class="space-y-5 border border-gray-200 bg-white p-5">
-    <header>
-        <h2 class="text-lg font-semibold">یادداشت‌های خصوصی من</h2>
-
-        <p class="mt-2 text-sm text-gray-600">
-            این یادداشت‌ها فقط برای شما نمایش داده می‌شوند و مشاور به آن‌ها دسترسی ندارد.
-        </p>
-    </header>
-
-    @if (session('status'))
-        <div role="status" class="border border-green-200 bg-green-50 p-4">
-            {{ session('status') }}
-        </div>
-    @endif
-
+<section class="ccs-card ccs-notes" id="ccs-notes" data-session-url="{{ route('client.appointments.session.show', $appointment) }}" aria-labelledby="ccs-notes-title">
+    <div class="ccs-heading"><h2 id="ccs-notes-title">یادداشت‌های خصوصی من</h2><span class="ccs-muted ccs-small">{{ $notes->total() }} یادداشت</span></div>
+    <p class="ccs-muted ccs-small">این یادداشت‌ها فقط برای شما نمایش داده می‌شوند و مشاور به آن‌ها دسترسی ندارد.</p>
+    <p class="ccs-feedback" role="status" aria-live="polite" tabindex="-1">{{ session('status') }}</p>
     @if ($errors->any())
-        <div role="alert" class="border border-red-200 bg-red-50 p-4">
-            <ul class="list-inside list-disc">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
+        <div class="ccs-error" role="alert"><ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
     @endif
-
-    <form
-        method="POST"
-        action="{{ route('client.appointments.session.notes.store', $appointment) }}"
-        class="space-y-3"
-    >
+    <form method="POST" action="{{ route('client.appointments.session.notes.store', $appointment) }}" data-note-action="create" class="ccs-create">
         @csrf
-
         <input type="hidden" name="_note_form" value="create">
-
-        <label for="new_private_note" class="block font-medium">
-            یادداشت جدید
-        </label>
-
-        <textarea
-            id="new_private_note"
-            name="body"
-            rows="5"
-            maxlength="10000"
-            required
-            class="w-full border border-gray-300 p-3"
-        >{{ $failedForm === 'create' ? old('body') : '' }}</textarea>
-
-        <button
-            type="submit"
-            class="bg-indigo-700 px-4 py-2 text-white"
-        >
-            ثبت یادداشت خصوصی
-        </button>
+        <label for="new_private_note">یادداشت جدید</label>
+        <p id="ccs-create-hint" class="ccs-muted ccs-small">موضوع‌ها یا سؤال‌هایی که می‌خواهید به خاطر بسپارید؛ حداکثر ۱۰٬۰۰۰ نویسه. ذخیره خودکار نیست.</p>
+        <textarea id="new_private_note" name="body" rows="3" maxlength="10000" required aria-describedby="ccs-create-hint">{{ $failedForm === 'create' ? old('body') : '' }}</textarea>
+        <p class="ccs-form-message" role="status" aria-live="polite" tabindex="-1"></p>
+        <button type="submit" class="ccs-button">ثبت یادداشت</button>
     </form>
-
-    <div class="space-y-4">
-        @forelse ($notes as $note)
-            @php
-                $formKey = 'edit-' . $note->id;
-                $isFailedEdit = $failedForm === $formKey;
-            @endphp
-
-            <article class="space-y-4 border border-gray-200 p-4">
-                <div class="space-y-1 text-xs text-gray-500">
-                    <p>
-                        ثبت:
-                        {{ \App\Support\PersianDate::format(
-                            $note->created_at->copy()->setTimezone('Asia/Tehran'),
-                            'yyyy/MM/dd HH:mm'
-                        ) }}
-                    </p>
-
-                    @if ($note->updated_at->gt($note->created_at))
-                        <p>
-                            آخرین ویرایش:
-                            {{ \App\Support\PersianDate::format(
-                                $note->updated_at->copy()->setTimezone('Asia/Tehran'),
-                                'yyyy/MM/dd HH:mm'
-                            ) }}
-                        </p>
-                    @endif
-                </div>
-
-                <p class="whitespace-pre-wrap break-words text-gray-700">{{ $note->body }}</p>
-
-                <details @if ($isFailedEdit) open @endif>
-                    <summary class="cursor-pointer text-sm text-indigo-700">
-                        ویرایش یادداشت
-                    </summary>
-
-                    <form
-                        method="POST"
-                        action="{{ route('client.appointments.session.notes.update', [
-                            'appointment' => $appointment,
-                            'note' => $note,
-                        ]) }}"
-                        class="mt-3 space-y-3"
-                    >
-                        @csrf
-                        @method('PUT')
-
-                        <input
-                            type="hidden"
-                            name="_note_form"
-                            value="{{ $formKey }}"
-                        >
-
-                        <label for="private_note_{{ $note->id }}" class="block text-sm">
-                            متن یادداشت
-                        </label>
-
-                        <textarea
-                            id="private_note_{{ $note->id }}"
-                            name="body"
-                            rows="5"
-                            maxlength="10000"
-                            required
-                            class="w-full border border-gray-300 p-3"
-                        >{{ $isFailedEdit ? old('body') : $note->body }}</textarea>
-
-                        <button
-                            type="submit"
-                            class="border border-indigo-700 px-4 py-2 text-sm text-indigo-700"
-                        >
-                            ذخیره تغییرات
-                        </button>
-                    </form>
-                </details>
-
-                <form
-                    method="POST"
-                    action="{{ route('client.appointments.session.notes.destroy', [
-                        'appointment' => $appointment,
-                        'note' => $note,
-                    ]) }}"
-                    onsubmit="return confirm('این یادداشت خصوصی حذف شود؟')"
-                >
+    <div class="ccs-note-list">
+    @forelse ($notes as $note)
+        @php
+            $formKey = 'edit-' . $note->id;
+            $isFailedEdit = $failedForm === $formKey;
+        @endphp
+        <article class="ccs-note" id="ccs-note-{{ $note->id }}">
+            <div class="ccs-muted ccs-small">
+                <p>ثبت: {{ \App\Support\PersianDate::format($note->created_at->copy()->setTimezone('Asia/Tehran'), 'yyyy/MM/dd HH:mm') }}</p>
+                @if ($note->updated_at->gt($note->created_at))
+                    <p>ویرایش: {{ \App\Support\PersianDate::format($note->updated_at->copy()->setTimezone('Asia/Tehran'), 'yyyy/MM/dd HH:mm') }}</p>
+                @endif
+            </div>
+            <p class="ccs-text">{{ $note->body }}</p>
+            <details @if ($isFailedEdit) open @endif>
+                <summary>ویرایش یادداشت</summary>
+                <form method="POST" action="{{ route('client.appointments.session.notes.update', ['appointment' => $appointment, 'note' => $note]) }}" data-note-action="edit">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="_note_form" value="{{ $formKey }}">
+                    <label for="private_note_{{ $note->id }}">متن یادداشت · حداکثر ۱۰٬۰۰۰ نویسه</label>
+                    <textarea id="private_note_{{ $note->id }}" name="body" rows="4" maxlength="10000" required>{{ $isFailedEdit ? old('body') : $note->body }}</textarea>
+                    <p class="ccs-form-message" role="status" aria-live="polite" tabindex="-1"></p>
+                    <div class="ccs-actions"><button type="submit" class="ccs-button">ذخیره تغییرات</button><button type="button" class="ccs-secondary" data-cancel-edit hidden>انصراف از ویرایش</button></div>
+                </form>
+            </details>
+            <details class="ccs-delete">
+                <summary>حذف یادداشت</summary>
+                <p class="ccs-small">این یادداشت برای همیشه حذف می‌شود و قابل بازگشت نیست.</p>
+                <form method="POST" action="{{ route('client.appointments.session.notes.destroy', ['appointment' => $appointment, 'note' => $note]) }}" data-note-action="delete">
                     @csrf
                     @method('DELETE')
-
-                    <button type="submit" class="text-sm text-red-700">
-                        حذف یادداشت
-                    </button>
+                    <p class="ccs-form-message" role="status" aria-live="polite" tabindex="-1"></p>
+                    <button type="submit" class="ccs-danger">تأیید حذف دائمی</button>
                 </form>
-            </article>
-        @empty
-            <p class="text-sm text-gray-500">
-                هنوز یادداشت خصوصی برای این جلسه ثبت نکرده‌اید.
-            </p>
-        @endforelse
+            </details>
+        </article>
+    @empty
+        <p class="ccs-empty">هنوز یادداشتی برای این جلسه ندارید. می‌توانید اولین یادداشت را از کادر بالا اضافه کنید.</p>
+    @endforelse
     </div>
-
-    {{ $notes->links() }}
+    <div class="ccs-pagination">{{ $notes->links() }}</div>
 </section>

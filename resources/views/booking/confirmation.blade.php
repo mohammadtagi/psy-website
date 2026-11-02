@@ -5,6 +5,10 @@
 
 @section('title', 'جزئیات نوبت')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('website/style/care-booking-confirmation.css') }}?v=1">
+@endpush
+
 @section('content')
     @php
         $timezone = 'Asia/Tehran';
@@ -78,7 +82,12 @@ Appointment::STATUS_PENDING_PAYMENT =>
 
     @endphp
 
-    <main class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+    <main class="cbc mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8" dir="rtl">
+        <nav aria-label="مراحل رزرو" class="cbc-steps">
+            <span>۱ · انتخاب تاریخ</span>
+            <span>۲ · انتخاب ساعت</span>
+            <span aria-current="step">۳ · بررسی و وضعیت نوبت</span>
+        </nav>
         <section class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
             <div
                 class="border-b px-6 py-8 text-center {{ $isConfirmed
@@ -86,7 +95,7 @@ Appointment::STATUS_PENDING_PAYMENT =>
                     : 'border-gray-200 bg-gray-50' }}"
             >
                 <h1 class="text-2xl font-bold text-gray-900">
-                    {{ $isConfirmed ? 'نوبت شما تأیید شده است' : 'جزئیات نوبت' }}
+                    {{ $isConfirmed ? 'نوبت شما تأیید شده است' : ($isPendingPayment && $hasActiveHold && ! $hasSessionStarted ? 'بررسی نوبت و پرداخت' : 'جزئیات نوبت') }}
                 </h1>
 
                 <p class="mt-2 text-sm text-gray-700">
@@ -175,7 +184,7 @@ Appointment::STATUS_PENDING_PAYMENT =>
 
                 </div>
 
-                <div class="grid gap-5 sm:grid-cols-2">
+                <div class="cbc-summary grid gap-5 sm:grid-cols-2">
                     <div>
                         <span class="block text-sm text-gray-500">
                             روان‌شناس
@@ -215,7 +224,7 @@ Appointment::STATUS_PENDING_PAYMENT =>
 
                     <div>
                         <span class="block text-sm text-gray-500">
-                            ساعت جلسه
+                            ساعت جلسه · به وقت تهران
                         </span>
 
                         <strong class="mt-1 block text-gray-900">
@@ -248,7 +257,7 @@ Appointment::STATUS_PENDING_PAYMENT =>
 
                     @include('booking._invoice')
 
-                <div class="flex flex-col gap-3 border-t border-gray-200 pt-6 sm:flex-row">
+                <div class="cbc-footer flex flex-col gap-3 border-t border-gray-200 pt-6 sm:flex-row">
                     <a
                         href="{{ route('booking.index') }}"
                         class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
@@ -258,7 +267,7 @@ Appointment::STATUS_PENDING_PAYMENT =>
 
                     <a
                         href="{{ route('client.appointments.index') }}"
-                        class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-700"
+                        class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
                     >
                         مشاهده نوبت‌های من
                     </a>

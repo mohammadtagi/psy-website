@@ -1,0 +1,39 @@
+.website-services .container-layout {
+    width: min(1290px, calc(100% - 64px));
+    margin-inline: auto;
+}
+.website-services .hero-bg {
+    background: linear-gradient(
+        90deg,
+        rgba(10, 92, 58, 0.55),
+        rgba(31, 61, 46, 0.55)
+    ),
+    url("../images/hero-section-bg.webp") center / cover no-repeat;
+}
+.website-services .cta-bg {
+    background: linear-gradient(
+        rgba(0, 0, 0, 0.48),
+        rgba(0, 0, 0, 0.48)
+    ),
+    url("../images/therapist.png") center / cover no-repeat;
+}
+.website-services .soft-card {
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.025);
+}
+@media (max-width: 900px) {
+    .website-services .container-layout {
+        width: min(100% - 36px, 680px);
+    }
+}
+.website-services [x-cloak] {
+    display: none !important;
+}
+@media (max-width: 767px) {
+    .website-services .container-layout {
+        width: min(100% - 28px, 680px);
+    }
+}
+
+
+.website-services .price-value, .website-services .duration-label { transition: opacity .18s ease; }
+.website-services .fade-update { opacity: .35; }

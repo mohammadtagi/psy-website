@@ -1,33 +1,16 @@
 @extends('components.layouts.app')
-
-@section('title', 'جزئیات جلسه')
-
+@section('title', 'جلسه و یادداشت‌های من')
+@push('styles')
+<link rel="stylesheet" href="{{ asset('website/style/care-client-session.css') }}">
+@endpush
 @section('content')
-    <main class="mx-auto max-w-4xl space-y-5 px-4 py-8">
-        <header>
-            <h1 class="text-2xl font-bold">جزئیات جلسه</h1>
-
-            <p class="mt-2 text-gray-600">
-                مشاور:
-                {{ $appointment->psychologist->first_name }}
-                {{ $appointment->psychologist->last_name }}
-            </p>
-
-            <a
-                href="{{ route('client.appointments.index') }}"
-                class="mt-3 inline-block text-indigo-700"
-            >
-                بازگشت به نوبت‌ها
-            </a>
-        </header>
-
-        @include('appointments.partials.session-details', [
-            'appointment' => $appointment,
-        ])
-        @include('client.appointments.partials.private-notes', [
-    'appointment' => $appointment,
-    'notes' => $notes,
-])
-
-    </main>
+<main class="ccs" dir="rtl">
+    <header class="ccs-header">
+        <div><h1>جلسه و یادداشت‌های من</h1><p class="ccs-muted">مشاور: {{ $appointment->psychologist?->first_name }} {{ $appointment->psychologist?->last_name }}</p></div>
+        <nav aria-label="بازگشت"><a href="{{ route('client.dashboard') }}">داشبورد</a><a href="{{ route('client.appointments.index') }}">نوبت‌های من</a></nav>
+    </header>
+    @include('client.appointments.partials.session-summary', ['appointment' => $appointment])
+    @include('client.appointments.partials.private-notes', ['appointment' => $appointment, 'notes' => $notes])
+</main>
+<script src="{{ asset('website/js/care-client-session.js') }}" defer></script>
 @endsection

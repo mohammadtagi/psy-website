@@ -10,7 +10,7 @@
         && ! $hasSessionStarted;
 @endphp
 
-<div class="space-y-5 rounded-lg bg-gray-50 p-4">
+<div class="cbc-invoice space-y-5 rounded-lg bg-gray-50 p-4">
     <h2 class="font-semibold text-gray-900">فاکتور نوبت</h2>
 
     <dl class="space-y-3 text-sm">
@@ -30,7 +30,7 @@
             </dd>
         </div>
 
-        <div class="flex items-center justify-between gap-4 border-t pt-3">
+        <div class="cbc-total flex items-center justify-between gap-4 border-t pt-3">
             <dt class="font-semibold text-gray-900">مبلغ نهایی</dt>
 
             <dd class="font-bold text-gray-900">
@@ -68,6 +68,8 @@
     @endif
 
     @if ($canSettle)
+        <details class="cbc-discount" @if(old('code') || $errors->any()) open @endif>
+            <summary>{{ $hasDiscount ? 'تغییر کد تخفیف' : 'کد تخفیف دارید؟' }}</summary>
         <form
             method="POST"
             action="{{ route('booking.discount.store', $appointment) }}"
@@ -111,6 +113,8 @@
             اعمال یا حذف کد، مهلت رزرو را تمدید نمی‌کند.
         </p>
 
+        </details>
+
         @if ($hasDiscount && $finalAmount === 0)
             <form
                 method="POST"
@@ -120,7 +124,7 @@
 
                 <button
                     type="submit"
-                    class="min-h-11 rounded-lg bg-green-700 px-5 py-3 font-medium text-white"
+                    class="cbc-primary min-h-11 rounded-lg bg-green-700 px-5 py-3 font-medium text-white"
                 >
                     تأیید نهایی رایگان نوبت
                 </button>
@@ -148,7 +152,7 @@
 
                 <button
                     type="submit"
-                    class="min-h-11 rounded-lg bg-indigo-600 px-5 py-3 font-medium text-white"
+                    class="cbc-primary min-h-11 rounded-lg bg-indigo-600 px-5 py-3 font-medium text-white"
                 >
                     پرداخت و تأیید نوبت
                 </button>

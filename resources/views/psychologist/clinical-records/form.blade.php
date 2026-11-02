@@ -5,7 +5,7 @@
         : route('psychologist.clinical-records.store', $client);
 @endphp
 
-<form method="POST" action="{{ $formAction }}" class="space-y-8">
+<form id="clinical-record-form" method="POST" action="{{ $formAction }}" class="cr-edit-form space-y-8">
     @csrf
 
     @if ($isEdit)
@@ -15,7 +15,20 @@
     <section class="border border-gray-200 bg-white p-5">
         <h2 class="text-lg font-semibold text-gray-900">مشخصات و وضعیت کلی</h2>
 
-        <div class="mt-5 grid gap-5 md:grid-cols-2">
+        <div class="mt-5 cr-important cr-family">
+            <label for="family_status_and_living_conditions" class="mb-2 block text-sm font-medium text-gray-700">
+                وضعیت خانوادگی و شرایط زندگی
+            </label>
+
+            <textarea
+                id="family_status_and_living_conditions"
+                name="family_status_and_living_conditions"
+                rows="4"
+                class="w-full border border-gray-300 px-3 py-2"
+            >{{ old('family_status_and_living_conditions', $record->family_status_and_living_conditions) }}</textarea>
+        </div>
+
+        <div class="cr-edit-grid mt-5 grid gap-5 md:grid-cols-2">
             <div>
                 <label for="gender" class="mb-2 block text-sm font-medium text-gray-700">
                     جنسیت
@@ -82,23 +95,12 @@
             </div>
         </div>
 
-        <div class="mt-5">
-            <label for="family_status_and_living_conditions" class="mb-2 block text-sm font-medium text-gray-700">
-                وضعیت خانوادگی و شرایط زندگی
-            </label>
-
-            <textarea
-                id="family_status_and_living_conditions"
-                name="family_status_and_living_conditions"
-                rows="4"
-                class="w-full border border-gray-300 px-3 py-2"
-            >{{ old('family_status_and_living_conditions', $record->family_status_and_living_conditions) }}</textarea>
-        </div>
     </section>
 
     <section class="border border-gray-200 bg-white p-5">
         <h2 class="text-lg font-semibold text-gray-900">مسئله و وضعیت فعلی</h2>
 
+        <div class="cr-edit-grid">
         @foreach ([
             'presenting_problem' => 'مسئله اصلی مراجع',
             'problem_onset' => 'زمان و نحوه شروع مسئله',
@@ -106,7 +108,7 @@
             'current_medications' => 'داروهای فعلی',
             'important_medical_history' => 'سوابق پزشکی مهم',
         ] as $field => $label)
-            <div class="mt-5">
+            <div class="mt-5 {{ in_array($field, ['presenting_problem', 'clinical_observations', 'treatment_goals'], true) ? 'cr-important cr-field-wide' : 'cr-field-half' }}">
                 <label for="{{ $field }}" class="mb-2 block text-sm font-medium text-gray-700">
                     {{ $label }}
                 </label>
@@ -119,12 +121,13 @@
                 >{{ old($field, $record->{$field}) }}</textarea>
             </div>
         @endforeach
+        </div>
     </section>
 
     <section class="border border-gray-200 bg-white p-5">
         <h2 class="text-lg font-semibold text-gray-900">ایمنی و خطر</h2>
 
-        <div class="grid gap-5 md:grid-cols-2">
+        <div class="cr-edit-grid grid gap-5 md:grid-cols-2">
             @foreach ([
                 'suicide_risk' => 'خطر خودکشی',
                 'self_harm_risk' => 'خطر خودآسیب‌رسانی',
@@ -177,17 +180,18 @@
     <section class="border border-gray-200 bg-white p-5">
         <h2 class="text-lg font-semibold text-gray-900">ارزیابی و برنامه درمان</h2>
 
+        <div class="cr-edit-grid">
         @foreach ([
+            'clinical_observations' => 'مشاهدات بالینی',
+            'treatment_goals' => 'اهداف درمان',
             'important_life_history' => 'سوابق مهم زندگی',
             'important_relationships_and_support' => 'روابط مهم و شبکه حمایت',
             'values_and_personal_resources' => 'ارزش‌ها و منابع شخصی',
-            'clinical_observations' => 'مشاهدات بالینی',
             'clinical_formulation' => 'فرمول‌بندی بالینی',
             'treatment_approach' => 'رویکرد درمانی',
-            'treatment_goals' => 'اهداف درمان',
             'treatment_plan_and_schedule' => 'برنامه و زمان‌بندی درمان',
         ] as $field => $label)
-            <div class="mt-5">
+            <div class="mt-5 {{ in_array($field, ['presenting_problem', 'clinical_observations', 'treatment_goals'], true) ? 'cr-important cr-field-wide' : 'cr-field-half' }}">
                 <label for="{{ $field }}" class="mb-2 block text-sm font-medium text-gray-700">
                     {{ $label }}
                 </label>
@@ -212,6 +216,7 @@
                 value="{{ old('treatment_stage', $record->treatment_stage) }}"
                 class="w-full border border-gray-300 px-3 py-2"
             >
+        </div>
         </div>
     </section>
 
