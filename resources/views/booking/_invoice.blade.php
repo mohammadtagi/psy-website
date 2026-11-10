@@ -115,7 +115,7 @@
 
         </details>
 
-        @if ($hasDiscount && $finalAmount === 0)
+        @if ($finalAmount === 0)
             <form
                 method="POST"
                 action="{{ route('booking.confirm-free', $appointment) }}"
@@ -130,19 +130,9 @@
                 </button>
 
                 <p class="mt-2 text-xs leading-6 text-gray-600">
-                    مبلغ نهایی صفر است؛ برای تأیید این نوبت
-                    نیازی به ورود به درگاه یا پرداخت وجه نیست.
+                    مبلغ نهایی صفر است؛ برای تأیید این نوبت نیازی به ورود به درگاه یا پرداخت وجه نیست.
                 </p>
             </form>
-        @elseif ($hasDiscount)
-            <div
-                class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm leading-7 text-amber-900"
-                role="status"
-            >
-                پرداخت آنلاین نوبت دارای تخفیف هنوز فعال نشده است.
-                این نوبت تا تکمیل فرایند تسویه، تأیید نهایی نمی‌شود
-                و مهلت رزرو آن همچنان برقرار است.
-            </div>
         @elseif (config('payment.online_enabled', true))
             <form
                 method="POST"
@@ -158,7 +148,7 @@
                 </button>
 
                 <p class="mt-2 text-xs leading-6 text-gray-600">
-                    به درگاه زرین‌پال منتقل می‌شوید.
+                    به درگاه پرداخت اینترنتی به‌پرداخت ملت منتقل می‌شوید.
                     تأیید نهایی پس از پرداخت موفق و بررسی سمت سرور انجام می‌شود.
                 </p>
             </form>
@@ -167,6 +157,8 @@
                 پرداخت آنلاین در حال حاضر غیرفعال است.
             </p>
         @endif
+
+
     @endif
 
     <p class="text-xs leading-6 text-gray-500">

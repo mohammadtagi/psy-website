@@ -7,9 +7,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "ext-intl": "*",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
-        "ext-intl": "*"
+        "shetabit/payment": "^7.0",
+        "ext-soap": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

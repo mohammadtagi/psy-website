@@ -22,11 +22,11 @@
         <meta name="twitter:description" content="@yield('description')">
     @endif
     <meta property="og:url" content="@yield('canonical', url()->current())">
-    <meta property="og:image" content="@yield('social_image', asset('website/images/logo-mini.png'))">
+    <meta property="og:image" content="@yield('social_image', asset('website/images/logo-mini.webp'))">
     <meta property="og:image:alt" content="@yield('social_image_alt', 'کریم محمدزاده')">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('title', 'کریم محمدزاده')">
-    <meta name="twitter:image" content="@yield('social_image', asset('website/images/logo-mini.png'))">
+    <meta name="twitter:image" content="@yield('social_image', asset('website/images/logo-mini.webp'))">
     <meta name="twitter:image:alt" content="@yield('social_image_alt', 'کریم محمدزاده')">
 
     <link rel="icon" href="{{ asset('website/images/favicon.ico') }}">
@@ -39,6 +39,7 @@
     <link rel="stylesheet" href="{{ asset('website/style/fonts.css') }}">
     <link rel="stylesheet" href="{{ asset('website/style/style.css') }}">
     @stack('styles')
+    <link rel="stylesheet" href="{{ asset('website/style/care-public-shell.css') }}">
 
     <style>
         html, body {
@@ -58,5 +59,6 @@
 @include('website.partials.footer')
 
 @stack('scripts')
+<script defer src="{{ asset('website/js/care-public-shell.js') }}"></script>
 </body>
 </html>

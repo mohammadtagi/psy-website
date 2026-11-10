@@ -219,3 +219,7 @@ Route::middleware(['auth', 'role:psychologist'])
             Route::patch('/{discount}/status', [DiscountCodeController::class, 'updateStatus'])->whereNumber('discount')->name('status');
         });
     });
+
+// درگاه پرداخت - کال‌بک عمومی به‌پرداخت ملت
+Route::match(['get', 'post'], '/payments/behpardakht/callback', [PaymentController::class, 'callback'])
+    ->name('payments.behpardakht.callback');

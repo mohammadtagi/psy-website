@@ -32,7 +32,7 @@ class DiscountService
             $locked = $this->lockOwnedAppointment($client, $appointment);
 
             $this->ensurePending($locked);
-            $this->ensureNoGatewayTransaction($locked);
+            $this->invalidatePriorPaymentAttempts($locked);
 
             $discount = DiscountCode::query()
                 ->where('code', $code)
@@ -70,7 +70,7 @@ class DiscountService
             $locked = $this->lockOwnedAppointment($client, $appointment);
 
             $this->ensurePending($locked);
-            $this->ensureNoGatewayTransaction($locked);
+            $this->invalidatePriorPaymentAttempts($locked);
 
             $locked->forceFill([
                 'discount_code_id' => null,
@@ -106,7 +106,7 @@ class DiscountService
             }
 
             $this->ensurePending($locked);
-            $this->ensureNoGatewayTransaction($locked);
+            $this->invalidatePriorPaymentAttempts($locked);
 
             if ($locked->discount_code_id === null) {
                 $this->fail('ابتدا کد تخفیف را اعمال کنید.');
@@ -136,19 +136,6 @@ class DiscountService
 
             $now = CarbonImmutable::now('UTC');
 
-            // پرداخت اولیه بدون لینک درگاه، دیگر قابل استفاده نیست.
-            Payment::query()
-                ->where('appointment_id', $locked->getKey())
-                ->whereIn('status', [
-                    Payment::STATUS_INITIATED,
-                    Payment::STATUS_PENDING,
-                ])
-                ->update([
-                    'status' => Payment::STATUS_CANCELLED,
-                    'gateway_message' =>
-                        'با تأیید رایگان نوبت جایگزین شد؛ وجهی دریافت نشد.',
-                ]);
-
             // این رکورد تسویه صفر است، نه پرداخت موفق زرین‌پال.
             $payment = Payment::query()->create([
                 'appointment_id' => $locked->getKey(),
@@ -159,6 +146,7 @@ class DiscountService
                 'paid_at' => $now,
                 'gateway_message' =>
                     'تأیید رایگان با کد تخفیف؛ بدون دریافت وجه.',
+                'final_amount' => 0,
             ]);
 
             DiscountRedemption::query()->create([
@@ -221,8 +209,7 @@ class DiscountService
             $this->fail('زمان شروع این نوبت فرا رسیده است.');
         }
     }
-
-    private function ensureNoGatewayTransaction(
+    private function invalidatePriorPaymentAttempts(
         Appointment $appointment,
     ): void {
         $payments = Payment::query()
@@ -232,17 +219,25 @@ class DiscountService
             ->get();
 
         foreach ($payments as $payment) {
-            if (
-                $payment->status === Payment::STATUS_PAID
-                || (
-                    $payment->authority !== null
-                    && $payment->authority !== ''
-                )
-            ) {
+            if ($payment->status === Payment::STATUS_PAID) {
                 $this->fail(
-                    'این نوبت تراکنش پرداخت دارد؛ تغییر تخفیف یا '
-                    . 'تأیید رایگان تا تعیین تکلیف تراکنش ممکن نیست.',
+                    'برای این نوبت پرداخت قطعی ثبت شده است؛ '
+                    . 'تغییر تخفیف یا تأیید رایگان ممکن نیست.',
                 );
+            }
+
+            if (in_array($payment->status, [
+                Payment::STATUS_INITIATED,
+                Payment::STATUS_PENDING,
+            ], true)) {
+                $payment->forceFill([
+                    'status' => Payment::STATUS_CANCELLED,
+                    'gateway_message' => trim(
+                        (string) $payment->gateway_message
+                        . "\nبا تغییر فاکتور یا تأیید رایگان، "
+                        . 'این تلاش پرداخت نامعتبر شد.'
+                    ),
+                ])->save();
             }
         }
     }

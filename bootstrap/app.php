@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(
             fn (Request $request): string => route('auth.login')
         );
+
+        $middleware->validateCsrfTokens(except: [
+            'payments/behpardakht/callback',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

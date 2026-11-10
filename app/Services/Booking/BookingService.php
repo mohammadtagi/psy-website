@@ -356,13 +356,6 @@ class BookingService
                 'hold_expires_at' => $now->addMinutes($holdMinutes),
             ]);
 
-            $appointment->payments()->create([
-                'client_id' => $client->getKey(),
-                'amount' => $appointment->amount,
-                'gateway' => Payment::GATEWAY_ZARINPAL,
-                'status' => Payment::STATUS_INITIATED,
-            ]);
-
             return $appointment;
         }, 3);
     }
