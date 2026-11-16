@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php" colors="true" cacheDirectory="/tmp/psychology-booking-api-phpunit">
+    <testsuites>
+        <testsuite name="Booking API contract">
+            <file>tests/Feature/BookingApiContractTest.php</file>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_CONFIG_CACHE" value="/tmp/psychology-booking-api-no-config-cache.php" force="true"/>
+        <env name="APP_ROUTES_CACHE" value="/tmp/psychology-booking-api-no-routes-cache.php" force="true"/>
+        <env name="DB_CONNECTION" value="sqlite" force="true"/>
+        <env name="DB_DATABASE" value=":memory:" force="true"/>
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <env name="SESSION_DRIVER" value="array" force="true"/>
+        <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+    </php>
+</phpunit>
