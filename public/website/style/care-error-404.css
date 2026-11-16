@@ -1,24 +1,19 @@
-@font-face{font-family:CareErrorYekan;src:url('../fonts/IranYekan/IRANYekanRegular.ttf') format('truetype');font-weight:400;font-display:swap}
-@font-face{font-family:CareErrorYekan;src:url('../fonts/IranYekan/IRANYekanBold.ttf') format('truetype');font-weight:700;font-display:swap}
-*{box-sizing:border-box}
-body.ce404{margin:0;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;background:#f8f6ef;color:#214736;font-family:CareErrorYekan,Tahoma,sans-serif;line-height:1.9}
-.ce404 a{color:inherit;text-decoration:none}
-.ce404 a:focus-visible{outline:3px solid #a17925;outline-offset:5px}
-.ce404-header{width:min(1120px,100%);margin:0 auto;padding:26px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.ce404-brand{display:flex;align-items:center;gap:12px;border-radius:8px}
-.ce404-brand strong{display:block;font-size:17px}.ce404-brand small{display:block;font-size:11px;color:#627162}
-.ce404-mark{width:48px;height:48px;display:grid;place-items:center;background:#214736;color:#f2dfac;border-radius:16px}.ce404-mark svg{width:34px;height:34px}
-.ce404-header-link{font-size:12px;display:inline-flex;align-items:center;gap:10px;min-height:44px;border-bottom:1px solid #cdd5c6}
-.ce404-main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:12px 24px 40px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ce404-art{position:relative;width:min(100%,390px);margin:0 auto 18px}.ce404-art svg{display:block;width:100%;height:auto}.ce404-code{position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);background:#214736;border:5px solid #f8f6ef;color:#f2dfac;border-radius:18px;padding:0 23px;font-family:Tahoma,sans-serif;font-size:35px;font-weight:700;line-height:1.55;letter-spacing:5px;text-indent:5px}
-.ce404-eyebrow{margin:10px 0 6px;font-size:12px;color:#66785c}.ce404 h1{margin:0 0 12px;font-size:clamp(26px,5vw,36px);line-height:1.6;font-weight:700;letter-spacing:-.6px}
-.ce404-description{margin:0;color:#5e6b60;font-size:14px;line-height:2.2;max-width:530px}
-.ce404-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:26px 0 0}.ce404-actions a{display:inline-flex;align-items:center;justify-content:center;gap:22px;min-height:50px;padding:11px 23px;border-radius:12px;font-size:13px;font-weight:700;transition:background .18s ease,transform .18s ease}
-.ce404-actions .ce404-primary{background:#214736;color:#fff;border:1px solid #214736}.ce404-primary:hover{background:#173728;transform:translateY(-2px)}.ce404-actions .ce404-secondary{background:transparent;border:1px solid #b8c7b5}.ce404-secondary:hover{background:#edf0e6;transform:translateY(-2px)}
-.ce404-hint{font-size:11px;color:#697466;margin:22px 0 0;line-height:2}.ce404-footer{text-align:center;font-size:11px;color:#6c7767;padding:20px 16px;border-top:1px solid #e4e6da;margin:0 24px}.ce404-footer span{margin:0 8px}
-/* Brief, quiet motion: stops automatically; no JS or continuous distraction. */
-.ce404-float{animation:ce404-float 4.4s ease-in-out 1;transform-box:fill-box;transform-origin:center}.ce404-leaf{animation:ce404-sway 4.4s ease-in-out 1;transform-box:fill-box;transform-origin:bottom center}
-@keyframes ce404-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}@keyframes ce404-sway{0%,100%{transform:rotate(0)}50%{transform:rotate(-5deg)}}
-@media(max-width:540px){.ce404-header{padding:18px 20px;gap:12px}.ce404-brand{gap:8px}.ce404-brand strong{font-size:14px}.ce404-brand small{font-size:10px}.ce404-mark{width:40px;height:40px;border-radius:13px}.ce404-header-link{font-size:11px;gap:6px}.ce404-main{padding:18px 20px 32px}.ce404-art{max-width:310px}.ce404-description{font-size:13px}.ce404-description br{display:none}.ce404-actions{width:100%;max-width:340px;flex-direction:column;margin-top:22px;gap:10px}.ce404-actions a{width:100%}.ce404-hint{max-width:290px}.ce404-footer{margin:0 20px}}
-@media(prefers-reduced-motion:reduce){.ce404-float,.ce404-leaf{animation:none}.ce404-actions a{transition:none}.ce404-actions a:hover{transform:none}}
-@media(forced-colors:active){.ce404-actions a,.ce404-code,.ce404-mark{border:1px solid ButtonText}}
+/* Content-only styles: header and footer remain the actual shared site components. */
+.care404-header-wrap{background:#075b3f;color:#fff}
+.care404-content{display:flex;align-items:center;justify-content:center;min-height:560px;padding:48px 20px 64px;background:#fff;color:#214736;text-align:center}
+.care404-inner{width:100%;max-width:560px}
+.care404-illustration{width:220px;max-width:100%;margin:0 auto 12px;animation:care404-enter .45s ease-out both}
+.care404-illustration svg{display:block;width:100%;height:auto}
+.care404-label{margin:0 0 8px;color:#788173;font-size:12px;line-height:1.8}
+.care404-content h1{margin:0;font-size:32px;font-weight:700;line-height:1.8;color:#214736}
+.care404-description{margin:12px 0 0;color:#657166;font-size:14px;line-height:2.1}
+.care404-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-top:28px}
+.care404-actions a{display:inline-flex;align-items:center;justify-content:center;gap:24px;min-width:158px;min-height:50px;padding:11px 24px;border-radius:12px;font-size:13px;font-weight:700;line-height:1.8;text-decoration:none;transition:background .16s ease}
+.care404-actions .care404-booking{background:#e3c55c;border:1px solid #e3c55c;color:#173b2d}
+.care404-actions .care404-booking:hover{background:#f4d97a}
+.care404-actions .care404-home{background:#fff;border:1px solid #cad5cb;color:#214736}
+.care404-actions .care404-home:hover{background:#f3f7f3}
+.care404-actions a:focus-visible{outline:2px solid #52745c;outline-offset:4px}
+@keyframes care404-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:540px){.care404-content{min-height:490px;padding:36px 20px 48px}.care404-illustration{width:185px}.care404-content h1{font-size:27px}.care404-description{font-size:13px;max-width:300px;margin:10px auto 0}.care404-actions{gap:10px;margin-top:24px}.care404-actions a{min-width:0;flex:1;max-width:170px;padding:11px 14px;gap:14px}}
+@media(prefers-reduced-motion:reduce){.care404-illustration{animation:none}.care404-actions a{transition:none}}
