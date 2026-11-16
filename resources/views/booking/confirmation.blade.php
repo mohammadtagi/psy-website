@@ -6,7 +6,9 @@
 @section('title', 'جزئیات نوبت')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('website/style/care-booking-confirmation.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('website/style/care-booking-review.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('website/style/care-booking-followup.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('website/style/care-booking-payment-compact.css') }}?v=2">
 @endpush
 
 @section('content')
@@ -83,11 +85,7 @@ Appointment::STATUS_PENDING_PAYMENT =>
     @endphp
 
     <main class="cbc mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8" dir="rtl">
-        <nav aria-label="مراحل رزرو" class="cbc-steps">
-            <span>۱ · انتخاب تاریخ</span>
-            <span>۲ · انتخاب ساعت</span>
-            <span aria-current="step">۳ · بررسی و وضعیت نوبت</span>
-        </nav>
+        <ol class="cbp-steps" aria-label="مراحل رزرو"><li><span>۱</span>اطلاعات حساب</li><li><span>۲</span>تاریخ و ساعت</li><li aria-current="step"><span>۳</span>بررسی و پرداخت</li></ol>
         <section class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
             <div
                 class="border-b px-6 py-8 text-center {{ $isConfirmed
@@ -99,13 +97,13 @@ Appointment::STATUS_PENDING_PAYMENT =>
                 </h1>
 
                 <p class="mt-2 text-sm text-gray-700">
-                    وضعیت فعلی نوبت: {{ $statusLabel }}
+                    کد پیگیری نوبت: <bdi dir="ltr" class="break-all font-mono">{{ $appointment->tracking_code }}</bdi>
                 </p>
             </div>
 
-            @if (session('status'))
+            @if (session('status') && ! $isPendingPayment)
                 <div
-                    class="mx-6 mt-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
+                    class="mx-6 mt-6 rounded-lg border px-4 py-3 text-sm {{ $isConfirmed ? 'border-green-200 bg-green-50 text-green-800' : 'border-gray-200 bg-gray-50 text-gray-700' }}"
                     role="status"
                 >
                     {{ session('status') }}
@@ -150,39 +148,17 @@ Appointment::STATUS_PENDING_PAYMENT =>
                                 برای ثبت نوبت جدید، زمان‌های موجود را بررسی کنید.
                             </p>
                         @else
-                            <p class="font-medium">
-                                این نوبت به‌صورت موقت ثبت شده و هنوز تأیید نهایی نشده است.
-                            </p>
-
-                            <p class="mt-1">
-                                پایان مهلت نگهداری موقت:
-                                <strong>
-                                    {{ \App\Support\PersianDate::format($holdExpiresAt) }}
-                                    ساعت
-                                    {{ $holdExpiresAt->format('H:i:s') }}
-                                </strong>
-                                به وقت تهران.
-                            </p>
-
-                            <p class="mt-1">
-                                تأیید نهایی به پرداخت موفق یا تأیید رایگان با کد تخفیف معتبر،
-                                و معتبر بودن زمان نوبت وابسته است.
-                                مهلت نگهداری موقت، امکان پرداخت پس از شروع جلسه را تضمین نمی‌کند.
-                            </p>
+                            <div class="cbp-pending">
+                                <p class="font-medium">نوبت شما هنوز تکمیل نشده، برای ادامه پرداخت را انجام دهید.</p>
+                                @php($paymentDeadline = $holdExpiresAt->lt($startsAt) ? $holdExpiresAt : $startsAt)
+                                <span class="cbp-timer" data-payment-countdown data-remaining="{{ max(0, $paymentDeadline->getTimestamp() - $now->getTimestamp()) }}">
+                                    مهلت تکمیل: <bdi data-countdown-value dir="ltr">{{ gmdate('i:s', max(0, $paymentDeadline->getTimestamp() - $now->getTimestamp())) }}</bdi>
+                                </span>
+                            </div>
                         @endif
                     </div>
                 @endif
 
-                <div class="flex items-center justify-between border-b border-gray-100 pb-4">
-<span class="text-sm text-gray-500">
-    کد پیگیری نوبت
-</span>
-
-                    <strong dir="ltr" class="break-all font-mono text-sm text-gray-900">
-                        {{ $appointment->tracking_code }}
-                    </strong>
-
-                </div>
 
                 <div class="cbc-summary grid gap-5 sm:grid-cols-2">
                     <div>
@@ -255,15 +231,63 @@ Appointment::STATUS_PENDING_PAYMENT =>
                     </div>
                 </div>
 
-                    @include('booking._invoice')
+                @if (! $isPendingPayment)
+                <section class="cbf-next" aria-labelledby="cbf-next-title">
+                    <h2 id="cbf-next-title">قدم بعدی شما</h2>
+                    @if ($isConfirmed)
+                        <p>نوبت شما تأیید شده است. برای پیگیری جزئیات و امکانات مربوط به جلسه، به «نوبت‌های من» بروید.</p>
+                        @if (! $hasSessionStarted)
+                            @if ($appointment->session_type === Appointment::SESSION_TYPE_ONLINE)
+                                <ul><li>پیش از جلسه، اتصال اینترنت، میکروفن و هدفون خود را بررسی کنید.</li><li>محیطی آرام و خصوصی برای گفت‌وگو انتخاب کنید.</li><li>جزئیات دسترسی به جلسه را در حساب خود بررسی کنید.</li></ul>
+                            @elseif ($appointment->session_type === Appointment::SESSION_TYPE_IN_PERSON)
+                                <ul><li>پیش از حرکت، نشانی و جزئیات مراجعه را بررسی کنید.</li><li>برای حضور به‌موقع برنامه‌ریزی کنید؛ ساعت نوبت به وقت تهران است.</li></ul>
+                            @endif
+                        @else
+                            <p>زمان شروع این نوبت فرا رسیده است؛ آخرین جزئیات آن را در حساب خود بررسی کنید.</p>
+                        @endif
+                    @elseif ($isPendingPayment && $hasActiveHold && ! $hasSessionStarted)
+                        <p>رزرو هنوز قطعی نیست. برای ادامه، فاکتور و گزینه‌های تسویهٔ همین صفحه را بررسی کنید. داشتن کد پیگیری به‌تنهایی به معنی تأیید نوبت یا پرداخت موفق نیست.</p>
+                    @elseif ($isPendingPayment)
+                        <p>این نوبت تأیید نشده است و امکان ادامهٔ پرداخت در این صفحه وجود ندارد. برای رزرو جدید، زمان‌های موجود را بررسی کنید.</p>
+                    @elseif ($appointment->status === Appointment::STATUS_CANCELLED)
+                        <p>این نوبت لغو شده است. وضعیت لغو به‌تنهایی نشان‌دهندهٔ انجام بازپرداخت نیست. برای پیگیری، کد نوبت را نگه دارید.</p>
+                    @elseif ($appointment->status === Appointment::STATUS_COMPLETED)
+                        <p>این جلسه تکمیل شده است. برای مرور سوابق نوبت‌ها به حساب خود بروید.</p>
+                    @elseif ($appointment->status === Appointment::STATUS_NO_SHOW)
+                        <p>برای این جلسه وضعیت عدم حضور ثبت شده است. این عنوان به‌تنهایی مشخص نمی‌کند عدم حضور مربوط به کدام طرف بوده یا بازپرداخت انجام شده است.</p>
+                    @else
+                        <p>برای پیگیری آخرین جزئیات، نوبت‌های خود را در حساب کاربری بررسی کنید.</p>
+                    @endif
+                    <a class="cbf-account-link" href="{{ route('client.appointments.index') }}">رفتن به نوبت‌های من ←</a>
+                    <p class="cbf-privacy">کد پیگیری و جزئیات جلسه را فقط در اختیار افراد مورد اعتماد قرار دهید.</p>
+                </section>
+                @endif
+
+                @include('booking._invoice')
+
+                @if ($isPendingPayment && $hasActiveHold && ! $hasSessionStarted)
+                <section class="cbp-notes" aria-labelledby="cbp-notes-title">
+                    <h2 id="cbp-notes-title">ملاحظات پرداخت</h2>
+                    <p>هزینهٔ پرداختی شامل مبلغ ویزیت کامل است و هزینه‌ای برای ویزیت در مطب دریافت نمی‌گردد.</p>
+                </section>
+                <section class="cbp-trust" aria-labelledby="cbp-trust-title">
+                    <h2 id="cbp-trust-title"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 4 6v6c0 4 5 8 8 9 3-1 8-5 8-9V6Z"/><path d="m8 12 3 3 5-6"/></svg>با اطمینان خاطر نوبت خود را ثبت کنید</h2>
+                    <p>بازگشت وجه در صورت عدم حضور مشاور، مطابق شرایط</p>
+                    <p>پیگیری نوبت از حساب کاربری</p>
+                    <details class="cbp-policy">
+                        <summary>امکان لغو نوبت <span>(مشاهده شرایط)</span></summary>
+                        <p>در صورتی که لغو تا قبل از ۲۴ ساعت مانده به نوبت انجام شود 100 درصد مبلغ پرداخت شده به حساب شما برگردانده خواهد شد.</p>
+                    </details>
+                </section>
+                @endif
 
                 <div class="cbc-footer flex flex-col gap-3 border-t border-gray-200 pt-6 sm:flex-row">
-                    <a
-                        href="{{ route('booking.index') }}"
-                        class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                    >
-                        رزرو نوبت دیگر
-                    </a>
+                    @if (($isPendingPayment || $isConfirmed) && ! $hasSessionStarted)
+                    <form method="POST" action="{{ route('client.appointments.cancel', $appointment) }}" class="cbp-cancel" data-cancel-appointment>
+                        @csrf
+                        <button type="submit">لغو این نوبت</button>
+                    </form>
+                    @endif
 
                     <a
                         href="{{ route('client.appointments.index') }}"
@@ -276,3 +300,6 @@ Appointment::STATUS_PENDING_PAYMENT =>
         </section>
     </main>
 @endsection
+@push('scripts')
+<script src="{{ asset('website/js/care-booking-payment-compact.js') }}?v=2" defer></script>
+@endpush

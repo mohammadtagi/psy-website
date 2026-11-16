@@ -142,13 +142,12 @@ class AvailabilityService
             ]);
         }
 
-        // Availability boundaries may be arbitrary, but appointment starts
-        // must be aligned to 00 or 30 minutes.
-        $firstAllowedStart = (int) (ceil($startMinutes / 30) * 30);
+        // Round the first appointment start up to the next quarter hour.
+        $firstAllowedStart = (int) (ceil($startMinutes / 15) * 15);
 
         if ($firstAllowedStart + 45 > $endMinutes) {
             throw ValidationException::withMessages([
-                'end_time' => 'این بازه برای یک جلسه ۴۵ دقیقه‌ای با شروع روی ساعت یا نیم‌ساعت کافی نیست.',
+                'end_time' => 'این بازه برای یک جلسه ۴۵ دقیقه‌ای با شروع روی ربع ساعت کافی نیست.',
             ]);
         }
 

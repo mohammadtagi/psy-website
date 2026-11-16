@@ -61,6 +61,7 @@
         }
     }
     function render(data) {
+        stage(1);
         const user = data.user;
         if (data.authenticated && user) {
             const dashboard = { client: root.dataset.clientDashboard, psychologist: root.dataset.psychologistDashboard, admin: root.dataset.adminDashboard }[user.role];
@@ -159,6 +160,7 @@
         mobileForm.elements.mobile.focus();
     });
     function stage(number) {
+        root.dataset.bookingStage = String(number);
         root.querySelectorAll('.bka-steps li').forEach((el, i) => {
             el.removeAttribute('aria-current');
             if (i === number - 1) el.setAttribute('aria-current', 'step');

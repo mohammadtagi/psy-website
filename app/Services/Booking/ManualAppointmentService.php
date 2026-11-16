@@ -22,7 +22,7 @@ class ManualAppointmentService
         $data = Validator::make($input, [
             'date' => ['required', 'date_format:Y-m-d'],
             'time' => ['required', 'date_format:H:i'],
-            'duration_minutes' => ['required', 'integer', 'min:1', 'max:480'],
+            'duration_minutes' => ['required', 'integer', 'in:45'],
             'session_type' => [
                 'required',
                 Rule::in(['online', 'in_person']),

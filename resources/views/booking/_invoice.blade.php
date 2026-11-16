@@ -40,7 +40,7 @@
     </dl>
 
     @if ($hasDiscount)
-        <div class="rounded-lg border border-green-200 bg-green-50 p-3 text-sm">
+        <div class="cbp-applied rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
             <span>کد اعمال‌شده:</span>
 
             <bdi class="break-all font-mono font-semibold">
@@ -68,7 +68,7 @@
     @endif
 
     @if ($canSettle)
-        <details class="cbc-discount" @if(old('code') || $errors->any()) open @endif>
+        <details class="cbp-discount" @if($errors->has('code') || old('code')) open @endif>
             <summary>{{ $hasDiscount ? 'تغییر کد تخفیف' : 'کد تخفیف دارید؟' }}</summary>
         <form
             method="POST"
@@ -107,15 +107,9 @@
             </div>
         </form>
 
-        <p class="text-xs leading-6 text-gray-600">
-            اعمال کد به معنی تأیید نوبت یا رزرو ظرفیت تخفیف نیست.
-            اعتبار و ظرفیت کد هنگام تأیید نهایی دوباره بررسی می‌شود.
-            اعمال یا حذف کد، مهلت رزرو را تمدید نمی‌کند.
-        </p>
-
         </details>
 
-        @if ($finalAmount === 0)
+        @if ($hasDiscount && $finalAmount === 0)
             <form
                 method="POST"
                 action="{{ route('booking.confirm-free', $appointment) }}"
@@ -130,9 +124,19 @@
                 </button>
 
                 <p class="mt-2 text-xs leading-6 text-gray-600">
-                    مبلغ نهایی صفر است؛ برای تأیید این نوبت نیازی به ورود به درگاه یا پرداخت وجه نیست.
+                    برای تأیید نهایی، دکمهٔ بالا را بزنید؛ پرداختی لازم نیست.
                 </p>
             </form>
+        @elseif ($hasDiscount)
+            <div
+                class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm leading-7 text-amber-900"
+                role="status"
+            >
+                    پرداخت آنلاین با تخفیف جزئی در حال حاضر فعال نیست.
+                    می‌توانید کد را حذف کنید و مبلغ اصلی جلسه را بپردازید،
+                    یا در صورت داشتن کد معتبر با تخفیف کامل، آن را جایگزین کنید.
+                    تا تأیید نهایی، نوبت موقت است و اعمال یا حذف کد مهلت آن را تمدید نمی‌کند.
+            </div>
         @elseif (config('payment.online_enabled', true))
             <form
                 method="POST"
@@ -144,12 +148,11 @@
                     type="submit"
                     class="cbc-primary min-h-11 rounded-lg bg-indigo-600 px-5 py-3 font-medium text-white"
                 >
-                    پرداخت و تأیید نوبت
+                    پرداخت {{ number_format($finalAmount) }} تومان و تأیید نوبت
                 </button>
 
                 <p class="mt-2 text-xs leading-6 text-gray-600">
-                    به درگاه پرداخت اینترنتی به‌پرداخت ملت منتقل می‌شوید.
-                    تأیید نهایی پس از پرداخت موفق و بررسی سمت سرور انجام می‌شود.
+                    انتقال به درگاه زرین‌پال
                 </p>
             </form>
         @else
@@ -157,18 +160,7 @@
                 پرداخت آنلاین در حال حاضر غیرفعال است.
             </p>
         @endif
-
-
     @endif
 
-    <p class="text-xs leading-6 text-gray-500">
-        نمایش این فاکتور به‌تنهایی رسید پرداخت یا تأیید نوبت نیست؛
-        وضعیت نهایی در بالای صفحه نمایش داده می‌شود.
-    </p>
 
-    @if ($appointment->session_type === \App\Models\Appointment::SESSION_TYPE_ONLINE)
-        <p class="text-xs leading-6 text-gray-500">
-            لینک جلسه آنلاین، در صورت فعال‌شدن، در اطلاعات نوبت نمایش داده خواهد شد.
-        </p>
-    @endif
 </div>

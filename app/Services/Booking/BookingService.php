@@ -15,7 +15,7 @@ class BookingService
 {
     private const LOCAL_TIMEZONE = 'Asia/Tehran';
 
-    private const SLOT_INTERVAL_MINUTES = 30;
+    private const SLOT_INTERVAL_MINUTES = 45;
 
     private const MINUTE_BEFORE_START_LIMIT = 1;
 
@@ -104,11 +104,7 @@ class BookingService
                 $availability->ends_at
             );
 
-            $firstStart = $this->roundUpToHalfHour(
-                $availabilityStart->lt($dayStart)
-                    ? $dayStart
-                    : $availabilityStart,
-            );
+            $firstStart = $this->firstSlotStart($availabilityStart, $dayStart);
 
             for (
                 $slotStart = $firstStart;
@@ -171,9 +167,9 @@ class BookingService
         $startsAt = CarbonImmutable::parse($startsAtInput)->utc();
         $endsAt = $startsAt->addMinutes($durationMinutes);
 
-        if ($startsAt->minute % 30 !== 0 || $startsAt->second !== 0) {
+        if ($startsAt->setTimezone(self::LOCAL_TIMEZONE)->minute % 15 !== 0 || $startsAt->second !== 0 || $startsAt->microsecond !== 0) {
             throw ValidationException::withMessages([
-                'starts_at' => 'زمان شروع باید روی ساعت یا نیم‌ساعت باشد.',
+                'starts_at' => 'زمان شروع باید روی ربع ساعت باشد.',
             ]);
         }
 
@@ -305,6 +301,20 @@ class BookingService
                 ]);
             }
 
+            $firstStart = $this->firstSlotStart(
+                $availabilityStart,
+                $startsAt->setTimezone(self::LOCAL_TIMEZONE)->startOfDay()->utc(),
+            );
+
+            if (
+                $startsAt->lt($firstStart)
+                || ($startsAt->getTimestamp() - $firstStart->getTimestamp()) % (self::SLOT_INTERVAL_MINUTES * 60) !== 0
+            ) {
+                throw ValidationException::withMessages([
+                    'starts_at' => 'زمان شروع باید یکی از زمان‌های قابل رزرو باشد.',
+                ]);
+            }
+
             $conflict = Appointment::query()
                 ->where('psychologist_id', $lockedPsychologist->getKey())
                 ->where('starts_at', '<', $endsAt)
@@ -362,9 +372,9 @@ class BookingService
 
     private function validateDuration(int $durationMinutes): void
     {
-        if (! in_array($durationMinutes, [45, 60], true)) {
+        if ($durationMinutes !== 45) {
             throw ValidationException::withMessages([
-                'duration_minutes' => 'مدت جلسه باید ۴۵ یا ۶۰ دقیقه باشد.',
+                'duration_minutes' => 'مدت جلسه باید ۴۵ دقیقه باشد.',
             ]);
         }
     }
@@ -407,17 +417,35 @@ class BookingService
     }
 
 
-    private function roundUpToHalfHour(
+    private function firstSlotStart(
+        CarbonImmutable $availabilityStart,
+        CarbonImmutable $dayStart,
+    ): CarbonImmutable {
+        $first = $this->roundUpToQuarterHour($availabilityStart);
+
+        // Preserve the availability's 45-minute grid across midnight.
+        if ($first->lt($dayStart)) {
+            $steps = (int) ceil(
+                ($dayStart->getTimestamp() - $first->getTimestamp())
+                / (self::SLOT_INTERVAL_MINUTES * 60)
+            );
+            $first = $first->addMinutes($steps * self::SLOT_INTERVAL_MINUTES);
+        }
+
+        return $first;
+    }
+
+    private function roundUpToQuarterHour(
         CarbonImmutable $dateTime,
     ): CarbonImmutable {
         $local = $dateTime->setTimezone(self::LOCAL_TIMEZONE);
 
         $rounded = $local->startOfHour()->addMinutes(
-            $local->minute >= 30 ? 30 : 0,
+            intdiv($local->minute, 15) * 15,
         );
 
         if ($rounded->lt($local)) {
-            $rounded = $rounded->addMinutes(self::SLOT_INTERVAL_MINUTES);
+            $rounded = $rounded->addMinutes(15);
         }
 
         return $rounded->utc();

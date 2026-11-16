@@ -1,376 +1,67 @@
 @extends('components.layouts.app')
-
-@section('title', 'انتخاب زمان جلسه')
-
+@section('title', 'انتخاب ساعت جلسه')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('website/style/care-booking.css') }}?v=1">
-<link rel="stylesheet" href="{{ asset('website/style/care-booking-inputs.css') }}?v=1">
+<link rel="stylesheet" href="{{ asset('website/style/care-booking-time.css') }}?v=1">
 @endpush
 @section('content')
-    @php
-        $dateObject = \Carbon\CarbonImmutable::createFromFormat(
-            '!Y-m-d',
-            $date,
-            'Asia/Tehran'
-        );
-    @endphp
-
-    <main class="cbk mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8" dir="rtl">
-        <ol class="cbk-steps" aria-label="مراحل رزرو"><li>۱. انتخاب تاریخ</li><li aria-current="step">۲. ساعت و اطلاعات</li><li>۳. بررسی و پرداخت</li></ol>
-        <header class="mb-8">
-            <a
-                href="{{ route('booking.index', ['duration' => $durationMinutes]) }}"
-                class="text-sm font-medium text-indigo-600 hover:text-indigo-800"
-            >
-                بازگشت به انتخاب تاریخ
-            </a>
-
-            <h1 class="mt-4 text-2xl font-bold text-gray-900">
-                انتخاب زمان جلسه
-            </h1>
-
-            <p class="mt-2 text-sm text-gray-600">
-                {{ $dateObject->locale('fa')->dayName }}
-                {{ \App\Support\PersianDate::format($dateObject) }}
-                -
-                جلسه {{ $durationMinutes }} دقیقه‌ای · ساعت‌ها به وقت تهران
-            </p>
-        </header>
-
-        @if (session('status'))
-            <div
-                class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
-                role="status"
-            >
-                {{ session('status') }}
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div
-                class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
-                role="alert"
-            >
-                <ul class="list-disc space-y-1 pr-5">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        @if (! $isAuthenticated)
-            <section class="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-5">
-                <h2 class="font-semibold text-amber-900">
-                    برای ثبت نوبت ابتدا وارد شوید
-                </h2>
-
-                <p class="mt-2 text-sm text-amber-800">
-                    برای انتخاب ساعت و ثبت درخواست نوبت، ابتدا وارد حساب شوید.
-                </p>
-
-                <a
-                    href="{{ route('auth.login') }}"
-                    class="mt-4 inline-flex min-h-11 items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-                >
-                    ورود به حساب
-                </a>
-            </section>
-        @endif
-
-        <section class="mb-8">
-            <div class="mb-4 flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-900">
-                    زمان‌های آزاد
-                </h2>
-
-                <span class="text-sm text-gray-500">
-                    {{ $durationMinutes }} دقیقه
-                </span>
-            </div>
-
-            @if (empty($slots))
-                <div class="rounded-lg border border-gray-200 bg-white px-6 py-10 text-center shadow-sm">
-                    <p class="text-sm text-gray-600">
-                        برای این تاریخ و مدت جلسه، زمان آزادی وجود ندارد.
-                    </p>
-                </div>
-            @else
-                <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                    @foreach ($slots as $index => $slot)
-                        <button
-                            type="button"
-                            class="slot-button min-h-12 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-800 transition hover:border-indigo-500 hover:bg-indigo-50"
-                            data-slot-index="{{ $index }}"
-                            data-start-time="{{ $slot['start_time'] }}"
-                            aria-pressed="false"
-                            aria-controls="booking-form-container"
-                            @disabled(! $isAuthenticated)
-                        >
-                            {{ $slot['start_time'] }}
-                            <span class="mt-1 block text-xs font-normal text-gray-500">
-                                تا {{ $slot['end_time'] }}
-                            </span>
-                        </button>
-                    @endforeach
-                </div>
-            @endif
-        </section>
-
-        @if ($isAuthenticated && ! empty($slots))
-            <section
-                id="booking-form-container"
-                class="cbk-form border-t border-gray-200 pt-8"
-            >
-                <h2 class="mb-5 text-lg font-semibold text-gray-900">
-                    اطلاعات مراجع
-                </h2>
-
-                <p class="cbk-selection-hint" id="booking-selection-hint" role="status">ابتدا یکی از ساعت‌های بالا را انتخاب کنید؛ سپس اطلاعات خود را بررسی کنید.</p>
-                <noscript><p class="cbk-notice">برای انتخاب ساعت و ثبت درخواست، JavaScript مرورگر باید فعال باشد.</p></noscript>
-                <form
-                    method="POST"
-                    action="{{ route('booking.store', ['date' => $date]) }}"
-                    class="space-y-6"
-                >
-                    @csrf
-
-                    <input
-                        type="hidden"
-                        name="availability_id"
-                        id="availability_id"
-                    >
-
-                    <input
-                        type="hidden"
-                        name="start_time"
-                        id="start_time"
-                    >
-
-                    <input
-                        type="hidden"
-                        name="duration_minutes"
-                        value="{{ $durationMinutes }}"
-                    >
-
-                    <div class="grid gap-5 sm:grid-cols-2">
-                        <div>
-                            <label
-                                for="first_name"
-                                class="mb-2 block text-sm font-medium text-gray-700"
-                            >
-                                نام
-                            </label>
-
-                            <input
-                                id="first_name"
-                                autocomplete="given-name"
-                                name="first_name"
-                                type="text"
-                                value="{{ old('first_name', auth()->user()->first_name) }}"
-                                required
-                                maxlength="100"
-                                class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            >
-                        </div>
-
-                        <div>
-                            <label
-                                for="last_name"
-                                class="mb-2 block text-sm font-medium text-gray-700"
-                            >
-                                نام خانوادگی
-                            </label>
-
-                            <input
-                                id="last_name"
-                                autocomplete="family-name"
-                                name="last_name"
-                                type="text"
-                                value="{{ old('last_name', auth()->user()->last_name) }}"
-                                required
-                                maxlength="100"
-                                class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            >
-                        </div>
-                    </div>
-
-                    <div>
-                        <label
-                            for="birth_date_jalali"
-                            class="mb-2 block text-sm font-medium text-gray-700"
-                        >
-                            تاریخ تولد شمسی
-                        </label>
-
-                        <div class="cbk-birth-field">
-                        <input
-                            id="birth_date_jalali"
-                            name="birth_date_jalali"
-                            type="text"
-                            dir="ltr"
-                            value="{{ old(
-            'birth_date_jalali',
-            auth()->user()->birth_date
-                ? \App\Support\PersianDate::format(auth()->user()->birth_date)
-                : ''
-        ) }}"
-                            placeholder="۱۳۷۵/۰۶/۱۵"
-                            maxlength="10"
-                            required
-                            aria-describedby="birth-date-help"
-                            @error('birth_date_jalali') aria-invalid="true" @enderror
-                            class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        >
-
-                        <button type="button" id="cbk-birth-open" class="cbk-birth-open" hidden aria-label="باز کردن تقویم تاریخ تولد شمسی" aria-haspopup="dialog" title="انتخاب تاریخ تولد">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 11h18M7 15h2m3 0h2m3 0h1M7 18h2m3 0h2"/></svg>
-                        </button>
-                        </div>
-                        <p id="birth-date-help" class="mt-2 text-xs text-gray-500">
-                            به ترتیب سال/ماه/روز وارد کنید؛ اعداد فارسی و انگلیسی پذیرفته می‌شوند.
-                        </p>
-
-                        @error('birth_date_jalali')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-
-                    <fieldset>
-                        <legend class="mb-3 text-sm font-medium text-gray-700">
-                            شیوه برگزاری
-                        </legend>
-
-                        <div class="grid gap-3 sm:grid-cols-2">
-                            @foreach ($sessionTypes as $sessionType)
-                                <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-300 p-4 hover:border-indigo-500">
-                                    <input
-                                        type="radio"
-                                        name="session_type"
-                                        value="{{ $sessionType['value'] }}"
-                                        @checked(old('session_type', 'online') === $sessionType['value'])
-                                        required
-                                        class="border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                    >
-
-                                    <span class="text-sm font-medium text-gray-800">
-                                        {{ $sessionType['label'] }}
-                                    </span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </fieldset>
-
-                    <div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
-                        <div class="flex items-center justify-between">
-                            <span>زمان انتخاب‌شده</span>
-                            <strong id="selected-time" dir="ltr" aria-live="polite">انتخاب نشده</strong>
-                        </div>
-
-                        <div class="mt-2 flex items-center justify-between">
-                            <span>مبلغ جلسه</span>
-                            <strong>
-                                {{ $durationMinutes === 45 ? '۷۶۰٬۰۰۰' : '۹۵۰٬۰۰۰' }}
-                                تومان
-                            </strong>
-                        </div>
-                    </div>
-
-                    <p class="cbk-notice">با ادامه، درخواست نوبت موقت ثبت می‌شود. تأیید نهایی در مرحله بعد، پس از پرداخت موفق یا تأیید نوبت رایگان انجام می‌شود.</p>
-                    <button
-                        type="submit"
-                        id="booking-submit"
-                        disabled
-                        class="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                        ثبت موقت و ادامه به بررسی و پرداخت
-                    </button>
-                </form>
-            </section>
-        @endif
-    </main>
-
-    @if ($isAuthenticated && ! empty($slots))
-        <script>
-            (() => {
-                const slots = {{ \Illuminate\Support\Js::from($slots) }};
-                const oldSelection = {{ \Illuminate\Support\Js::from([
-                'availability_id' => old('availability_id'),
-                'start_time' => old('start_time'),
-            ]) }};
-
-                const buttons = document.querySelectorAll('.slot-button');
-                const availabilityInput = document.getElementById('availability_id');
-                const startTimeInput = document.getElementById('start_time');
-                const selectedTime = document.getElementById('selected-time');
-
-                function selectSlot(button) {
-                    const slot = slots[Number(button.dataset.slotIndex)];
-
-                    if (!slot) {
-                        return;
-                    }
-
-                    buttons.forEach((item) => {
-                        item.classList.remove(
-                            'border-indigo-600',
-                            'bg-indigo-50',
-                            'text-indigo-700'
-                        );
-
-                        item.classList.add(
-                            'border-gray-300',
-                            'bg-white',
-                            'text-gray-800'
-                        );
-
-                        item.setAttribute('aria-pressed', 'false');
-                    });
-
-                    button.classList.remove(
-                        'border-gray-300',
-                        'bg-white',
-                        'text-gray-800'
-                    );
-
-                    button.classList.add(
-                        'border-indigo-600',
-                        'bg-indigo-50',
-                        'text-indigo-700'
-                    );
-
-                    button.setAttribute('aria-pressed', 'true');
-
-                    availabilityInput.value = slot.availability_id;
-                    startTimeInput.value = slot.start_time;
-                    selectedTime.textContent =
-                        `${slot.start_time} تا ${slot.end_time}`;
-
-                    document.getElementById('booking-submit').disabled = false;
-                    document.getElementById('booking-selection-hint').textContent = 'ساعت انتخاب شد؛ اطلاعات زیر را بررسی کنید و ادامه دهید.';
-                }
-
-                buttons.forEach((button) => {
-                    button.setAttribute('aria-pressed', 'false');
-
-                    button.addEventListener('click', () => selectSlot(button));
-                });
-
-                const previousButton = Array.from(buttons).find((button) => {
-                    const slot = slots[Number(button.dataset.slotIndex)];
-
-                    return slot
-                        && String(slot.availability_id) ===
-                        String(oldSelection.availability_id)
-                        && slot.start_time === oldSelection.start_time;
-                });
-
-                if (previousButton) {
-                    selectSlot(previousButton);
-                }
-            })();
-        </script>
+@php
+    $dateObject = \Carbon\CarbonImmutable::createFromFormat('!Y-m-d', $date, 'Asia/Tehran');
+    $client = auth()->user();
+    $canBook = $client && $client->isClient() && \App\Support\BookingAccount::complete($client);
+@endphp
+<main class="bkt" dir="rtl" data-booking-time>
+    <ol class="bkt-steps" aria-label="مراحل رزرو"><li>۱. اطلاعات حساب</li><li aria-current="step">۲. تاریخ و ساعت</li><li>۳. بررسی و پرداخت</li></ol>
+    <header><a href="{{ route('booking.index', ['duration' => $durationMinutes]) }}">← بازگشت به اطلاعات حساب و انتخاب تاریخ</a><h1>ساعت مناسب خود را انتخاب کنید</h1><p>{{ $dateObject->locale('fa')->dayName }}، {{ \App\Support\PersianDate::format($dateObject) }} · جلسهٔ {{ $durationMinutes }} دقیقه‌ای · به وقت تهران</p></header>
+    @if(session('status'))<p class="bkt-notice" role="status">{{ session('status') }}</p>@endif
+    @if($errors->any())
+        <div class="bkt-errors" role="alert"><strong>درخواست ثبت نشد؛ لطفاً موارد زیر را بررسی کنید.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
     @endif
-    <script src="{{ asset('website/js/care-booking-birth-picker.js') }}?v=1" defer></script>
+    @if(!$canBook)
+        <section class="bkt-card"><h2>{{ !$client ? 'ابتدا وارد حساب شوید' : ($client->isClient() ? 'اطلاعات حساب را تکمیل کنید' : 'رزرو با حساب مراجع') }}</h2><p>برای ادامهٔ رزرو، با حساب مراجع وارد شوید و نام، نام خانوادگی و تاریخ تولد خود را تأیید کنید.</p><a class="bkt-link" href="{{ route('booking.index', ['duration' => $durationMinutes]) }}">بازگشت به مرحلهٔ اطلاعات حساب</a></section>
+    @endif
+    <div class="bkt-grid">
+        <div>
+            <section class="bkt-card"><div class="bkt-section-head"><h2>ساعت‌های آزاد</h2><span>مدت جلسه: {{ $durationMinutes }} دقیقه</span></div><p>برای انتخاب، روی یکی از ساعت‌ها بزنید. زمان‌ها به وقت تهران هستند.</p>
+                @if(empty($slots))
+                    <p class="bkt-notice">برای این روز ساعت آزادی وجود ندارد؛ لطفاً تاریخ دیگری انتخاب کنید.</p><a class="bkt-link" href="{{ route('booking.index', ['duration' => $durationMinutes]) }}">انتخاب تاریخ دیگر</a>
+                @else
+                    <div class="bkt-slots" role="group" aria-label="انتخاب ساعت جلسه">
+                        @foreach($slots as $slot)
+                            <button type="button" class="bkt-slot" data-slot data-availability="{{ $slot['availability_id'] }}" data-start="{{ $slot['start_time'] }}" data-end="{{ $slot['end_time'] }}" aria-pressed="false" @disabled(!$canBook)>
+                                <strong dir="ltr">{{ $slot['start_time'] }}</strong><span>تا {{ $slot['end_time'] }}</span><small>{{ $loop->first ? 'اولین ساعت آزاد' : 'قابل رزرو' }}</small>
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+            </section>
+            @if($canBook && !empty($slots))
+                <section class="bkt-card"><h2>شیوهٔ برگزاری جلسه</h2>
+                    <form method="POST" action="{{ route('booking.store', ['date' => $date]) }}" data-booking-form>
+                        @csrf
+                        <input type="hidden" name="availability_id" value="{{ old('availability_id') }}">
+                        <input type="hidden" name="start_time" value="{{ old('start_time') }}">
+                        <input type="hidden" name="duration_minutes" value="{{ $durationMinutes }}">
+                        <fieldset><legend class="bkt-sr">شیوهٔ برگزاری را انتخاب کنید</legend><div class="bkt-types">
+                            @foreach($sessionTypes as $sessionType)
+                                <label><input type="radio" name="session_type" value="{{ $sessionType['value'] }}" @checked(old('session_type', 'online') === $sessionType['value']) required><span>{{ $sessionType['label'] }}</span></label>
+                            @endforeach
+                        </div></fieldset>
+                        <p class="bkt-selection" data-selection role="status">ابتدا یک ساعت از فهرست بالا انتخاب کنید.</p>
+                        <p class="bkt-notice">با ادامه، نوبت به‌صورت موقت ثبت می‌شود. تأیید نهایی پس از پرداخت موفق یا تأیید نوبت رایگان انجام خواهد شد.</p>
+                        <button type="submit" class="bkt-primary" data-submit disabled>ادامه به بررسی و پرداخت ←</button>
+                        <noscript><p class="bkt-errors">برای انتخاب ساعت و ادامه، جاوااسکریپت مرورگر را فعال کنید.</p></noscript>
+                    </form>
+                </section>
+            @endif
+        </div>
+        <aside class="bkt-card bkt-summary"><h2>خلاصهٔ جلسه</h2><dl><div><dt>تاریخ</dt><dd>{{ \App\Support\PersianDate::format($dateObject) }}</dd></div><div><dt>ساعت</dt><dd data-summary-time aria-live="polite">انتخاب نشده</dd></div><div><dt>مدت</dt><dd>{{ $durationMinutes }} دقیقه</dd></div><div><dt>شیوهٔ برگزاری</dt><dd data-summary-type>انتخاب نشده</dd></div></dl><p>مبلغ نهایی در مرحلهٔ بررسی و پرداخت نمایش داده می‌شود.</p>
+            @if($canBook)
+                <div class="bkt-account"><h3>اطلاعات حساب</h3><dl><div><dt>مراجع</dt><dd>{{ $client->first_name }} {{ $client->last_name }}</dd></div><div><dt>تاریخ تولد</dt><dd>{{ \App\Support\PersianDate::format($client->birth_date) }}</dd></div></dl><p>رزرو با اطلاعات ذخیره‌شدهٔ حساب شما ثبت می‌شود.</p><a href="{{ route('booking.index', ['duration' => $durationMinutes]) }}">ویرایش اطلاعات حساب</a></div>
+            @endif
+        </aside>
+    </div>
+</main>
 @endsection
+@push('scripts')
+<script src="{{ asset('website/js/care-booking-time.js') }}?v=1" defer></script>
+@endpush

@@ -33,7 +33,7 @@
                 <fieldset><legend>۳. ساعت حضور</legend><div class="cv-grid">
                         <div><label for="cv-start">ساعت شروع</label><input id="cv-start" type="time" name="start_time" dir="ltr" value="{{ old('start_time') }}" required aria-describedby="cv-time-help" aria-invalid="{{ $errors->has('start_time') ? 'true' : 'false' }}"></div>
                         <div><label for="cv-end">ساعت پایان</label><input id="cv-end" type="time" name="end_time" dir="ltr" value="{{ old('end_time') }}" required aria-describedby="cv-time-help" aria-invalid="{{ $errors->has('end_time') ? 'true' : 'false' }}"></div>
-                    </div><p id="cv-time-help" class="cv-muted">پایان باید بعد از شروع و در همان روز باشد. بازه باید برای حداقل یک جلسه ۴۵ دقیقه‌ای با شروع روی ساعت یا نیم‌ساعت کافی باشد؛ مثلاً ۹:۱۵ تا ۱۰:۱۵.</p></fieldset>
+                    </div><p id="cv-time-help" class="cv-muted">پایان باید بعد از شروع و در همان روز باشد. بازه باید برای حداقل یک جلسه ۴۵ دقیقه‌ای با شروع روی ربع ساعت کافی باشد؛ مثلاً ۹:۱۵ تا ۱۰:۱۵.</p></fieldset>
                 <aside class="cv-guide"><strong>پیش از ثبت</strong><ul><li>شروع تمام بازه‌ها باید در آینده باشد.</li><li>تداخل با برنامه موجود هنگام ثبت بررسی می‌شود؛ در صورت خطا هیچ‌یک از بازه‌های این درخواست ثبت نمی‌شود.</li></ul></aside>
                 <noscript><p class="cv-alert">جاوااسکریپت غیرفعال است؛ در حالت یک‌روز، تاریخ پایان را برابر تاریخ شروع وارد کنید. روزهای هفته فقط برای حالت تکرارشونده استفاده می‌شوند.</p></noscript>
                 <div class="cv-submit"><span class="cv-muted">ثبت بازه به معنی رزرو نوبت نیست.</span><button class="cv-button cv-primary" type="submit">ثبت بازه حضور</button></div>

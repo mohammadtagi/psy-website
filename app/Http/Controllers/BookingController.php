@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Validation\ValidationException;
-use App\Support\PersianDate;
+use App\Support\BookingAccount;
 use App\Models\Appointment;
 use App\Models\DiscountCode;
 
@@ -114,7 +114,7 @@ class BookingController extends Controller
         ]);
     }
 
-    public function store(Request $request, string $date): RedirectResponse
+    public function store(Request $request, string $date): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $validatedDate = $this->validateDate($date);
 
@@ -131,48 +131,27 @@ class BookingController extends Controller
             'duration_minutes' => [
                 'required',
                 'integer',
-                'in:45,60',
+                'in:45',
             ],
             'session_type' => [
                 'required',
                 'in:online,in_person',
             ],
-            'first_name' => [
-                'required',
-                'string',
-                'max:100',
-            ],
-            'last_name' => [
-                'required',
-                'string',
-                'max:100',
-            ],
-            'birth_date_jalali' => [
-                'required',
-                'string',
-                'max:10',
-            ],
-
         ]);
-        try {
-            $birthDate = PersianDate::birthDateToGregorian(
-                $validated['birth_date_jalali'],
-            );
-        } catch (\InvalidArgumentException) {
-            throw ValidationException::withMessages([
-                'birth_date_jalali' =>
-                    'تاریخ تولد شمسی معتبر وارد کنید؛ مانند ۱۳۷۵/۰۶/۱۵. تاریخ نباید در آینده باشد.',
-            ]);
-        }
 
         /** @var User $client */
         $client = $request->user();
 
-        $client->update([
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
-            'birth_date' => $birthDate,
-        ]);
+        // Legacy forms send all personal fields; popup requests use the saved account.
+        if ($request->hasAny(['first_name', 'last_name', 'birth_date_jalali'])) {
+            BookingAccount::save($request, $client);
+        }
+
+        if (! BookingAccount::complete($client)) {
+            throw ValidationException::withMessages([
+                'profile' => 'پیش از ثبت نوبت، نام، نام خانوادگی و تاریخ تولد حساب را تکمیل کنید.',
+            ]);
+        }
 
 
         $psychologist = $this->psychologist();
@@ -209,6 +188,15 @@ class BookingController extends Controller
                 $pendingAppointment = $client->clientAppointments()
                     ->findOrFail((int) $pendingAppointmentId);
 
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'message' => 'شما یک نوبت پرداخت‌نشده دارید.',
+                        'errors' => ['booking' => ['ابتدا پرداخت نوبت قبلی را تکمیل کنید.']],
+                        'appointment_id' => $pendingAppointment->getKey(),
+                        'confirmation_url' => route('booking.confirmation', $pendingAppointment),
+                    ], 422)->header('Cache-Control', 'no-store');
+                }
+
                 return redirect()
                     ->route(
                         'booking.confirmation',
@@ -224,6 +212,14 @@ class BookingController extends Controller
             throw $exception;
         }
 
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'appointment_id' => $appointment->getKey(),
+                'confirmation_url' => route('booking.confirmation', $appointment),
+                'message' => 'نوبت موقت ثبت شد؛ تأیید نهایی منوط به پرداخت موفق است.',
+            ], 201)->header('Cache-Control', 'no-store');
+        }
 
         return redirect()
             ->route('booking.confirmation', $appointment)
@@ -305,12 +301,6 @@ class BookingController extends Controller
 
     private function requestedDuration(): int
     {
-        $duration = (int) request()->query('duration', 45);
-
-        if (! in_array($duration, [45, 60], true)) {
-            return 45;
-        }
-
-        return $duration;
+        return 45;
     }
 }

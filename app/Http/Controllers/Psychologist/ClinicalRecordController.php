@@ -56,10 +56,7 @@ class ClinicalRecordController extends Controller
 
 
 
-        $manualDefaultDuration = (int) config(
-            'booking.manual_default_duration_minutes',
-            45,
-        );
+        $manualDefaultDuration = 45;
 
         $manualDefaultAmount = app(
             \App\Services\Booking\BookingService::class,

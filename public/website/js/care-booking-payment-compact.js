@@ -1,5 +1,10 @@
 (() => {
     'use strict';
+    document.querySelectorAll('[data-cancel-appointment]').forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!window.confirm('آیا از لغو این نوبت مطمئن هستید؟')) event.preventDefault();
+        });
+    });
     const timer = document.querySelector('[data-payment-countdown]');
     if (!timer) return;
     const value = timer.querySelector('[data-countdown-value]');

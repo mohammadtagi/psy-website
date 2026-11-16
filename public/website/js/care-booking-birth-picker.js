@@ -1,8 +1,8 @@
 (() => {
     'use strict';
     const init = () => {
-        const input = document.getElementById('birth_date_jalali');
-        const open = document.getElementById('cbk-birth-open');
+        const input = document.getElementById('bka-birth-date');
+        const open = document.getElementById('bka-birth-open');
         if (!input || !open || typeof HTMLDialogElement === 'undefined') return;
         let fmt;
         try {
@@ -18,9 +18,9 @@
         const today = parts(new Date());
         const months = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
         const dialog = document.createElement('dialog');
-        dialog.className = 'cbk-birth-dialog'; dialog.dir='rtl';
-        dialog.setAttribute('aria-labelledby','cbk-birth-title');
-        dialog.innerHTML = '<h2 id="cbk-birth-title">انتخاب تاریخ تولد شمسی</h2><div class="cbk-birth-selectors"><label>سال<select data-year></select></label><label>ماه<select data-month></select></label></div><p data-heading aria-live="polite"></p><div class="cbk-birth-days" role="group" aria-label="روزهای ماه"></div><p>با انتخاب روز، تاریخ در ورودی قرار می‌گیرد. برای تاریخ‌های پیش از ۱۲۰۰ از ورود دستی استفاده کنید.</p><button type="button" class="cbk-button cbk-secondary" data-close>بستن بدون تغییر</button>';
+        dialog.className = 'bka-birth-dialog'; dialog.dir='rtl';
+        dialog.setAttribute('aria-labelledby','cc-birth-title');
+        dialog.innerHTML = '<h2 id="cc-birth-title">انتخاب تاریخ تولد شمسی</h2><div class="cc-birth-selectors"><label>سال<select data-year></select></label><label>ماه<select data-month></select></label></div><p data-heading aria-live="polite"></p><div class="cc-birth-days" role="group" aria-label="روزهای ماه"></div><p>با انتخاب روز، تاریخ در ورودی قرار می‌گیرد. برای تاریخ‌های پیش از ۱۲۰۰ از ورود دستی استفاده کنید.</p><button type="button" class="cc-button cc-secondary" data-close>بستن بدون تغییر</button>';
         document.body.append(dialog);
         const year = dialog.querySelector('[data-year]'), month = dialog.querySelector('[data-month]');
         for(let y=today.y;y>=1200;y--) year.add(new Option(fa(y),String(y)));
@@ -38,7 +38,7 @@
         };
         const render = () => {
             const y=+year.value,m=+month.value;
-            const grid=dialog.querySelector('.cbk-birth-days'); grid.replaceChildren();
+            const grid=dialog.querySelector('.cc-birth-days'); grid.replaceChildren();
             dialog.querySelector('[data-heading]').textContent=months[m-1]+' '+fa(y);
             ['ش','ی','د','س','چ','پ','ج'].forEach(text=>{const s=document.createElement('span');s.textContent=text;s.setAttribute('aria-hidden','true');grid.append(s);});
             const days=dates(y).filter(p=>p.m===m);
@@ -62,6 +62,7 @@
             render();dialog.showModal();year.focus();
         });
         year.addEventListener('change',render);month.addEventListener('change',render);
+        dialog.addEventListener('close', () => open.focus());
         dialog.querySelector('[data-close]').addEventListener('click',()=>dialog.close());
     };
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();

@@ -16,9 +16,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title }} | کریم محمدزاده</title>
     <link rel="stylesheet" href="{{ asset('website/style/psychologist-dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('website/style/care-panel-navigation.css') }}?v=3">
 </head>
-<body class="therapy-ui">
-<a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
+<body class="therapy-ui care-panel-modern">
+
 <svg xmlns="http://www.w3.org/2000/svg" class="icon-library" aria-hidden="true"><defs>
     <symbol id="home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10H3Z M9 20v-7h6v7"/></symbol>
     <symbol id="calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v5m10-5v5M3 11h18m-14 5h3m4 0h3"/></symbol>
@@ -29,6 +30,7 @@
     <symbol id="menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
     <symbol id="leaf" viewBox="0 0 24 24"><path d="M20 3C8 2 2 8 5 15s16 5 15-12ZM4 21 16 9"/></symbol>
 </defs></svg>
+@include('components.layouts.panel-navigation')
 <aside class="sidebar" aria-label="منوی اصلی">
     <a class="brand" href="{{ route('psychologist.dashboard') }}"><span class="brand-mark"><svg class="icon"><use href="#leaf"/></svg></span><span>کریم محمدزاده<small>سامانه مدیریت مشاوره</small></span></a>
     <p class="nav-caption">فضای کاری مشاور</p>
@@ -49,10 +51,11 @@
         </nav></details>
     </header>
     <main id="main-content" tabindex="-1">{{ $slot }}</main>
+    @include('components.layouts.panel-account-actions')
     <footer class="page-footer">سامانه اختصاصی مدیریت خدمات مشاوره · کریم محمدزاده</footer>
 </div>
-<nav class="bottom-nav" aria-label="دسترسی سریع موبایل">
-    @foreach (array_slice($navigation, 0, 4) as $item)
+<nav class="bottom-nav" style="--care-nav-count: {{ count($navigation) }}" aria-label="دسترسی سریع موبایل">
+    @foreach ($navigation as $item)
         <a href="{{ route($item['route']) }}" @if(request()->routeIs($item['route'])) aria-current="page" @endif><svg class="icon" aria-hidden="true"><use href="#{{ $item['icon'] }}"/></svg><span>{{ $item['label'] }}</span></a>
     @endforeach
 </nav>

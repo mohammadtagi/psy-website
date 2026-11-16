@@ -96,11 +96,11 @@
                     aria-describedby="manual-duration-feedback"
                     name="duration_minutes"
                     type="number"
-                    min="1"
-                    max="480"
-                    step="1"
+                    min="45"
+                    max="45"
+                    readonly
                     required
-                    value="{{ old('duration_minutes', $manualDefaultDuration) }}"
+                    value="45"
                     class="w-full rounded-lg border-gray-300"
                 >
 

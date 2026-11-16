@@ -77,6 +77,12 @@ Route::post('/logout', [OtpLoginController::class, 'logout'])
 */
 Route::get('/booking', [BookingController::class, 'index'])->name('booking.index');
 
+Route::get('/booking/account', [\App\Http\Controllers\BookingAccountController::class, 'show'])
+    ->name('booking.account.show');
+Route::put('/booking/account', [\App\Http\Controllers\BookingAccountController::class, 'update'])
+    ->middleware(['auth', 'role:client'])
+    ->name('booking.account.update');
+
 Route::get('/booking/{date}', [BookingController::class, 'show'])
     ->where('date', '\d{4}-\d{2}-\d{2}')
     ->name('booking.show');

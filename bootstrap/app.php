@@ -26,5 +26,24 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request, \Throwable $exception): bool =>
+                $request->is('booking/account')
+                || ($request->is('login', 'login/*', 'booking', 'booking/*')
+                    ? $request->wantsJson()
+                    : $request->expectsJson()),
+        );
+
+        // Includes errors raised before controllers: auth, CSRF and throttling.
+        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response) {
+            $request = request();
+            if (
+                ($request->is('booking/account') || $request->wantsJson())
+                && $request->is('login', 'login/*', 'booking', 'booking/*')
+            ) {
+                $response->headers->set('Cache-Control', 'no-store');
+            }
+
+            return $response;
+        });
     })->create();

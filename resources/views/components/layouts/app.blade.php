@@ -23,6 +23,7 @@
             ['route'=>'auth.login', 'label'=>'ورود', 'icon'=>'users', 'patterns'=>['auth.*']],
         ],
     };
+    $modernPanel = in_array($role, ['client', 'psychologist'], true);
     $roleLabel = match ($role) { 'psychologist'=>'پنل مشاور', 'client'=>'پنل مراجع', 'admin'=>'پنل مدیر', default=>'سامانه مشاوره' };
     $pageTitle = isset($title) && is_string($title) ? $title : $roleLabel;
 @endphp
@@ -35,11 +36,12 @@
     <title>@yield('title', $pageTitle) | کریم محمدزاده</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('website/style/care-shell.css') }}">
+    @if($modernPanel)<link rel="stylesheet" href="{{ asset('website/style/care-panel-navigation.css') }}?v=3">@endif
     @stack('styles')
 </head>
-<body class="care-shell">
-<a class="care-skip" href="#care-content">رفتن به محتوای اصلی</a>
+<body class="care-shell {{ $modernPanel ? 'care-panel-modern' : '' }}">
 @include('components.layouts.care-icons')
+@if($modernPanel)@include('components.layouts.panel-navigation')@endif
 <aside class="care-sidebar" aria-label="منوی اصلی">
     <a class="care-brand" href="{{ route($navigation[0]['route']) }}"><span class="care-brand-mark"><img src="{{ asset('website/images/logo-mini.png')  }}"></span><span>کریم محمدزاده<small>سامانه مدیریت مشاوره</small></span></a>
     <p class="care-caption">{{ $roleLabel }}</p>
@@ -64,10 +66,11 @@
         @if(isset($slot) && !is_array($slot)){{ $slot }}@endif
         @yield('content')
     </div>
+    @if($modernPanel)@include('components.layouts.panel-account-actions')@endif
     <footer class="care-footer">سامانه اختصاصی مدیریت خدمات مشاوره · کریم محمدزاده</footer>
 </div>
-<nav class="care-bottom-nav" style="--care-nav-count: {{ min(count($navigation), 4) }}" aria-label="دسترسی سریع موبایل">
-    @foreach(array_slice($navigation, 0, 4) as $item)<a href="{{ route($item['route']) }}" @if(request()->routeIs(...$item['patterns'])) aria-current="page" @endif><svg class="icon" aria-hidden="true"><use href="#{{ $item['icon'] }}"/></svg><span>{{ $item['label'] }}</span></a>@endforeach
+<nav class="care-bottom-nav" style="--care-nav-count: {{ $modernPanel ? count($navigation) : min(count($navigation), 4) }}" aria-label="دسترسی سریع موبایل">
+    @foreach(($modernPanel ? $navigation : array_slice($navigation, 0, 4)) as $item)<a href="{{ route($item['route']) }}" @if(request()->routeIs(...$item['patterns'])) aria-current="page" @endif><svg class="icon" aria-hidden="true"><use href="#{{ $item['icon'] }}"/></svg><span>{{ $item['label'] }}</span></a>@endforeach
 </nav>
 @stack('scripts')
 </body>

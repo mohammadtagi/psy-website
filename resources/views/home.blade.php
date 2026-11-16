@@ -8,7 +8,7 @@
 
     <meta
         name="description"
-        content="رزرو جلسه مشاوره روان‌شناختی آنلاین و حضوری با کریم محمدزاده. مشاهده زمان‌های آزاد و انتخاب جلسه ۴۵ یا ۶۰ دقیقه‌ای."
+        content="رزرو جلسه مشاوره روان‌شناختی آنلاین و حضوری با کریم محمدزاده. مشاهده زمان‌های آزاد و انتخاب جلسه ۴۵ دقیقه‌ای."
     >
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -120,7 +120,7 @@
                 </div>
 
                 <div class="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm text-slate-500">
-                    <span>جلسات ۴۵ و ۶۰ دقیقه‌ای</span>
+                    <span>جلسات ۴۵ دقیقه‌ای</span>
                     <span>برگزاری آنلاین با Google Meet</span>
                     <span>امکان جلسه حضوری</span>
                 </div>
@@ -159,10 +159,7 @@
                             <p class="mt-2 font-bold text-slate-900">۴۵ دقیقه</p>
                         </div>
 
-                        <div class="rounded-2xl bg-stone-100 p-4">
-                            <p class="text-xs text-slate-500">مدت جلسه</p>
-                            <p class="mt-2 font-bold text-slate-900">۶۰ دقیقه</p>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -197,8 +194,8 @@
             </h2>
 
             <p class="mt-4 leading-8 text-slate-600">
-                هر دو نوع جلسه به‌صورت آنلاین و حضوری قابل رزرو هستند.
-                زمان‌های در دسترس پس از انتخاب نوع جلسه نمایش داده می‌شوند.
+                جلسه‌های ۴۵ دقیقه‌ای به‌صورت آنلاین و حضوری قابل رزرو هستند.
+                زمان‌های در دسترس در صفحه رزرو نمایش داده می‌شوند.
             </p>
         </div>
 
@@ -235,37 +232,7 @@
                 </div>
             </article>
 
-            <article class="rounded-3xl border border-teal-200 bg-teal-50/50 p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <p class="text-sm text-slate-500">جلسه گسترده‌تر</p>
-                        <h3 class="mt-2 text-2xl font-bold text-slate-900">
-                            مشاوره ۶۰ دقیقه‌ای
-                        </h3>
-                    </div>
 
-                    <span class="rounded-full bg-white px-3 py-1 text-sm font-semibold text-teal-700">
-                            ۶۰ دقیقه
-                        </span>
-                </div>
-
-                <p class="mt-6 leading-8 text-slate-600">
-                    مناسب برای موضوعاتی که به زمان بیشتر برای گفت‌وگو و بررسی نیاز دارند.
-                </p>
-
-                <div class="mt-8 flex items-center justify-between border-t border-teal-100 pt-5">
-                        <span class="font-bold text-slate-900">
-                            ۹۵۰٬۰۰۰ تومان
-                        </span>
-
-                    <a
-                        href="{{ route('booking.index') }}"
-                        class="font-semibold text-teal-700 hover:text-teal-900"
-                    >
-                        مشاهده زمان‌ها
-                    </a>
-                </div>
-            </article>
         </div>
     </section>
 
@@ -353,7 +320,7 @@
                 </summary>
 
                 <p class="mt-4 leading-8 text-slate-600">
-                    جلسه‌های ۴۵ دقیقه‌ای و ۶۰ دقیقه‌ای در زمان‌های آزاد قابل انتخاب هستند.
+                    جلسه‌های ۴۵ دقیقه‌ای در زمان‌های آزاد قابل رزرو هستند.
                 </p>
             </details>
         </div>

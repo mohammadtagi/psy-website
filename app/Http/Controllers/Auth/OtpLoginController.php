@@ -7,6 +7,9 @@ use App\Models\OtpCode;
 use App\Models\User;
 use App\Services\MelipayamakService;
 use Illuminate\Contracts\View\View;
+use App\Support\BookingAccount;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +36,7 @@ class OtpLoginController extends Controller
         ]);
     }
 
-    public function sendOtp(Request $request): RedirectResponse
+    public function sendOtp(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'mobile' => ['required', 'string', 'max:30'],
@@ -51,13 +54,16 @@ class OtpLoginController extends Controller
             ]);
         }
 
-        $this->sendCode($mobile);
-
+        $otp = $this->sendCode($mobile, $request);
         $request->session()->put([
             self::SESSION_MOBILE_KEY => $mobile,
             self::SESSION_REMEMBER_KEY => $request->boolean('remember'),
         ]);
 
+
+        if ($request->wantsJson()) {
+            return $this->sentResponse($mobile, $otp);
+        }
 
         return redirect()
             ->route('auth.otp.form')
@@ -80,11 +86,14 @@ class OtpLoginController extends Controller
     }
 
 
-    public function verifyOtp(Request $request): RedirectResponse
+    public function verifyOtp(Request $request): RedirectResponse|JsonResponse
     {
         $mobile = $request->session()->get(self::SESSION_MOBILE_KEY);
 
         if (! is_string($mobile) || $mobile === '') {
+            if ($request->wantsJson()) {
+                throw ValidationException::withMessages(['code' => 'فرآیند ورود منقضی شده است.']);
+            }
             return redirect()
                 ->route('auth.login')
                 ->withErrors([
@@ -92,6 +101,9 @@ class OtpLoginController extends Controller
                 ]);
         }
 
+        if ($request->wantsJson()) {
+            $request->validate(['code' => ['required', 'string', 'max:32']]);
+        }
         $length = (int) config('services.otp.length', 6);
 
         $code = $this->normalizeDigits(
@@ -205,22 +217,42 @@ class OtpLoginController extends Controller
 
         $request->session()->regenerate();
 
+        if ($request->wantsJson()) {
+            $dashboard = match ($user->role) {
+                User::ROLE_ADMIN => 'admin.dashboard',
+                User::ROLE_PSYCHOLOGIST => 'psychologist.dashboard',
+                default => 'client.dashboard',
+            };
+
+            return response()->json(BookingAccount::payload($user) + [
+                    'dashboard_url' => route($dashboard),
+                    'csrf_token' => $request->session()->token(),
+                ])->header('Cache-Control', 'no-store');
+        }
+
         return match ($user->role) {
             User::ROLE_ADMIN => redirect()->route('admin.dashboard'),
             User::ROLE_PSYCHOLOGIST => redirect()->route('psychologist.dashboard'),
-                        default => redirect()->route('client.dashboard'),
+            default => redirect()->route('client.dashboard'),
         };
     }
 
-    public function resendOtp(Request $request): RedirectResponse
+    public function resendOtp(Request $request): RedirectResponse|JsonResponse
     {
         $mobile = $request->session()->get(self::SESSION_MOBILE_KEY);
 
         if (! is_string($mobile) || $mobile === '') {
+            if ($request->wantsJson()) {
+                throw ValidationException::withMessages(['mobile' => 'فرآیند ورود منقضی شده است.']);
+            }
             return redirect()->route('auth.login');
         }
 
-        $this->sendCode($mobile);
+        $otp = $this->sendCode($mobile, $request);
+
+        if ($request->wantsJson()) {
+            return $this->sentResponse($mobile, $otp);
+        }
 
         return redirect()
             ->route('auth.otp.form')
@@ -237,14 +269,38 @@ class OtpLoginController extends Controller
         return redirect()->route('auth.login');
     }
 
-    private function sendCode(string $mobile): void
+    private function sentResponse(string $mobile, OtpCode $otp): JsonResponse
+    {
+        return response()->json([
+            'mobile_masked' => substr($mobile, 0, 4).'***'.substr($mobile, -4),
+            'otp_length' => (int) config('services.otp.length', 6),
+            'resend_after' => max(0, (int) ceil(now()->diffInSeconds(
+                $otp->created_at->copy()->addSeconds((int) config('services.otp.resend_seconds', 60)),
+                false,
+            ))),
+            'expires_in' => max(0, (int) ceil(now()->diffInSeconds($otp->expires_at, false))),
+        ])->header('Cache-Control', 'no-store');
+    }
+
+    private function rateLimited(Request $request, string $message, int $seconds): never
+    {
+        if ($request->wantsJson()) {
+            throw new HttpResponseException(response()->json([
+                'message' => $message,
+                'errors' => ['mobile' => [$message]],
+            ], 429)->header('Retry-After', (string) max(1, $seconds))
+                ->header('Cache-Control', 'no-store'));
+        }
+
+        throw ValidationException::withMessages(['mobile' => $message]);
+    }
+
+    private function sendCode(string $mobile, Request $request): OtpCode
     {
         $lock = Cache::lock('otp:send:' . $mobile, 10);
 
         if (! $lock->get()) {
-            throw ValidationException::withMessages([
-                'mobile' => 'لطفاً کمی بعد دوباره تلاش کنید.',
-            ]);
+            $this->rateLimited($request, 'لطفاً کمی بعد دوباره تلاش کنید.', 10);
         }
 
         try {
@@ -271,15 +327,14 @@ class OtpLoginController extends Controller
 
                 $remainingSeconds = max(
                     1,
-                    (int) now()->diffInSeconds($nextAvailableAt)
+                    (int) ceil(now()->diffInSeconds($nextAvailableAt, false))
                 );
 
-                throw ValidationException::withMessages([
-                    'mobile' => sprintf(
-                        'لطفاً %d ثانیه قبل از ارسال مجدد صبر کنید.',
-                        $remainingSeconds
-                    ),
-                ]);
+                $this->rateLimited(
+                    $request,
+                    sprintf('لطفاً %d ثانیه قبل از ارسال مجدد صبر کنید.', $remainingSeconds),
+                    $remainingSeconds,
+                );
             }
 
             $length = (int) config('services.otp.length', 6);
@@ -318,6 +373,8 @@ class OtpLoginController extends Controller
                 ->update([
                     'consumed_at' => now(),
                 ]);
+
+            return $otp;
         } finally {
             $lock->release();
         }
