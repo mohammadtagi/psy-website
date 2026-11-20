@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\DiscountRedemption;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,7 +42,15 @@ class ProfileController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $history = Payment::query()->where('client_id', $client->getKey());
+
+        $payments = (clone $history)->with(['appointment' => fn ($q) => $q->where('client_id', $client->getKey())->select('id', 'amount', 'discount_amount')])->latest('id')->paginate(5, ['id', 'appointment_id', 'created_at', 'status', 'gateway', 'amount', 'final_amount', 'ref_id'], 'payments_page')->withQueryString()->fragment('cpf-payments');
+        $discountReceipts = DiscountRedemption::where('client_id', $client->getKey())->whereIn('payment_id', $payments->getCollection()->modelKeys())->get(['payment_id', 'original_amount', 'discount_amount', 'final_amount'])->keyBy('payment_id');
+
         return view('client.profile.show', [
+            'discountReceipts' => $discountReceipts,
+            'paidCount' => (clone $history)->reorder()->where('status', Payment::STATUS_PAID)->where('gateway', '!=', Payment::GATEWAY_FREE)->count(),
+            'paymentHistory' => $payments,
             'client' => $client,
             'completedAppointments' => $completedAppointments,
         ]);

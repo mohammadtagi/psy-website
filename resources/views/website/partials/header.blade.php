@@ -11,16 +11,15 @@
 <header class="cps-header">
     <div class="cps-bar">
         <a class="cps-brand" href="{{ route('home') }}" aria-label="کریم محمدزاده؛ صفحه اصلی">
-            <img src="{{ asset('website/images/logo-mini.webp') }}" width="52" height="52" alt="">
-            <span><strong>کریم محمدزاده</strong><small>روان‌شناس و روان‌درمانگر</small></span>
+            <img src="{{ asset('website/images/logo-mini.png') }}" width="52" height="52" alt="">
+            <span><strong>کریم محمدزاده</strong><small>روان‌شناس بالینی</small></span>
         </a>
         <nav class="cps-desktop" aria-label="منوی اصلی">
             @foreach($publicLinks as [$routeName, $label])
                 <a href="{{ route($routeName) }}" @if(request()->routeIs($routeName)) aria-current="page" @endif>{{ $label }}</a>
             @endforeach
         </nav>
-        <div class="cps-actions">
-            <a class="cps-account" href="{{ route($accountRoute) }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg><span>{{ auth()->check() ? 'حساب کاربری' : 'ورود به حساب' }}</span></a>
+        <div class="cps-actions cps-desktop-reserve">
             <a class="cps-button" href="{{ route('booking.index') }}">رزرو نوبت <span aria-hidden="true">←</span></a>
         </div>
     <details class="cps-mobile">
@@ -29,6 +28,7 @@
             @foreach($publicLinks as [$routeName, $label])
                 <a href="{{ route($routeName) }}" @if(request()->routeIs($routeName)) aria-current="page" @endif>{{ $label }}</a>
             @endforeach
+            <a href="{{ route('booking.index') }}">رزرو نوبت</a>
             <a class="cps-mobile-account" href="{{ route($accountRoute) }}">
                 <svg class="cps-user-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>
                 <span class="cps-account-copy"><strong>{{ auth()->check() ? 'حساب کاربری' : 'ورود به حساب' }}</strong><small>{{ auth()->check() ? 'مشاهده و مدیریت حساب' : 'برای دسترسی به نوبت‌ها و حساب شما' }}</small></span>

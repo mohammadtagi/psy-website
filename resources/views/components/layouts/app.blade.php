@@ -1,6 +1,7 @@
 @php
     $role = auth()->user()?->role;
-    $navigation = match ($role) {
+    // Guests see the client links; protected destinations still enforce auth.
+    $navigation = match (auth()->guest() ? 'client' : $role) {
         'psychologist' => [
             ['route'=>'psychologist.dashboard', 'label'=>'داشبورد', 'icon'=>'home', 'patterns'=>['psychologist.dashboard']],
             ['route'=>'psychologist.appointments.index', 'label'=>'نوبت‌ها', 'icon'=>'calendar', 'patterns'=>['psychologist.appointments.*']],
@@ -23,7 +24,7 @@
             ['route'=>'auth.login', 'label'=>'ورود', 'icon'=>'users', 'patterns'=>['auth.*']],
         ],
     };
-    $modernPanel = in_array($role, ['client', 'psychologist'], true);
+    $modernPanel = in_array($role, ['client', 'psychologist'], true) || (auth()->guest() && request()->routeIs('booking.index'));
     $roleLabel = match ($role) { 'psychologist'=>'پنل مشاور', 'client'=>'پنل مراجع', 'admin'=>'پنل مدیر', default=>'سامانه مشاوره' };
     $pageTitle = isset($title) && is_string($title) ? $title : $roleLabel;
 @endphp
@@ -66,8 +67,8 @@
         @if(isset($slot) && !is_array($slot)){{ $slot }}@endif
         @yield('content')
     </div>
-    @if($modernPanel)@include('components.layouts.panel-account-actions')@endif
-    <footer class="care-footer">سامانه اختصاصی مدیریت خدمات مشاوره · کریم محمدزاده</footer>
+    @if($modernPanel && auth()->check())@include('components.layouts.panel-account-actions')@endif
+    <footer class="care-footer">سامانه اختصاصی مدیریت خدمات مشاوره کریم محمدزاده</footer>
 </div>
 <nav class="care-bottom-nav" style="--care-nav-count: {{ $modernPanel ? count($navigation) : min(count($navigation), 4) }}" aria-label="دسترسی سریع موبایل">
     @foreach(($modernPanel ? $navigation : array_slice($navigation, 0, 4)) as $item)<a href="{{ route($item['route']) }}" @if(request()->routeIs(...$item['patterns'])) aria-current="page" @endif><svg class="icon" aria-hidden="true"><use href="#{{ $item['icon'] }}"/></svg><span>{{ $item['label'] }}</span></a>@endforeach

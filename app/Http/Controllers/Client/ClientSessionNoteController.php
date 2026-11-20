@@ -16,6 +16,16 @@ class ClientSessionNoteController extends Controller
     ): RedirectResponse {
         $this->authorizeAppointment($request, $appointment);
 
+        // Enforce the new-note restriction even for direct POST requests.
+        if ($appointment->status === Appointment::STATUS_CANCELLED
+            || ($appointment->status === Appointment::STATUS_PENDING_PAYMENT
+                && $appointment->hold_expires_at
+                && $appointment->hold_expires_at->lte(now()))) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'body' => 'ثبت یادداشت جدید برای این نوبت غیرفعال است.',
+            ]);
+        }
+
         $data = $request->validate([
             'body' => ['required', 'string', 'max:10000'],
         ]);

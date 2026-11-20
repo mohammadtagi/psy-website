@@ -11,7 +11,9 @@
             </a>
         @endforeach
     </nav>
+    @auth
     <div class="panel-header-actions">
         <form method="POST" action="{{ route('logout') }}">@csrf<button class="panel-logout-icon" type="submit" aria-label="خروج از حساب" title="خروج از حساب"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5M14 8l4 4-4 4M8 12h10"/></svg></button></form>
     </div>
+    @endauth
 </header>

@@ -2,10 +2,14 @@
 @section('title', 'پروفایل من')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('website/style/care-client-profile.css') }}?v=1">
+<style>
+#cpf-payments .pay-row{display:grid;gap:2px;padding:7px 0;border-bottom:1px solid #dce5e1;font-size:.9rem;line-height:1.6}
+#cpf-payments .pay-line{display:flex;flex-wrap:wrap;gap:0 .8rem;align-items:baseline}#cpf-payments .pay-meta{font-size:.81rem;color:#475650;overflow-wrap:anywhere}
+</style>
 @endpush
 @section('content')
 <main class="cpf" dir="rtl">
-    <header><h1>پروفایل من</h1><p>اطلاعات فردی و سوابق جلسات تکمیل‌شده</p></header>
+    <header><h1>پروفایل من</h1><p>اطلاعات فردی، پرداخت‌ها و جلسات تکمیل‌شده</p></header>
     @if (session('success'))
         <div class="cpf-success" role="status">{{ session('success') }}</div>
     @endif
@@ -53,6 +57,28 @@
                 <button type="submit" class="cpf-save">ذخیره تغییرات</button>
             </form>
         </details>
+    </section>
+    <section id="cpf-payments" aria-labelledby="cpf-payment-title">
+        <div class="cpf-section-heading"><h2 id="cpf-payment-title">تاریخچه پرداخت‌ها</h2><span>پرداخت موفق: {{ number_format($paidCount) }}</span></div>
+        @forelse ($paymentHistory as $payment)
+            @php
+                $net = $payment->final_amount ?? $payment->amount;
+                $receipt = $discountReceipts->get($payment->id);
+                $base = $receipt?->original_amount ?? $payment->appointment?->amount;
+                $off = $receipt?->discount_amount ?? $payment->appointment?->discount_amount;
+                $showDiscount = $off > 0 && $base - $off === $net;
+            @endphp
+            <article class="pay-row">
+                <div class="pay-line">
+                    @if ($showDiscount)<span>کل: {{ number_format($base) }}</span><span>تخفیف: {{ number_format($off) }}</span>@endif
+                    <strong>{{ in_array($payment->status, ['paid','refunded'], true) ? 'پرداختی' : 'مبلغ نهایی' }}: {{ number_format($net) }} تومان</strong>
+                </div>
+                <div class="pay-line pay-meta"><span>{{ match ($payment->status) { 'paid' => $payment->gateway === 'free' ? 'رزرو رایگان' : 'موفق', 'initiated' => 'آغاز پرداخت', 'pending' => 'در انتظار تأیید', 'failed' => 'ناموفق', 'cancelled' => 'لغوشده', 'refunded' => 'بازپرداخت‌شده', default => 'نامشخص' } }}</span><span>{{ \App\Support\PersianDate::format($payment->created_at->copy()->setTimezone('Asia/Tehran')) }}</span><span>{{ match ($payment->gateway) { 'behpardakht' => 'به‌پرداخت ملت', 'zarinpal' => 'زرین‌پال', 'free' => 'بدون درگاه', default => 'سایر' } }}</span>@if ($payment->gateway !== 'free')<span>کد پیگیری: <bdi>{{ $payment->ref_id ?: 'ثبت نشده' }}</bdi></span>@endif</div>
+            </article>
+        @empty
+            <p class="cpf-card cpf-empty">پرداختی برای نمایش نیست.</p>
+        @endforelse
+        {{ $paymentHistory->links() }}
     </section>
     <section aria-labelledby="cpf-history">
         <div class="cpf-section-heading"><h2 id="cpf-history">جلسات تکمیل‌شده</h2><a href="{{ route('client.appointments.index') }}">مشاهده همه نوبت‌ها</a></div>

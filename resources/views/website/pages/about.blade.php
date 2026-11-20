@@ -8,34 +8,17 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('website/style/about.css') }}">
+    <link rel="stylesheet" href="{{ asset('website/style/inner-hero.css') }}">
 @endpush
 
 @section('content')
     <div class="website-about">
-        <!-- 1. Header and About -->
-        <section class="min-h-screen hero">
-            <div class="layout">
-                @include('website.partials.header')
-            </div>
+        @include('website.partials.inner-hero', [
+            'crumb' => 'درباره من',
+            'heading' => 'درباره من',
+            'intro' => 'در این صفحه می‌توانید با مسیر کاری، رویکرد درمانی و تجربه‌های کاری من در زمینه روان‌درمانی و مشاوره بیشتر آشنا شوید.',
+        ])
 
-            <div class="hero-content">
-                <nav aria-label="مسیر صفحه" class="mb-6 text-sm text-white/80">
-                    <ol class="flex items-center justify-center gap-3">
-                        <li><a href="{{ route('home') }}" class="hover:text-white">خانه</a></li>
-                        <li aria-hidden="true">/</li>
-                        <li aria-current="page">درباره ما</li>
-                    </ol>
-                </nav>
-                <h1 class="text-5xl font-bold tracking-tight">
-                    درباره من
-                </h1>
-
-                <p class="mt-6 max-w-xl text-sm leading-8 text-white/90">
-                    در این صفحه می‌توانید با مسیر کاری، رویکرد درمانی و تجربه‌های کاری من
-                    در زمینه روان‌درمانی و مشاوره بیشتر آشنا شوید.
-                </p>
-            </div>
-        </section>
         <section id="service" class="section bg-white">
             <div class="page-grid grid grid-cols-1 items-start text-end lg:grid-cols-12" dir="ltr">
 

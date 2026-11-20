@@ -1,0 +1,22 @@
+/* FAQ only — palette from website/js/tw.js */
+.website-faq {--fq-forest:#1F4738;--fq-deep:#123A28;--fq-paper:#fff;--fq-mist:#f2f7f4;--fq-line:#d5e4db;--fq-accent:#84b69a;--fq-muted:#51665a;color:var(--fq-forest)}
+.website-faq .text-forest,.website-faq .faq-column h2:target {color:var(--fq-forest)}
+.website-faq .bg-primary,.website-faq .faq-directory a:is(:hover,:focus-visible) {background:var(--fq-forest);color:white}
+.website-faq .faq-more:hover {background:var(--fq-deep)}
+.website-faq .bg-lime {background:var(--fq-accent);color:var(--fq-deep)}
+.website-faq .intro-grid + div article,.website-faq .faq-directory,.website-faq .faq-reader button,.website-faq .faq-item,.website-faq .faq-column .faq-item {background:var(--fq-paper);color:var(--fq-forest);border-color:var(--fq-line)}
+.website-faq .bg-contact,.website-faq .faq-reader-panel,.website-faq .faq-item[open],.website-faq .faq-column .faq-item[open] {background:var(--fq-mist);color:var(--fq-deep)}
+.website-faq .faq-reader button[aria-pressed=true] {background:var(--fq-forest);color:white;border-color:var(--fq-forest);box-shadow:inset -3px 0 var(--fq-accent)}
+.website-faq .faq-column,.website-faq .faq-directory a,.website-faq #contact .border-b {border-color:var(--fq-line)}
+.website-faq .faq-directory a:not(:hover):not(:focus-visible),.website-faq .faq-reader-panel::before,.website-faq .faq-reader-panel p {color:var(--fq-forest)}
+.website-faq .faq-column h2 {border-inline-start-color:var(--fq-accent)}
+.website-faq .intro-grid + div article p,.website-faq #contact p,.website-faq .faq-directory p {color:var(--fq-muted)}
+.website-faq .faq-reader button:focus-visible,.website-faq .faq-directory a:focus-visible,.website-faq .faq-item summary:focus-visible {outline-color:var(--fq-forest)}
+
+.website-faq .faq-directory,.website-faq .intro-grid + div article {background:#f6f9f7}
+.website-faq .bg-lime {background:#dceee3;color:#1F4738}
+.website-faq .faq-reader button[aria-pressed=true],.website-faq .faq-item[open],.website-faq .faq-column .faq-item[open] {background:#e3f0e8;color:#1F4738;border-color:#9abda8;box-shadow:inset -3px 0 #397555}
+.website-faq .faq-item summary::after {color:#397555}
+@media (hover:hover) {
+    .website-faq .faq-reader button:not([aria-pressed=true]):hover,.website-faq .faq-item:not([open]):hover {background:#f2f7f4;border-color:#9abda8}
+}

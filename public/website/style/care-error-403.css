@@ -1,0 +1,19 @@
+/* Content-only styles: header and footer remain the actual shared site components. */
+.care403-header-wrap{background:#075b3f;color:#fff}
+.care403-content{display:flex;align-items:center;justify-content:center;min-height:560px;padding:48px 20px 64px;background:#fff;color:#214736;text-align:center}
+.care403-inner{width:100%;max-width:560px}
+.care403-illustration{width:220px;max-width:100%;margin:0 auto 12px;animation:care403-enter .45s ease-out both}
+.care403-illustration svg{display:block;width:100%;height:auto}
+.care403-label{margin:0 0 8px;color:#788173;font-size:12px;line-height:1.8}
+.care403-content h1{margin:0;font-size:32px;font-weight:700;line-height:1.8;color:#214736}
+.care403-description{margin:12px 0 0;color:#657166;font-size:14px;line-height:2.1}
+.care403-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-top:28px}
+.care403-actions a{display:inline-flex;align-items:center;justify-content:center;gap:24px;min-width:158px;min-height:50px;padding:11px 24px;border-radius:12px;font-size:13px;font-weight:700;line-height:1.8;text-decoration:none;transition:background .16s ease}
+.care403-actions .care403-booking{background:#e3c55c;border:1px solid #e3c55c;color:#173b2d}
+.care403-actions .care403-booking:hover{background:#f4d97a}
+.care403-actions .care403-home{background:#fff;border:1px solid #cad5cb;color:#214736}
+.care403-actions .care403-home:hover{background:#f3f7f3}
+.care403-actions a:focus-visible{outline:2px solid #52745c;outline-offset:4px}
+@keyframes care403-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:540px){.care403-content{min-height:490px;padding:36px 20px 48px}.care403-illustration{width:185px}.care403-content h1{font-size:27px}.care403-description{font-size:13px;max-width:300px;margin:10px auto 0}.care403-actions{gap:10px;margin-top:24px}.care403-actions a{min-width:0;flex:1;max-width:170px;padding:11px 14px;gap:14px}}
+@media(prefers-reduced-motion:reduce){.care403-illustration{animation:none}.care403-actions a{transition:none}}

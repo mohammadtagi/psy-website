@@ -1,0 +1,1 @@
+.inner-page-hero{background:linear-gradient(90deg,rgba(10,92,58,.65),rgba(31,61,46,.65)),url('../images/hero-section-bg.webp') center/cover no-repeat}.inner-hero-frame{width:min(1290px,calc(100% - 64px));margin-inline:auto}@media(max-width:900px){.inner-hero-frame{width:min(calc(100% - 36px),680px)}}@media(max-width:767px){.inner-hero-frame{width:min(calc(100% - 28px),680px)}}

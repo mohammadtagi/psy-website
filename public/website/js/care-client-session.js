@@ -23,7 +23,7 @@ document.addEventListener('submit', async e => {
  e.preventDefault();
  if (busy || !form.reportValidity()) return;
  const root = form.closest('.ccs-notes');
- const message = form.querySelector('.ccs-form-message');
+ const message = root.querySelector('.ccs-feedback');
  // Keep other unsaved forms intact, even when pagination changes after a mutation.
  const drafts = [...root.querySelectorAll('[data-note-action]')].filter(f => f !== form && dirty(f)).map(f => ({
   id: f.querySelector('textarea').id, value: f.querySelector('textarea').value,
@@ -33,7 +33,7 @@ document.addEventListener('submit', async e => {
  const controls = [...root.querySelectorAll('button, textarea')];
  busy = true; root.setAttribute('aria-busy', 'true');
  controls.forEach(c => { if (c.tagName === 'TEXTAREA') c.readOnly = true; else c.disabled = true; });
- message.textContent = 'در حال ذخیره تغییرات…';
+ message.textContent = form.dataset.noteAction === 'delete' ? 'در حال حذف…' : 'در حال ذخیره…';
  const controller = new AbortController();
  const timer = setTimeout(() => controller.abort(), 30000);
  let saved = false;

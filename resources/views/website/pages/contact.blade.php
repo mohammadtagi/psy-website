@@ -7,36 +7,17 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('website/style/contact.css') }}">
+    <link rel="stylesheet" href="{{ asset('website/style/inner-hero.css') }}">
 @endpush
 
 @section('content')
-    <div class="hero-bg min-h-screen text-white">
-        <div class="layout">
+    @include('website.partials.inner-hero', [
+            'crumb' => 'تماس با ما',
+            'heading' => 'تماس با ما',
+            'intro' => 'اگر برای شروع درمان، نوع جلسه، یا هماهنگی زمان سؤال دارید، از همین‌جا پیام بفرستید. پاسخ‌گویی در ساعات کاری انجام می‌شود و پیام‌ها با احترام به حریم خصوصی شما بررسی می‌شوند.',
+        ])
 
-            @include('website.partials.header')
-
-            <section
-                class="layout flex min-h-[555px] items-center justify-center text-center"
-                aria-labelledby="page-title"
-            >
-                <div class="max-w-[580px]">
-                    <h1
-                        id="page-title"
-                        class="text-4xl leading-[1.4!important] font-bold tracking-tight md:text-5xl"
-                    >
-                        تماس با ما </h1>
-
-                    <p class="mt-6 text-sm leading-8 text-white/90">
-                        اگر برای شروع درمان، نوع جلسه، یا هماهنگی زمان سؤال دارید، از همین‌جا پیام بفرستید. پاسخ‌گویی در
-                        ساعات کاری انجام می‌شود و پیام‌ها با احترام به حریم خصوصی شما بررسی می‌شوند.
-                    </p>
-                </div>
-            </section>
-
-        </div>
-    </div>
-
-    <main id="main-content">
+        <main id="main-content">
 
         <section
             id="contact-form"

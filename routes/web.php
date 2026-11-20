@@ -42,6 +42,7 @@ Route::view('/contact-us', 'website.pages.contact')->name('website.contact');
 Route::view('/about-us', 'website.pages.about')->name('website.about');
 Route::view('/services', 'website.pages.services')->name('website.services');
 Route::view('/faq', 'website.pages.faq')->name('website.faq');
+Route::view('/terms', 'website.pages.terms')->name('website.terms');
 
 /*
 |--------------------------------------------------------------------------

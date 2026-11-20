@@ -2,6 +2,7 @@
     @section('title', 'داشبورد مراجع')
     @push('styles')
         <link rel="stylesheet" href="{{ asset('website/style/care-client-dashboard.css') }}">
+        <link rel="stylesheet" href="{{ asset('website/style/care-client-dashboard-refinement.css') }}?v=2">
     @endpush
     <main class="ccd">
         <header class="ccd-header">
@@ -31,16 +32,14 @@
         @if ($nextAppointment)
             <section class="ccd-card ccd-preparation" aria-labelledby="ccd-preparation-title">
                 <h2 id="ccd-preparation-title">آمادگی برای جلسه پیش رو</h2>
-                <p class="ccd-muted">برای جلسه {{ \App\Support\PersianDate::format($nextDate, 'd MMMM yyyy') }}، ساعت <bdi dir="ltr">{{ $nextDate->format('H:i') }}</bdi> به وقت تهران</p>
+                <p class="ccd-muted">{{ \App\Support\PersianDate::format($nextDate, 'd MMMM yyyy') }} · ساعت <bdi dir="ltr">{{ $nextDate->format('H:i') }}</bdi> تهران</p>
                 <form data-ccd-note data-success-url="{{ route('client.appointments.session.show', $nextAppointment) }}" method="POST" action="{{ route('client.appointments.session.notes.store', $nextAppointment) }}">
                     @csrf
-                    <label for="ccd-note-body">دوست دارید در این جلسه درباره چه چیزی صحبت کنید؟</label>
-                    <p id="ccd-note-hint" class="ccd-muted">سؤال‌ها، موضوعات مهم یا چیزهایی که نمی‌خواهید فراموش کنید را بنویسید. حداکثر ۱۰٬۰۰۰ نویسه.</p>
-                    <textarea id="ccd-note-body" name="body" rows="3" maxlength="10000" required aria-describedby="ccd-note-hint ccd-note-save-hint{{ $errors->has('body') ? ' ccd-note-error' : '' }}" @if($errors->has('body')) aria-invalid="true" @endif>{{ old('body') }}</textarea>
+                    <label for="ccd-note-body">دوست دارید در جلسه از چه بگویید؟</label>
+                    <textarea id="ccd-note-body" name="body" rows="3" maxlength="10000" required placeholder="مثلاً: استرس این روزهایم…" @if($errors->has('body')) aria-describedby="ccd-note-error" aria-invalid="true" @endif>{{ old('body') }}</textarea>
                     @error('body')<p id="ccd-note-error" class="ccd-note-error" role="alert">{{ $message }}</p>@enderror
-                    <p id="ccd-note-save-hint" class="ccd-muted">ذخیره خودکار نیست؛ هر بار ذخیره یک یادداشت جدید می‌سازد. بدون JavaScript، پس از ذخیره صفحه جلسه باز می‌شود.</p>
                     <p class="ccd-note-status" role="status" aria-live="polite" tabindex="-1"></p>
-                    <div class="ccd-note-actions"><button class="ccd-button" type="submit">ذخیره یادداشت برای این جلسه</button><a class="ccd-link" href="{{ route('client.appointments.session.show', $nextAppointment) }}">مشاهده یادداشت‌های این جلسه</a></div>
+                    <div class="ccd-note-actions"><button class="ccd-button" type="submit">ذخیره یادداشت</button><a class="ccd-link" href="{{ route('client.appointments.session.show', $nextAppointment) }}">یادداشت‌های جلسه</a></div>
                 </form>
             </section>
         @endif
@@ -60,32 +59,32 @@
                     <div class="ccd-progress-label"><span>پیشرفت مسیر</span><strong>{{ $progress }}٪</strong></div>
                     <progress class="ccd-progress" value="{{ $progress }}" max="100" aria-label="پیشرفت مسیر {{ $plan->title }}">{{ $progress }}٪</progress>
                     <details class="ccd-plan-details">
-                        <summary>مشاهده مراحل و جزئیات</summary>
-                        <p class="ccd-small ccd-muted">این درصد بر اساس جلسات برگزارشده نسبت به تعداد جلسات تخمینی است؛ شاخص بهبود بالینی نیست. بدون تخمین، صفر نمایش داده می‌شود.</p>
-                        <div class="ccd-stages">
-                            @foreach ($plan->stages as $stage)
-                                @php
-                                    $stageCount = (int) $stage->held_sessions_count;
-                                    $isCurrent = (int) $plan->current_stage === (int) $stage->stage_number;
-                                @endphp
-                                <section @class(['ccd-stage', 'ccd-stage-current' => $isCurrent])>
-                                    <div class="ccd-section-head"><h4>مرحله {{ $stage->stage_number }}</h4>@if ($isCurrent)<span class="ccd-badge">{{ $plan->isActive() ? 'مرحله فعلی' : 'آخرین مرحله ثبت‌شده' }}</span>@endif</div>
-                                    <p class="ccd-stage-title">{{ $stage->title }}</p>
-                                    <h5>هدف مرحله</h5>
-                                    @if (filled($stage->goal))
-                                        <p class="ccd-goal">{{ $stage->goal }}</p>
-                                    @else
-                                        <p class="ccd-muted">هدف این مرحله هنوز ثبت نشده است.</p>
-                                    @endif
-                                    <dl><div><dt>جلسات برگزارشده</dt><dd>{{ $stageCount }}</dd></div><div><dt>تعداد جلسات تخمینی</dt><dd>{{ $stage->estimated_sessions ?? 'بدون تخمین' }}</dd></div></dl>
-                                </section>
-                            @endforeach
-                        </div>
-                        <p class="ccd-privacy">یادداشت‌های خصوصی مشاور در این بخش نمایش داده نمی‌شوند.</p>
+                    <summary>مشاهده مراحل و جزئیات</summary>
+                    <p class="ccd-small ccd-muted">این درصد بر اساس جلسات برگزارشده نسبت به تعداد جلسات تخمینی است؛ شاخص بهبود بالینی نیست. بدون تخمین، صفر نمایش داده می‌شود.</p>
+                    <div class="ccd-stages">
+                        @foreach ($plan->stages as $stage)
+                            @php
+                                $stageCount = (int) $stage->held_sessions_count;
+                                $isCurrent = (int) $plan->current_stage === (int) $stage->stage_number;
+                            @endphp
+                            <section @class(['ccd-stage', 'ccd-stage-current' => $isCurrent])>
+                                <div class="ccd-section-head"><h4>مرحله {{ $stage->stage_number }}</h4>@if ($isCurrent)<span class="ccd-badge">{{ $plan->isActive() ? 'مرحله فعلی' : 'آخرین مرحله ثبت‌شده' }}</span>@endif</div>
+                                <p class="ccd-stage-title">{{ $stage->title }}</p>
+                                <h5>هدف مرحله</h5>
+                                @if (filled($stage->goal))
+                                    <p class="ccd-goal">{{ $stage->goal }}</p>
+                                @else
+                                    <p class="ccd-muted">هدف این مرحله هنوز ثبت نشده است.</p>
+                                @endif
+                                <dl><div><dt>جلسات برگزارشده</dt><dd>{{ $stageCount }}</dd></div><div><dt>تعداد جلسات تخمینی</dt><dd>{{ $stage->estimated_sessions ?? 'بدون تخمین' }}</dd></div></dl>
+                            </section>
+                        @endforeach
+                    </div>
+                    <p class="ccd-privacy">یادداشت‌های خصوصی مشاور در این بخش نمایش داده نمی‌شوند.</p>
                     </details>
                 </article>
             @empty
-                <div class="ccd-card ccd-empty"><h3>مسیر درمان شما هنوز فعال نشده است</h3><p class="ccd-muted">برای شروع، یک جلسه ارزیابی رزرو کنید. مسیر درمان پس از تعیین و فعال‌سازی مشاور در این بخش نمایش داده می‌شود.</p><a class="ccd-button" href="{{ route('booking.index') }}">رزرو جلسه ارزیابی</a></div>
+                <div class="ccd-card ccd-empty ccd-treatment-empty"><div class="ccd-treatment-empty-copy"><h3>مسیر درمان شما هنوز فعال نشده است</h3><p class="ccd-muted">مسیر درمان پس از ارزیابی و فعال‌سازی مشاور، اینجا نمایش داده می‌شود.</p></div><a class="ccd-button" href="{{ route('booking.index') }}">رزرو جلسه ارزیابی</a></div>
             @endforelse
         </section>
         <nav class="ccd-card ccd-quick" aria-label="دسترسی سریع مراجع"><h2>دسترسی سریع</h2><div><a href="{{ route('booking.index') }}">رزرو نوبت <span aria-hidden="true">←</span></a><a href="{{ route('client.appointments.index') }}">نوبت‌های من <span aria-hidden="true">←</span></a><a href="{{ route('client.profile.show') }}">پروفایل <span aria-hidden="true">←</span></a></div></nav>

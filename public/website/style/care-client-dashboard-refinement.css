@@ -1,0 +1,10 @@
+/* Loaded after the existing compact dashboard stylesheet. */
+.ccd .ccd-preparation label{font-size:13px;color:var(--ccd-green,#24543e)}
+.ccd .ccd-treatment-empty{display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;box-sizing:border-box}
+.ccd .ccd-treatment-empty-copy{flex:1 1 auto;min-width:0}
+.ccd .ccd-treatment-empty-copy p{max-width:none;margin:6px 0 0;font-size:13px;word-break:normal;overflow-wrap:normal}
+.ccd .ccd-treatment-empty>.ccd-button{flex:0 0 auto;white-space:nowrap;width:auto;max-width:100%;box-sizing:border-box;word-break:normal}
+@media(max-width:767px){
+ .ccd .ccd-treatment-empty{flex-direction:column;align-items:stretch;gap:14px}
+ .ccd .ccd-treatment-empty>.ccd-button{width:100%;align-self:stretch;white-space:normal}
+}

@@ -1839,9 +1839,9 @@ section[aria-labelledby="process-title"].is-visible::after {
     border-radius: 10px;
     background: #fff;
     color: var(--cta-forest);
-    font-family: "Vazirmatn", sans-serif;
+    font-family: 'IRANYekan', sans-serif;
+    font-weight: bold !important;
     font-size: 14px;
-    font-weight: 700;
     line-height: 1;
     text-align: center;
     cursor: pointer;

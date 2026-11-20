@@ -11,7 +11,7 @@
 .website-faq .faq-item summary { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 20px 24px; cursor: pointer; font-size: 13px; line-height: 2; list-style: none; }
 .website-faq .faq-item summary::-webkit-details-marker { display: none; }
 .website-faq .faq-item summary::after { content: '+'; flex-shrink: 0; font-size: 22px; }
-.website-faq .faq-item[open] { background: #096747; color: white; }
+.website-faq .faq-item[open] { background: #096747; }
 .website-faq .faq-item[open] summary::after { content: '−'; }
 .website-faq .faq-item p { margin: 0; padding: 0 24px 20px; font-size: 13px; line-height: 2.2; }
 .website-faq .faq-item summary:focus-visible { outline: 3px solid #b99855; outline-offset: -4px; }

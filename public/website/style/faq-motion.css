@@ -1,0 +1,13 @@
+.website-faq .faq-item,.website-faq .faq-column .faq-item{background:#f4f5ef;border:1px solid #dce3d9;color:#234335}
+.website-faq .faq-item[open]{border-color:#a1bfae;background:#edf5ef}
+.website-faq .faq-item summary::after,.website-faq .faq-item[open] summary::after{content:'';width:8px;height:8px;border:solid currentColor;border-width:0 1.6px 1.6px 0;transform:rotate(45deg)}
+.website-faq .faq-item[open] summary::after{transform:rotate(225deg)}
+.website-faq .faq-more{display:inline-flex;align-items:center;gap:8px;min-height:44px}.website-faq .faq-more svg{flex:none}.website-faq .faq-more:focus-visible{outline:2px solid #234335;outline-offset:3px}
+@media(prefers-reduced-motion:no-preference){
+.website-faq .faq-item summary::after,.website-faq .faq-more svg{transition:transform .18s ease}
+.website-faq .faq-more:is(:hover,:focus-visible) svg{transform:translateY(2px)}
+@supports (interpolate-size:allow-keywords) and selector(details::details-content){
+.website-faq .faq-item{interpolate-size:allow-keywords}.website-faq .faq-item::details-content{height:0;overflow:hidden;opacity:0;transition:height .22s ease,opacity .18s ease,content-visibility .22s allow-discrete}.website-faq .faq-item[open]::details-content{height:auto;opacity:1}}
+@supports(animation-timeline:view()){.website-faq .intro-grid,.website-faq .faq-column,.website-faq #contact>.container-grid{animation:faq-section-in linear both;animation-timeline:view();animation-range:entry 0% entry 30%}}
+}
+@keyframes faq-section-in{from{opacity:.86;transform:translateY(6px)}to{opacity:1;transform:none}}

@@ -1,7 +1,7 @@
 @extends('components.layouts.app')
 @section('title', 'جلسه و یادداشت‌های من')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('website/style/care-client-session.css') }}">
+<link rel="stylesheet" href="{{ asset('website/style/care-client-session.css?v=5') }}">
 @endpush
 @section('content')
 <main class="ccs" dir="rtl">
@@ -12,5 +12,5 @@
     @include('client.appointments.partials.session-summary', ['appointment' => $appointment])
     @include('client.appointments.partials.private-notes', ['appointment' => $appointment, 'notes' => $notes])
 </main>
-<script src="{{ asset('website/js/care-client-session.js') }}" defer></script>
+<script src="{{ asset('website/js/care-client-session.js?v=3') }}" defer></script>
 @endsection

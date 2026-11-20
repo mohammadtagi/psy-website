@@ -137,11 +137,9 @@
         run(async () => {
             clearErrors(codeForm); message.textContent = 'در حال بررسی کد…';
             try {
-                const data = await request(root.dataset.verify, 'POST', { code: digits(codeForm.elements.code.value.trim()) });
-                render(data); dialog.close();
-                if (data.user?.role === 'client') profileForm.elements.first_name.focus();
-                else q('.bka-heading h1').focus();
-                message.textContent = '';
+                await request(root.dataset.verify, 'POST', { code: digits(codeForm.elements.code.value.trim()) });
+                // Role-specific navigation is rendered by Blade, not by render().
+                window.location.reload();
             } catch (error) { report(error, codeForm, message); }
         });
     });

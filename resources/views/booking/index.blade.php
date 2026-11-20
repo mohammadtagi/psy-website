@@ -64,7 +64,7 @@
 </main>
 @endsection
 @push('scripts')
-<script src="{{ asset('website/js/care-booking-account.js') }}?v=uploaded-step-fix-1" defer></script>
+<script src="{{ asset('website/js/care-booking-account.js') }}?v=booking-shell-2" defer></script>
 <script src="{{ asset('website/js/care-booking-birth-picker.js') }}?v=1" defer></script>
 <script src="{{ asset('website/js/care-booking-calendar.js') }}?v=1" defer></script>
 <script src="{{ asset('website/js/care-booking-summary-position.js') }}?v=mobile-order-1" defer></script>

@@ -8,6 +8,7 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('website/style/services.css') }}">
+    <link rel="stylesheet" href="{{ asset('website/style/inner-hero.css') }}">
 @endpush
 
 @push('head')
@@ -134,41 +135,11 @@
 
 @section('content')
     <div class="website-services">
-        <div class="hero-bg min-h-screen text-white">
-            <div class="layout">
-
-                @include('website.partials.header')
-
-                <section
-                    class="container-layout flex min-h-[555px] items-center justify-center text-center"
-                    aria-labelledby="page-title"
-                >
-                    <div class="max-w-[580px]">
-                        <nav aria-label="مسیر صفحه" class="mb-6 text-sm text-white/80">
-                            <ol class="flex justify-center items-center gap-3">
-                                <li><a href="{{ route('home') }}">خانه</a></li>
-                                <li aria-hidden="true">/</li>
-                                <li aria-current="page">خدمات</li>
-                            </ol>
-                        </nav>
-                        <h1
-                            id="page-title"
-                            class="text-4xl leading-[1.4!important] font-bold tracking-tight md:text-5xl"
-                        >
-                            خدمات مشاوره و حمایت از سلامت روان
-                        </h1>
-
-                        <p class="mt-6 text-sm leading-8 text-white/90">
-                            در این بخش، چند حوزه‌ی اصلی کاری بنده رو می‌بینید؛ یعنی
-                            موضوعاتی که معمولاً در جلسات درمان روی آن‌ها کار می‌کنیم.
-                            انتخاب مسیر دقیق، در جلسه‌ی ارزیابی و با توجه به وضعیت هر فرد
-                            انجام می‌شود.
-                        </p>
-                    </div>
-                </section>
-
-            </div>
-        </div>
+        @include('website.partials.inner-hero', [
+            'crumb' => 'خدمات',
+            'heading' => 'خدمات مشاوره و حمایت از سلامت روان',
+            'intro' => 'در این بخش، چند حوزه‌ی اصلی کاری بنده رو می‌بینید؛ یعنی موضوعاتی که معمولاً در جلسات درمان روی آن‌ها کار می‌کنیم. انتخاب مسیر دقیق، در جلسه‌ی ارزیابی و با توجه به وضعیت هر فرد انجام می‌شود.',
+        ])
 
         <main>
             <!-- ۲. خدمات جامع برای حمایت از سلامت روان -->
